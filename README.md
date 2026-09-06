@@ -4,7 +4,7 @@ Self-contained, browser-only worksheets for a deep learning course. Each workshe
 single HTML file with all CSS, JavaScript and math inlined — no build step, no
 dependencies, no network calls at runtime.
 
-**Live site:** https://YOUR-USERNAME.github.io/dl-worksheets/
+**Live site:** https://kartikgupta98.github.io/dl-worksheets/
 
 ## Contents
 
