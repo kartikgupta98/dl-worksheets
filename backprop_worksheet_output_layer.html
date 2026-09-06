@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Backpropagation Worksheet 03 — Output Layer</title>
+<title>Backpropagation Worksheet 03: Output Layer</title>
 <style>
 :root{
   --ink:#16213D; --blue:#3A5DA1; --amber:#C8801F; --plum:#6D2E46;
@@ -320,7 +320,7 @@ function mk(tag,cls,html){
 }
 
 /* =========================================================================
-   2.  SEEDED SHUFFLE — fixed seed, so every laptop matches the projector
+   2.  SEEDED SHUFFLE - fixed seed, so every laptop matches the projector
    ========================================================================= */
 function mulberry32(seed){
   return function(){
@@ -964,7 +964,7 @@ var SECTIONS = [
         alt:"Mini diagram: both inputs into hidden neuron 1"},
    eye:"worked example", cap:"<b>into hidden 1</b><br>two weights in, plus its own bias.",
    blocks:[
-     {t:"p", html:"Row 1 of the layer 1 table is worked out for you in full. Neurons 2 and 3 have exactly the same shape — watch the little picture change."},
+     {t:"p", html:"Row 1 of the layer 1 table is worked out for you in full. Neurons 2 and 3 have exactly the same shape, so watch the little picture change."},
      {t:"worked", tag:"worked example", title:"Neuron 1", lines:[
        "{z|1|1} = (0.2)(1) + (0.1)(2) + 0.1 = 0.2 + 0.2 + 0.1 = <b>0.5</b>",
        "{a|1|1} = σ(0.5) = <b>0.6225</b>"]}
@@ -1007,7 +1007,7 @@ var SECTIONS = [
   {t:"stage",
    fig:{mini:true, ink:[], active:{x:[],h:[],o:[1,2]},
         alt:"Mini diagram: the two output neurons"},
-   eye:"step 3", cap:"<b>the two predictions</b><br>no new weights here — just σ at each output.",
+   eye:"step 3", cap:"<b>the two predictions</b><br>no new weights here, just σ at each output.",
    blocks:[
      {t:"card", v:"", html:
        "<h4>The output layer’s activation gets its own name.</h4>" +
@@ -1066,7 +1066,7 @@ var SECTIONS = [
   {t:"stage",
    fig:{mini:true, ink:["h1o1"], active:{x:[],h:[1],o:[1]}, labels:{h1o1:NAME_W11},
         alt:"Mini diagram: the single weight from hidden 1 into output 1"},
-   eye:"link 1 of 3", cap:"<b>how the loss feels the output</b><br>worked for you — this sets the standard.",
+   eye:"link 1 of 3", cap:"<b>how the loss feels the output</b><br>worked for you, and this sets the standard.",
    blocks:[
      {t:"worked", tag:"worked example", title:"", lines:[
        "∂L / ∂ŷ₁ = 2 · ½ · (ŷ₁ − y₁) = (ŷ₁ − y₁) = 0.6077 − 1 = <b>−0.3923</b>"],
@@ -1233,7 +1233,7 @@ var SECTIONS = [
 ];
 
 /* =========================================================================
-   7.  STATE  (memory only — no localStorage, no sessionStorage)
+   7.  STATE  (memory only, no localStorage, no sessionStorage)
    ========================================================================= */
 var state = { ans:{}, wrong:{}, collapsed:{}, autoc:{} };
 
@@ -1250,7 +1250,7 @@ function blanksInSection(n){
 }
 function each(list, fn){ Array.prototype.forEach.call(list, fn); }
 
-/* what the student has established so far — drives every diagram */
+/* what the student has established so far - drives every diagram */
 function known(){
   var A = state.ans;
   return {
@@ -1263,7 +1263,7 @@ function known(){
 }
 
 /* =========================================================================
-   8.  FIGURES — rebuilt on every state change so numbers appear only
+   8.  FIGURES - rebuilt on every state change so numbers appear only
        once they have actually been worked out
    ========================================================================= */
 function figOpts(spec){

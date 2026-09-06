@@ -546,7 +546,7 @@ function mk(tag,cls,html){
 function each(list, fn){ Array.prototype.forEach.call(list, fn); }
 
 /* =========================================================================
-   2.  SEEDED SHUFFLE — fixed seed, so every laptop matches the projector
+   2.  SEEDED SHUFFLE - fixed seed, so every laptop matches the projector
    ========================================================================= */
 function mulberry32(seed){
   return function(){
@@ -1298,7 +1298,7 @@ function f4(x){ return (x<0 ? "−" : "") + Math.abs(x).toFixed(4); }
 function f4s(x){ return (x<0 ? "−" : "+") + Math.abs(x).toFixed(4); }
 function f2(x){ return (x<0 ? "−" : "") + Math.abs(x).toFixed(2); }
 
-/* TABLE A — the six deliveries */
+/* TABLE A - the six deliveries */
 var T_DATA = (function(){
   var h = "<table class=\"wt\"><caption>table A &middot; the data, six deliveries</caption>" +
           "<thead><tr><th>sample</th><th>x &nbsp;<span style=\"font-size:14px;color:#9A9A9A\">km</span></th>" +
@@ -1309,7 +1309,7 @@ var T_DATA = (function(){
   return h + "</tbody></table>";
 })();
 
-/* TABLE B — every gradient at w = 2 */
+/* TABLE B - every gradient at w = 2 */
 var T_GRADS = (function(){
   var g = gradsAt(2), sum = 0;
   var h = "<div class=\"tscroll\"><table class=\"wt\"><caption>table B &middot; all six gradients at w = 2.0000</caption>" +
@@ -1334,7 +1334,7 @@ var STRIP_BATCH = (function(){
          " &nbsp;&rarr;&nbsp; the full-batch gradient. Single-signed. SGD never sees it.";
 })();
 
-/* TABLE C — the measured run, and the sign strip under it */
+/* TABLE C - the measured run, and the sign strip under it */
 var RUN12 = sgdHand(2, 0.05, 12);
 var T_RUN = (function(){
   var h = "<div class=\"tscroll\"><table class=\"wt\">" +
@@ -1400,7 +1400,7 @@ var STRIP_COMPARE = (function(){
          "× less far to get there. SGD arrives at roughly the right answer and then never stops moving.";
 })();
 
-/* TABLE D — the fading weights */
+/* TABLE D - the fading weights */
 var T_WEIGHTS = (function(){
   var h = "<table class=\"wt\"><caption>table D &middot; the weight each observation receives</caption>" +
     "<thead><tr><th class=\"lft\">how old</th><th>{beta} = 0.8</th><th>{beta} = 0.9</th></tr></thead><tbody>";
@@ -1412,7 +1412,7 @@ var T_WEIGHTS = (function(){
   return h + "</tbody></table>";
 })();
 
-/* TABLE E — how long is remembered */
+/* TABLE E - how long is remembered */
 var T_MEMORY = (function(){
   var h = "<table class=\"wt\"><caption>table E &middot; what {beta} buys</caption>" +
     "<thead><tr><th>{beta}</th><th>newest weight (1 − {beta})</th>" +
@@ -1424,7 +1424,7 @@ var T_MEMORY = (function(){
   return h + "</tbody></table>";
 })();
 
-/* TABLE F — three steps, side by side */
+/* TABLE F - three steps, side by side */
 var HOOK_G = [4, 4, -1];
 var HOOK_MOM = momFixed(2, 0.1, 0.9, HOOK_G);
 var HOOK_SGD = sgdFixed(2, 0.1, HOOK_G);
@@ -1446,7 +1446,7 @@ var T_THREE = (function(){
     "</tbody></table>";
 })();
 
-/* TABLE H — the stationary points of the two-valley loss */
+/* TABLE H - the stationary points of the two-valley loss */
 var T_STAT = (function(){
   var names = ["the global minimum, the deeper valley","the ridge between them",
                "a local minimum, the shallower valley"];
@@ -1460,7 +1460,7 @@ var T_STAT = (function(){
 })();
 var BARRIER = R(fVal(STAT[1]) - fVal(STAT[2]));
 
-/* TABLE I — where each beta ends up */
+/* TABLE I - where each beta ends up */
 var BETAS = [0, 0.5, 0.8, 0.9, 0.95, 0.98];
 var VALLEY_END = BETAS.map(function(b){
   var run = valleyRun(1.4, 0.5, b, 500);
@@ -1480,7 +1480,7 @@ var T_ESCAPE = (function(){
   return h + "</tbody></table>";
 })();
 
-/* TABLE J — the beta = 0.9 run, step by step */
+/* TABLE J - the beta = 0.9 run, step by step */
 var VALLEY_09 = valleyRun(1.4, 0.5, 0.9, 500);
 var T_CLIMB = (function(){
   var notes = {0:"on the outer wall", 1:"rolling down", 3:"still rolling down",
@@ -2206,7 +2206,7 @@ var SECTIONS = [
 ];
 
 /* =========================================================================
-   7.  STATE  (memory only — no storage APIs of any kind)
+   7.  STATE  (memory only, no storage APIs of any kind)
    ========================================================================= */
 var state = { ans:{}, wrong:{}, collapsed:{}, autoc:{} };
 
@@ -2223,7 +2223,7 @@ function blanksInSection(n){
 }
 
 /* =========================================================================
-   8.  ANIMATION 6 — the inline step figure.
+   8.  ANIMATION 6 - the inline step figure.
        A small number line that re-renders on every state change, so a value
        appears only once the student has filled the blank that produces it.
    ========================================================================= */
@@ -2887,7 +2887,7 @@ function hexA(hex, a){
 }
 /* fixed-width numbers, right aligned, so nothing jitters frame to frame */
 function fx(v, d, sign){
-  if(v === null || v === undefined || !isFinite(v)){ return "—"; }
+  if(v === null || v === undefined || !isFinite(v)){ return "n/a"; }
   var s = Math.abs(v).toFixed(d === undefined ? 4 : d);
   return (v < 0 ? "−" : (sign ? "+" : "")) + s;
 }
@@ -2970,7 +2970,7 @@ function Anim(o){
     var p = mk("span","pair" + (k.big ? " big" : ""));
     var greek = /[α-ωΑ-Ω]/.test(k.label);
     p.appendChild(mk("span","k" + (greek ? " gk" : ""), k.label));
-    var v = mk("span","v","—");
+    var v = mk("span","v","n/a");
     p.appendChild(v);
     self.cells[k.id] = v;
     self.readEl.appendChild(p);
@@ -3173,7 +3173,7 @@ function speedCtl(a){
 }
 
 /* =========================================================================
-   ANIMATION 1 — one sample at a time
+   ANIMATION 1 - one sample at a time
    ========================================================================= */
 var A1 = {L:48, Rt:398, AY:150, LO:1.4, HI:2.2,
           C1:442, C2:600, C3:706, C4:812, C5:925, ROW0:74, RH:26, MAXROWS:8};
@@ -3272,7 +3272,7 @@ function a1Live(g,W,H,a){
   }
 }
 function a1Read(m){
-  return { step:String(m.k), w:fx(m.w,4), g:m.g === null ? "—" : fx(m.g,4,true),
+  return { step:String(m.k), w:fx(m.w,4), g:m.g === null ? "n/a" : fx(m.g,4,true),
            rev:String(m.rev), dist:fx(m.dist,4) };
 }
 function buildA1(host){
@@ -3301,7 +3301,7 @@ function buildA1(host){
 }
 
 /* =========================================================================
-   ANIMATION 2 — the fading weights
+   ANIMATION 2 - the fading weights
    ========================================================================= */
 var A2 = {L:66, Rt:900, TOP:56, BOT:206, N:41};
 function a2Model(prev){
@@ -3362,7 +3362,7 @@ function a2Live(g,W,H,a){
 function a2Read(m){
   var hl = (m.beta <= 0) ? 0 : Math.log(0.5)/Math.log(m.beta);
   return { beta:m.beta.toFixed(2), neww:(1-m.beta).toFixed(4),
-           mem:(m.beta >= 1 ? "—" : (1/(1-m.beta)).toFixed(1)),
+           mem:(m.beta >= 1 ? "n/a" : (1/(1-m.beta)).toFixed(1)),
            half:(m.beta <= 0 ? "0.00" : hl.toFixed(2)) };
 }
 function buildA2(host){
@@ -3396,7 +3396,7 @@ function buildA2(host){
 }
 
 /* =========================================================================
-   ANIMATION 3 — SGD against Momentum
+   ANIMATION 3 - SGD against Momentum
    ========================================================================= */
 var A3 = {L:60, Rt:880, AY:78, SY:58, MY:98, LO:1.4, HI:2.2,
           BT:150, BB:344, NSTEP:60};
@@ -3551,7 +3551,7 @@ function buildA3(host){
 }
 
 /* =========================================================================
-   ANIMATION 4 — the barrier
+   ANIMATION 4 - the barrier
    ========================================================================= */
 var A4 = {L:60, Rt:900, T:44, B:352, LO:-1.8, HI:1.8};
 var A4Y = (function(){
@@ -3716,7 +3716,7 @@ function buildA4(host){
 }
 
 /* =========================================================================
-   ANIMATION 5 — the look-ahead
+   ANIMATION 5 - the look-ahead
    ========================================================================= */
 var A5 = {L:60, Rt:900, T:34, CB:210, B:238, LO:0.3, HI:2.2,
           BT:288, BB:370, TLO:0.3, THI:2.1, NSTEP:45,

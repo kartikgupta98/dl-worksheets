@@ -1174,7 +1174,7 @@ function run10(){
     if(hit>=0){solved++;res.push(hit);}
   }
   res.sort(function(a,b){return a-b;});
-  var med='—';
+  var med='n/a';
   if(res.length)med=String(res.length%2?res[(res.length-1)/2]:Math.round((res[res.length/2-1]+res[res.length/2])/2));
   document.getElementById('p2out').textContent='solved '+solved+'/10, median '+med+' epochs';
 }

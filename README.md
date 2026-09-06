@@ -1,7 +1,7 @@
-# Deep Learning — Interactive Worksheets
+# Deep Learning: Interactive Worksheets
 
 Self-contained, browser-only worksheets for a deep learning course. Each worksheet is a
-single HTML file with all CSS, JavaScript and math inlined — no build step, no
+single HTML file with all CSS, JavaScript and math inlined: no build step, no
 dependencies, no network calls at runtime.
 
 **Live site:** https://kartikgupta98.github.io/dl-worksheets/
@@ -11,9 +11,9 @@ dependencies, no network calls at runtime.
 | Worksheet | File | Topics |
 |---|---|---|
 | Activation Functions | [`activations.html`](activations.html) | sigmoid, tanh, ReLU, saturation, dying units |
-| Backpropagation 03 — Output Layer | [`backprop_worksheet_output_layer.html`](backprop_worksheet_output_layer.html) | forward pass, loss, chain rule, weight gradients |
-| Lecture 06 — Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
-| Worksheet 07 — Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
+| Backpropagation 03: Output Layer | [`backprop_worksheet_output_layer.html`](backprop_worksheet_output_layer.html) | forward pass, loss, chain rule, weight gradients |
+| Lecture 06: Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
+| Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
 
 ## Running locally
 
@@ -46,5 +46,5 @@ To (re)enable it: **Settings → Pages → Source: Deploy from a branch → `mai
 ## License
 
 Not yet licensed. Without a license file, default copyright applies and others may
-not reuse the material. For teaching content, **CC BY 4.0** is the usual choice —
+not reuse the material. For teaching content, **CC BY 4.0** is the usual choice;
 add it as `LICENSE` when you're ready.
