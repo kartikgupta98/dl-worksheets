@@ -14,6 +14,7 @@ dependencies, no network calls at runtime.
 | Backpropagation 03: Output Layer | [`backprop_worksheet_output_layer.html`](backprop_worksheet_output_layer.html) | forward pass, loss, chain rule, weight gradients |
 | Lecture 06: Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
 | Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
+| Worksheet 08: Adaptive Learning Rates | [`worksheet08_adaptive_lr.html`](worksheet08_adaptive_lr.html) | AdaGrad, RMSProp, Adam, bias correction |
 
 ## Running locally
 

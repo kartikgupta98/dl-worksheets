@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deep Learning: Interactive Worksheets</title>
-<meta name="description" content="Interactive, self-contained worksheets for a deep learning course: activations, backpropagation, gradient descent, momentum and NAG.">
+<meta name="description" content="Interactive, self-contained worksheets for a deep learning course: activations, backpropagation, gradient descent, momentum, NAG and adaptive learning rates.">
 <style>
 :root{
   --ink:#16213D; --blue:#3A5DA1; --amber:#C8801F; --plum:#6D2E46;
@@ -138,6 +138,13 @@ footer a{color:var(--blue)}
     <h3>From Stochastic Gradients to Momentum</h3>
     <p>Why plain SGD rattles down a ravine, how an exponentially weighted average smooths it, and what Nesterov's look-ahead buys on top.</p>
     <p class="covers">SGD · EWMA · momentum · NAG</p>
+  </a></li>
+
+  <li><a class="card" href="worksheet08_adaptive_lr.html">
+    <span class="tag ws">Worksheet 08</span>
+    <h3>One Learning Rate Is Not Enough</h3>
+    <p>A single step size cannot serve two parameters whose gradients are ten times apart. Three rules that measure a step size for each parameter from its own gradients, and the failure each one fixes.</p>
+    <p class="covers">AdaGrad · RMSProp · Adam · bias correction</p>
   </a></li>
 
 </ol>
