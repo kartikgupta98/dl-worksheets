@@ -52,6 +52,7 @@ and no capacity gain (the true function was nearly additive). Changes, all as kn
 | summary.py | `python summary.py exp2`: results with a gain column. |
 | export_kaggle.py | `python export_kaggle.py` writes kaggle/ + private/solution.csv; `reference` writes private/reference_submission.csv; `score sub.csv` scores locally. Reads settings from exp2. |
 | make_notebooks.py | Builds the notebooks from one description of the starter (exp2.START) plus a function per technique card: materials/starter_notebook.ipynb (students, Colab), materials/instructor_solution_notebook.ipynb (all helpful cards), materials/instructor_card_solutions.md (each card's exact change). |
+| make_card_code_notebook.py | `python make_card_code_notebook.py`: builds materials/instructor_card_code.ipynb, the code for all 25 cards (section by section, changed lines tagged with the card ID) to refer to while helping students. Uses the tested card code from make_notebooks.py. |
 | make_cards_html.py | `python make_cards_html.py`: builds materials/technique_cards.html (the student handout to share) from materials/technique_cards.md. Edit the .md, then rebuild. |
 | test_cards.py | `python test_cards.py 8`: runs the notebook after every card on the ladder plus the no-help cards, scores each submission, compares with results_exp2.csv, writes card_test_results.csv. |
 | smoke_test.py | Reproduces 3 recorded runs on a new machine. |
