@@ -16,8 +16,9 @@
   --rule: #d8dfe1;
   --accent: #0d5c61;
   --accent-soft: #dcebea;
-  --code-bg: #e8eeed;
+  --code-bg: #eef2f2;
   --watch: #8a4a00;
+  --removed: #a0413a;
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -32,8 +33,9 @@
     --rule: #28343b;
     --accent: #6cc2bf;
     --accent-soft: #173a3b;
-    --code-bg: #212c32;
+    --code-bg: #1d272d;
     --watch: #e6b064;
+    --removed: #e59a92;
     color-scheme: dark;
   }
 }
@@ -45,8 +47,9 @@
   --rule: #28343b;
   --accent: #6cc2bf;
   --accent-soft: #173a3b;
-  --code-bg: #212c32;
+  --code-bg: #1d272d;
   --watch: #e6b064;
+  --removed: #e59a92;
   color-scheme: dark;
 }
 
@@ -239,6 +242,71 @@ h1 {
   font-size: 0.6875rem;
   vertical-align: 0.05em;
 }
+
+/* code hint */
+.hint { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--rule); }
+.hint summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+  font: 600 0.8125rem/1.4 var(--sans);
+  color: var(--accent);
+  border-radius: 4px;
+}
+.hint summary::-webkit-details-marker { display: none; }
+.hint summary::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.hint[open] summary::before { transform: rotate(45deg); }
+.hint summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hint summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .hint summary::before { transition: none; } }
+.hint-note { margin: 0.75rem 0 0.7rem; max-width: 70ch; font-size: 0.8125rem; color: var(--muted); }
+.key { margin-right: 0.35rem; padding: 0.05rem 0.35rem; border-radius: 3px; font: 400 0.75rem/1.4 var(--mono); }
+.key.new { background: var(--accent-soft); color: var(--ink); }
+.key.removed { color: var(--removed); text-decoration: line-through; }
+.snippet + .snippet { margin-top: 0.8rem; }
+.snippet-label {
+  margin: 0 0 0.3rem;
+  font: 600 0.6875rem/1.4 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.snippet pre {
+  margin: 0;
+  padding: 0.6rem 0;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font: 400 0.8125rem/1.6 var(--mono);
+}
+.snippet code { display: block; padding: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+.ln {
+  display: block;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  min-height: 1.6em;
+  padding: 0 1rem 0 1.9rem;
+  white-space: pre;
+}
+.ln::before { position: absolute; left: 0.75rem; }
+.ln.same { color: var(--muted); }
+.ln.new { background: var(--accent-soft); color: var(--ink); }
+.ln.new::before { content: "+"; color: var(--accent); }
+.ln.removed { color: var(--removed); text-decoration: line-through; user-select: none; }
+.ln.removed::before { content: "\2212"; }
+
 @media (max-width: 560px) {
   h1 { font-size: 2.125rem; }
   .card { padding: 1.1rem 1.1rem 1.2rem; }
@@ -253,7 +321,7 @@ h1 {
 
 @media print {
   body { background: #fff; color: #000; font-size: 11pt; }
-  .index, .jump { display: none; }
+  .index, .jump, .hint { display: none; }
   .page { display: block; padding: 0; max-width: none; }
   .card, .order, .steps li { break-inside: avoid; }
   .card, .order { border-color: #bbb; }

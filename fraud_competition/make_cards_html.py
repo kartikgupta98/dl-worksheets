@@ -1,8 +1,12 @@
 """
-Builds materials/technique_cards.html from materials/technique_cards.md, so the handout has one source.
+Builds the technique cards handout from materials/technique_cards.md, so both versions have one source:
 
-    python make_cards_html.py                    # write materials/technique_cards.html
-    python make_cards_html.py --fragment PATH    # also write a version without <html>/<head>/<body>
+    materials/technique_cards.html            the cards, no code
+    materials/technique_cards_with_code.html  the same cards, each with a closed "Hint: show code" dropdown
+                                              holding the tested card code from make_card_code_notebook.py
+
+    python make_cards_html.py                    # write both files
+    python make_cards_html.py --fragment PATH    # also write the with-code version without <html>/<head>/<body>
 """
 import html
 import re
@@ -12,6 +16,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 SRC = HERE / "materials" / "technique_cards.md"
 OUT = HERE / "materials" / "technique_cards.html"
+OUT_CODE = HERE / "materials" / "technique_cards_with_code.html"
 STEP_WORDS = ["preprocessing", "features", "after the split", "model", "training", "submission"]
 
 
@@ -68,7 +73,28 @@ def step_of(text):
     return min(hits)[1] if hits else None
 
 
-def render_body(doc):
+def hint(card_id, ctx):
+    from make_card_code_notebook import builds_on, changes
+
+    blocks = []
+    for name, rows in changes(card_id, ctx):
+        lines = "".join(f'<span class="ln {kind}">{html.escape(line)}</span>' for kind, line in rows)
+        blocks.append(f'<div class="snippet"><p class="snippet-label">{html.escape(name)}</p>'
+                      f"<pre><code>{lines}</code></pre></div>")
+    base = builds_on(ctx)
+    base = base if base.startswith("the ") else f"cards {base}"
+    return ('<details class="hint"><summary>Hint: show code</summary>'
+            f'<p class="hint-note">One way to write it, on top of {html.escape(base)}. '
+            '<span class="key new">+ added</span> <span class="key removed">&minus; removed</span> '
+            "Your notebook may look a little different.</p>"
+            f'{"".join(blocks)}</details>')
+
+
+def render_body(doc, hints):
+    ctx = None
+    if hints:
+        from make_card_code_notebook import contexts
+        ctx = contexts()
     index = []
     for s in doc["sections"]:
         items = "".join(f'<li><a href="#{c["id"]}"><span class="id">{c["id"]}</span>{inline(c["title"])}</a></li>'
@@ -94,14 +120,16 @@ def render_body(doc):
                     value = (f'<span class="step step-sm" title="Notebook step {n}: {html.escape(doc["order"][n - 1][0])}">'
                              f"{n}</span>{value}")
                 fields.append(f'<div class="field field-{label.lower()}"><dt>{label}</dt><dd>{value}</dd></div>')
+            code_hint = hint(c["id"], ctx[c["id"]]) if hints else ""
             cards.append(f'<article class="card" id="{c["id"]}">'
                          f'<header class="card-head"><span class="id">{c["id"]}</span><h3>{inline(c["title"])}</h3></header>'
-                         f'<dl class="fields">{"".join(fields)}</dl></article>')
+                         f'<dl class="fields">{"".join(fields)}</dl>{code_hint}</article>')
         groups.append(f'<section class="group" id="{s["letter"]}">'
                       f'<h2><span class="letter">{s["letter"]}</span>{inline(s["name"])}</h2>'
                       f'<div class="cards">{"".join(cards)}</div></section>')
 
     pitfalls = "".join(f"<li><strong>{inline(lead)}</strong> {inline(text)}</li>" for lead, text in doc["pitfalls"])
+    eyebrow = "Flagged or Fraud? &middot; Student handout" + (" &middot; with code hints" if hints else "")
 
     return f"""<div class="page">
 <nav class="index" aria-label="All cards">
@@ -112,7 +140,7 @@ def render_body(doc):
 </nav>
 <main id="top">
 <header class="masthead">
-<p class="eyebrow">Flagged or Fraud? &middot; Student handout</p>
+<p class="eyebrow">{eyebrow}</p>
 <h1>{inline(doc["title"])}</h1>
 <p class="lede">{inline(" ".join(doc["intro"]))}</p>
 </header>
@@ -141,8 +169,9 @@ CSS = """
   --rule: #d8dfe1;
   --accent: #0d5c61;
   --accent-soft: #dcebea;
-  --code-bg: #e8eeed;
+  --code-bg: #eef2f2;
   --watch: #8a4a00;
+  --removed: #a0413a;
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -157,8 +186,9 @@ CSS = """
     --rule: #28343b;
     --accent: #6cc2bf;
     --accent-soft: #173a3b;
-    --code-bg: #212c32;
+    --code-bg: #1d272d;
     --watch: #e6b064;
+    --removed: #e59a92;
     color-scheme: dark;
   }
 }
@@ -170,8 +200,9 @@ CSS = """
   --rule: #28343b;
   --accent: #6cc2bf;
   --accent-soft: #173a3b;
-  --code-bg: #212c32;
+  --code-bg: #1d272d;
   --watch: #e6b064;
+  --removed: #e59a92;
   color-scheme: dark;
 }
 
@@ -364,6 +395,71 @@ h1 {
   font-size: 0.6875rem;
   vertical-align: 0.05em;
 }
+
+/* code hint */
+.hint { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--rule); }
+.hint summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+  font: 600 0.8125rem/1.4 var(--sans);
+  color: var(--accent);
+  border-radius: 4px;
+}
+.hint summary::-webkit-details-marker { display: none; }
+.hint summary::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.hint[open] summary::before { transform: rotate(45deg); }
+.hint summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hint summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .hint summary::before { transition: none; } }
+.hint-note { margin: 0.75rem 0 0.7rem; max-width: 70ch; font-size: 0.8125rem; color: var(--muted); }
+.key { margin-right: 0.35rem; padding: 0.05rem 0.35rem; border-radius: 3px; font: 400 0.75rem/1.4 var(--mono); }
+.key.new { background: var(--accent-soft); color: var(--ink); }
+.key.removed { color: var(--removed); text-decoration: line-through; }
+.snippet + .snippet { margin-top: 0.8rem; }
+.snippet-label {
+  margin: 0 0 0.3rem;
+  font: 600 0.6875rem/1.4 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.snippet pre {
+  margin: 0;
+  padding: 0.6rem 0;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font: 400 0.8125rem/1.6 var(--mono);
+}
+.snippet code { display: block; padding: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+.ln {
+  display: block;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  min-height: 1.6em;
+  padding: 0 1rem 0 1.9rem;
+  white-space: pre;
+}
+.ln::before { position: absolute; left: 0.75rem; }
+.ln.same { color: var(--muted); }
+.ln.new { background: var(--accent-soft); color: var(--ink); }
+.ln.new::before { content: "+"; color: var(--accent); }
+.ln.removed { color: var(--removed); text-decoration: line-through; user-select: none; }
+.ln.removed::before { content: "\\2212"; }
+
 @media (max-width: 560px) {
   h1 { font-size: 2.125rem; }
   .card { padding: 1.1rem 1.1rem 1.2rem; }
@@ -378,7 +474,7 @@ h1 {
 
 @media print {
   body { background: #fff; color: #000; font-size: 11pt; }
-  .index, .jump { display: none; }
+  .index, .jump, .hint { display: none; }
   .page { display: block; padding: 0; max-width: none; }
   .card, .order, .steps li { break-inside: avoid; }
   .card, .order { border-color: #bbb; }
@@ -386,29 +482,38 @@ h1 {
 }
 """
 
-HEAD = f"""<title>Flagged or Fraud? Technique Cards</title>
+
+def head(title):
+    return f"""<title>{title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
 <style>{CSS}</style>"""
 
 
-if __name__ == "__main__":
-    body = render_body(parse(SRC.read_text()))
-    OUT.write_text(f"""<!doctype html>
+def page(title, body):
+    return f"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-{HEAD}
+{head(title)}
 </head>
 <body>
 {body}
 </body>
 </html>
-""")
-    print("wrote", OUT)
+"""
+
+
+if __name__ == "__main__":
+    doc = parse(SRC.read_text())
+    title, title_code = "Flagged or Fraud? Technique Cards", "Flagged or Fraud? Technique Cards with Code"
+    OUT.write_text(page(title, render_body(doc, hints=False)))
+    body_code = render_body(doc, hints=True)
+    OUT_CODE.write_text(page(title_code, body_code))
+    print("wrote", OUT, "and", OUT_CODE)
     if "--fragment" in sys.argv:
         path = Path(sys.argv[sys.argv.index("--fragment") + 1])
-        path.write_text(f"{HEAD}\n{body}\n")
+        path.write_text(f"{head(title_code)}\n{body_code}\n")
         print("wrote", path)

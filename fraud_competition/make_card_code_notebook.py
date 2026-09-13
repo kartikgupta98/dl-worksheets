@@ -42,22 +42,37 @@ def sections(nb):
     return out
 
 
-def snippets(card, before):
-    cells = []
+def changes(card, before):
+    """For each notebook section the card touches: (section, [(kind, line)]), kind "same", "new" or "removed"."""
+    out = []
     for (name, a), (_, b) in zip(sections(build(before)), sections(build(before + [card]))):
         if a == b:
             continue
-        lines = []
+        rows = []
         for op, i1, i2, j1, j2 in SequenceMatcher(None, a, b).get_opcodes():
             if op == "equal":
                 if name not in PARTIAL:
-                    lines += b[j1:j2]
+                    rows += [("same", line) for line in b[j1:j2]]
                 continue
-            lines += [f"{line[:len(line) - len(line.lstrip())]}# removed: {line.strip()}"
-                      for line in a[i1:i2] if line.strip()]
-            lines += [f"{line}  # {card}" if line.strip() else line for line in b[j1:j2]]
+            rows += [("removed", line) for line in a[i1:i2] if line.strip()]
+            rows += [("new" if line.strip() else "same", line) for line in b[j1:j2]]
         if name == "Preprocessing":
-            lines = ["for df in [train, test]:", "    ...  # your earlier preprocessing lines"] + lines
+            rows = [("same", "for df in [train, test]:"), ("same", "    ...  # your earlier preprocessing lines")] + rows
+        out.append((name, rows))
+    return out
+
+
+def snippets(card, before):
+    cells = []
+    for name, rows in changes(card, before):
+        lines = []
+        for kind, line in rows:
+            if kind == "removed":
+                lines.append(f"{line[:len(line) - len(line.lstrip())]}# removed: {line.strip()}")
+            elif kind == "new":
+                lines.append(f"{line}  # {card}")
+            else:
+                lines.append(line)
         cells.append(code([f"# Section: {name}"] + lines))
     return cells
 
