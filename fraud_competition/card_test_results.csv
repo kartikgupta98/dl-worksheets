@@ -1,0 +1,28 @@
+config,cards,notebook,seconds,calibration_seed0,calibration_mean,diff_seed0
+L00 starter,starter,59.6,8,60.0,59.7,-0.4
+L01 +scale,A2,63.2,7,62.4,62.2,0.8
+L02 +all numeric columns,A1,60.4,7,60.4,62.4,-0.0
+L03 +log skewed,A3,61.9,7,61.9,63.7,-0.0
+L04 +one-hot,A4,69.2,7,69.2,69.5,0.0
+L05 +median & missing flags,A6 A7,71.7,7,71.7,71.4,0.0
+L06 +chargeback -1 flag,A8,73.2,7,73.2,73.0,0.0
+L07 +adam,B1,75.9,7,75.9,76.2,0.0
+L08 +100 epochs,B2,78.1,44,78.1,78.9,-0.0
+L09 +2x128 network,C1,80.6,46,81.1,80.4,-0.5
+L10 +dropout 0.3,D1,83.3,53,83.7,83.8,-0.4
+L11 +drop noise cols,A9,84.1,53,84.1,84.1,-0.0
+L12 +amount vs usual,E1,84.0,54,84.1,84.2,-0.1
+L13 +hour sin/cos,E2,84.4,53,84.3,84.3,0.1
+L14 +round amounts,E3,85.8,54,85.8,85.9,-0.0
+L15 +reduce lr,B4,86.8,54,86.8,86.9,0.0
+F- one-hot->codes,A5,86.1,58,85.9,85.9,0.2
+N batch 256,B3,87.1,18,87.1,87.1,0.0
+N 5 layers,C2,86.6,64,86.8,86.6,-0.2
+N sigmoid act,C3,86.8,57,86.8,86.8,0.0
+N batchnorm,C4,86.9,62,86.9,86.9,-0.0
+R l2 1e-3,D2,81.8,51,81.8,81.6,0.0
+N l1 1e-4,D3,87.2,56,87.3,87.3,-0.0
+N early stop,D4,86.9,29,86.9,86.9,-0.1
+T 3-seed average,F1,87.3,84,87.3,87.3,0.0
+R early stop,D4,82.5,17,82.5,82.6,-0.0
+N dropout on small net,D1,76.6,22,76.6,76.7,0.0

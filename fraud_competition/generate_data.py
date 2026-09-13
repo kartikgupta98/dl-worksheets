@@ -64,6 +64,25 @@ DEFAULT_KNOBS = dict(
     distance_missing=0.10,
     device_blocked_rate=0.25,
     chargeback_rate=0.30,
+    # added after exp1; these defaults reproduce the exp1 dataset exactly
+    night_peak_hour=2,
+    usual_spend_sigma=1.0,   # spread of typical spend across customers (log scale)
+    intl_in_person=0.0,      # extra for international card-present (negative: travellers)
+    card_testing=0.0,        # far below usual spend, times many transactions in the last hour
+    atm_failed_pin=0.0,      # per failed PIN attempt, at an ATM
+    location_hidden=0.0,     # location unavailable (sharing off or spoofed): distance is missing
+    location_hidden_rate=0.0,
+    profile_reset=0.0,       # spend profile wiped after a contact-details change: avg spend is missing
+    profile_reset_rate=0.0,
+    round_amount=0.0,        # cash-out in a round figure (multiple of 500), not at an ATM
+    round_amount_rate=0.0,
+    whole_rupee_rate=0.0,    # share of other non-ATM amounts stored without paise
+    amount_online=0.0,       # extra per unit of amount above usual, online only
+    night_velocity=0.0,      # night, times many transactions in the last hour
+    far_big_amount=0.0,      # far from home, times amount above usual
+    # sign flips: "a*b": w adds w * z_a * z_b, where z are centred facts (see Z_FACTS in generate).
+    # The effect of one fact reverses with the other, so no sum of single effects reproduces it.
+    flips={},
 )
 
 
@@ -102,7 +121,7 @@ def generate(n, seed, knobs=None):
     city_tier = rng.choice(["tier_1", "tier_2", "tier_3"], n, p=[0.45, 0.35, 0.20])
 
     card_age = np.clip(np.exp(rng.normal(5.7, 1.2, n)), 1, 4000).astype(int)
-    usual_spend = np.exp(rng.normal(7.7, 1.0, n))
+    usual_spend = np.exp(rng.normal(7.7, k["usual_spend_sigma"], n))
     log_ratio = rng.normal(0, 0.8, n)
     amount = usual_spend * np.exp(log_ratio)
     outlier = rng.random(n) < k["outlier_rate"]
@@ -110,12 +129,13 @@ def generate(n, seed, knobs=None):
     amount = np.where(atm, np.maximum(100, np.round(amount / 100) * 100), np.round(amount, 2))
 
     hour = _hours(rng, n)
-    night = ((np.cos(2 * np.pi * (hour - 2) / 24) + 1) / 2) ** 3
+    night = ((np.cos(2 * np.pi * (hour - k["night_peak_hour"]) / 24) + 1) / 2) ** 3
 
     international = rng.random(n) < np.where(online, 0.09, 0.02)
     distance = np.where(online, np.exp(rng.normal(3.0, 1.6, n)), np.exp(rng.normal(1.3, 1.0, n)))
     distance = np.where(international, distance + np.exp(rng.normal(7.5, 0.5, n)), distance)
     distance = np.round(distance, 1)
+    far = np.clip((np.log1p(distance) - 2.0) / 2, 0, 3)
 
     blocked = online & (rng.random(n) < k["device_blocked_rate"])
     trust = np.round(rng.beta(5, 2, n), 3)
@@ -126,6 +146,27 @@ def generate(n, seed, knobs=None):
 
     has_chargeback = rng.random(n) < k["chargeback_rate"]
     chargeback_days = np.clip(np.exp(rng.normal(4.8, 1.2, n)), 0, 2000).astype(int)
+
+    # draws added after exp1 use their own stream, so the exp1 dataset is unchanged
+    extra = np.random.default_rng([seed, 1])
+    location_hidden = extra.random(n) < k["location_hidden_rate"]
+    profile_reset = (card_age >= 90) & (extra.random(n) < k["profile_reset_rate"])
+    round_figure = ~atm & (extra.random(n) < k["round_amount_rate"])
+    whole_rupee = ~atm & (extra.random(n) < k["whole_rupee_rate"])
+    amount = np.where(round_figure, np.maximum(500, np.round(amount / 500) * 500),
+                      np.where(whole_rupee, np.round(amount), amount))
+
+    # centred facts for the sign flips (roughly mean 0, sd 1)
+    z = dict(
+        age=np.clip((np.log(card_age) - 5.7) / 1.2, -2, 2),
+        velocity=np.clip((np.log1p(velocity - 1) - 0.35) / 0.5, -1, 3),
+        amount=np.clip(log_ratio / 0.8, -2.5, 2.5),
+        trust=np.where(online & ~blocked, (trust - 0.714) / 0.16, 0),
+        merchant=np.clip((merchant_risk_score - 0.286) / 0.16, -2, 3),
+        far=np.clip((np.log1p(distance) - 2.2) / 1.2, -2, 3),
+    )
+    flips = sum((w * z[pair.split("*")[0]] * z[pair.split("*")[1]] for pair, w in k["flips"].items()),
+                np.zeros(n))
 
     # ---- true log-odds of fraud, from the clean facts ----
     logit = (
@@ -138,8 +179,7 @@ def generate(n, seed, knobs=None):
         + k["amount_tiny"] * (log_ratio < -1.0)
         + k["night"] * night
         + k["international"] * international
-        + np.where(online, k["distance_online"], k["distance_in_person"])
-        * np.clip((np.log1p(distance) - 2.0) / 2, 0, 3)
+        + np.where(online, k["distance_online"], k["distance_in_person"]) * far
         + np.where(online, np.where(blocked, k["device_blocked"],
                                     k["device_low_trust"] / (1 + np.exp(-(0.5 - trust) * 15))), 0)
         + k["failed_pin"] * np.minimum(failed_pin, 3)
@@ -150,6 +190,16 @@ def generate(n, seed, knobs=None):
         + k["big_amount_risky_merchant"] * np.maximum(log_ratio, 0) * high_risk
         + k["night_risky_merchant"] * night * high_risk
         + k["night_international"] * night * international
+        + k["intl_in_person"] * (international & ~online)
+        + k["card_testing"] * (log_ratio < -1.0) * np.log1p(velocity - 1)
+        + k["atm_failed_pin"] * atm * np.minimum(failed_pin, 3)
+        + k["location_hidden"] * location_hidden
+        + k["profile_reset"] * profile_reset
+        + k["round_amount"] * round_figure
+        + k["amount_online"] * online * np.clip(log_ratio, 0, 2.5)
+        + k["night_velocity"] * night * np.log1p(velocity - 1)
+        + k["far_big_amount"] * far * np.maximum(log_ratio, 0)
+        + flips
     ) * k["sharpness"]
 
     # choose the intercept so that half the investigated transactions are fraud
@@ -168,14 +218,15 @@ def generate(n, seed, knobs=None):
         "transaction_id": [f"TXN{v:08d}" for v in rng.choice(10**8, n, replace=False)],
         "terminal_id": [f"T{v:05d}" for v in rng.integers(10000, 12500, n)],
         "amount_inr": amount,
-        "customer_avg_spend_90d": np.where(card_age < 90, np.nan, np.round(usual_spend, 2)),
+        "customer_avg_spend_90d": np.where((card_age < 90) | profile_reset, np.nan, np.round(usual_spend, 2)),
         "card_age_days": card_age,
         "transaction_hour": hour,
         "merchant_category": merchant,
         "channel": channel,
         "card_type": card_type,
         "city_tier": city_tier,
-        "distance_from_home_km": np.where(rng.random(n) < k["distance_missing"], np.nan, distance),
+        "distance_from_home_km": np.where((rng.random(n) < k["distance_missing"]) | location_hidden,
+                                          np.nan, distance),
         "device_trust_score": np.where(online & ~blocked, trust, np.nan),
         "is_international": international.astype(int),
         "failed_pin_attempts_24h": failed_pin,

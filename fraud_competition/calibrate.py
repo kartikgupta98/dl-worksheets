@@ -3,7 +3,7 @@ Runs many (config, seed) training jobs in parallel and writes a results table.
 
 usage: python calibrate.py <experiment_module> [n_workers]
 The experiment module defines KNOBS (generator settings) and CONFIGS
-(name -> pipeline config) and optionally SEEDS.
+(name -> pipeline config) and optionally SEEDS and N_TRAIN.
 
 Results are appended to results_<experiment>.csv as they finish, and jobs
 already in that file are skipped, so an interrupted run can be restarted.
@@ -15,20 +15,24 @@ import time
 import traceback
 from multiprocessing import Pool
 
-os.environ.setdefault("KERAS_BACKEND", "torch")
+os.environ.setdefault("KERAS_BACKEND", "jax")
+# one CPU thread per worker process
+os.environ.setdefault("XLA_FLAGS", "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1")
 
+N_TEST = 30_000
 _DATA = {}
 
 
-def _init(knobs):
+def _init(knobs, n_train=10_000):
     import warnings
     warnings.filterwarnings("ignore")
-    import torch
-    torch.set_num_threads(1)
+    if os.environ["KERAS_BACKEND"] == "torch":
+        import torch
+        torch.set_num_threads(1)
     import pipeline  # noqa: F401  (import keras once per worker, up front)
     from generate_data import generate
-    df, _ = generate(40_000, seed=2026, knobs=knobs)
-    _DATA["train"], _DATA["test"] = df.iloc[:10_000].reset_index(drop=True), df.iloc[10_000:].reset_index(drop=True)
+    df, _ = generate(n_train + N_TEST, seed=2026, knobs=knobs)
+    _DATA["train"], _DATA["test"] = df.iloc[:n_train].reset_index(drop=True), df.iloc[n_train:].reset_index(drop=True)
 
 
 def _job(args):
@@ -68,7 +72,7 @@ def main():
     jobs = [(name, cfg, s) for name, cfg in exp.CONFIGS.items() for s in seeds if (name, s) not in done]
     print(f"{len(jobs)} jobs to run ({len(done)} already done), {workers} workers", flush=True)
 
-    with Pool(workers, initializer=_init, initargs=(exp.KNOBS,)) as pool:
+    with Pool(workers, initializer=_init, initargs=(exp.KNOBS, getattr(exp, "N_TRAIN", 10_000))) as pool:
         for i, r in enumerate(pool.imap_unordered(_job, jobs), 1):
             if "error" in r:
                 print(f"[{i}/{len(jobs)}] {r['config']} seed {r['seed']}: ERROR\n{r['error']}", flush=True)

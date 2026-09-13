@@ -5,7 +5,9 @@ the config, so the calibration can turn steps on and off and measure them.
 """
 import os
 
-os.environ.setdefault("KERAS_BACKEND", "torch")
+# JAX compiles the training step, about 15x faster than torch on CPU for these small networks
+os.environ.setdefault("KERAS_BACKEND", "jax")
+os.environ.setdefault("XLA_FLAGS", "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1")
 
 import numpy as np
 import pandas as pd
@@ -22,6 +24,7 @@ TARGET = "is_fraud"
 
 # the starter notebook
 STARTER = dict(
+    numeric=None,         # None = every numeric column, or a list of numeric columns to use
     log=False,            # log1p on skewed columns
     encode="drop",        # drop | codes | onehot
     impute="zero",        # zero | median | median_flag
@@ -29,6 +32,7 @@ STARTER = dict(
     drop_noise=False,
     fe_ratio=False,       # log(amount / usual spend)
     fe_hour=False,        # sin / cos of hour
+    fe_round=False,       # amount is a round figure (multiple of 500)
     scale=False,
     optimizer="sgd",
     lr=0.01,
@@ -53,21 +57,25 @@ def preprocess(train, others, cfg):
 
     for d in frames:
         d.drop(columns=[c for c in IDS + [TARGET] if c in d.columns], inplace=True)
-        if cfg["placeholder"]:
+        if cfg["numeric"] is not None:
+            d.drop(columns=[c for c in d.columns if c not in list(cfg["numeric"]) + CATEGORICAL], inplace=True)
+        if cfg["placeholder"] and "days_since_last_chargeback" in d:
             never = d["days_since_last_chargeback"] == -1
             d["never_chargeback"] = never.astype(float)
             d.loc[never, "days_since_last_chargeback"] = np.nan
-        if cfg["fe_ratio"]:
+        if cfg["fe_ratio"] and {"amount_inr", "customer_avg_spend_90d"} <= set(d.columns):
             d["amount_vs_usual"] = np.log(d["amount_inr"] / d["customer_avg_spend_90d"])
-        if cfg["fe_hour"]:
+        if cfg["fe_round"] and "amount_inr" in d:
+            d["amount_is_round"] = (d["amount_inr"] % 500 == 0).astype(float)
+        if cfg["fe_hour"] and "transaction_hour" in d:
             d["hour_sin"] = np.sin(2 * np.pi * d["transaction_hour"] / 24)
             d["hour_cos"] = np.cos(2 * np.pi * d["transaction_hour"] / 24)
         if cfg["log"]:
             cols = SKEWED + (["days_since_last_chargeback"] if cfg["placeholder"] else [])
-            for c in cols:
+            for c in [c for c in cols if c in d]:
                 d[c] = np.log1p(d[c].clip(lower=0) if c != "days_since_last_chargeback" else d[c])
         if cfg["drop_noise"]:
-            d.drop(columns=NOISE, inplace=True)
+            d.drop(columns=[c for c in NOISE if c in d], inplace=True)
 
     base = frames[0]
     if cfg["impute"] == "median_flag":
@@ -119,7 +127,7 @@ def build_model(n_inputs, cfg):
     return model
 
 
-def run(train_df, test_df, cfg, seed=0, split_seed=42):
+def run(train_df, test_df, cfg, seed=0, split_seed=42, return_probs=False):
     """Train the way a student would: own train/val split, then score on the hidden test set."""
     cfg = {**STARTER, **cfg}
     tr, va = train_test_split(train_df, test_size=0.2, random_state=split_seed, stratify=train_df[TARGET])
@@ -147,4 +155,4 @@ def run(train_df, test_df, cfg, seed=0, split_seed=42):
                         nan_loss=bool(np.isnan(h["loss"][-1])))
     p = np.nan_to_num(np.mean(probs, axis=0), nan=0.0)
     info["test_acc"] = float(((p > 0.5).astype(int) == yte).mean())
-    return info
+    return (info, p) if return_probs else info

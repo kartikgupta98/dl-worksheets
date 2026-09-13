@@ -2,6 +2,7 @@
 Writes the files for the Kaggle Community Competition, and scores submissions locally.
 
     python export_kaggle.py                      # write the competition files
+    python export_kaggle.py reference            # train the full pipeline, write private/reference_submission.csv
     python export_kaggle.py score my_sub.csv     # score a submission like Kaggle would
 
 kaggle/    goes to Kaggle's Data tab: train.csv, test.csv, sample_submission.csv
@@ -13,12 +14,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+import exp2
 from generate_data import generate
 
-# final generator settings, set from the calibration results
-KNOBS = {"sharpness": 3.6}
+# final generator settings come from the calibration experiment
+KNOBS, N_TRAIN = exp2.KNOBS, exp2.N_TRAIN
 SEED = 2026
-N_TRAIN, N_TEST = 10_000, 30_000
+N_TEST = 30_000
 PUBLIC_FRACTION = 0.30
 
 HERE = Path(__file__).parent
@@ -26,10 +28,13 @@ PUBLIC_DIR, PRIVATE_DIR = HERE / "kaggle", HERE / "private"
 ID, TARGET = "transaction_id", "is_fraud"
 
 
-def export():
+def load():
     df, p = generate(N_TRAIN + N_TEST, seed=SEED, knobs=KNOBS)
-    train, test = df.iloc[:N_TRAIN], df.iloc[N_TRAIN:].reset_index(drop=True)
-    p_test = p[N_TRAIN:]
+    return df.iloc[:N_TRAIN], df.iloc[N_TRAIN:].reset_index(drop=True), p[N_TRAIN:]
+
+
+def export():
+    train, test, p_test = load()
 
     rng = np.random.default_rng(SEED + 1)
     usage = np.where(rng.random(N_TEST) < PUBLIC_FRACTION, "Public", "Private")
@@ -49,6 +54,17 @@ def export():
           f"private {best[usage == 'Private'].mean():.4f}")
 
 
+def reference():
+    from pipeline import run
+    train, test, _ = load()
+    name = max(n for n in exp2.CONFIGS if n.startswith("L"))
+    info, p = run(train.reset_index(drop=True), test, exp2.CONFIGS[name], seed=0, return_probs=True)
+    PRIVATE_DIR.mkdir(exist_ok=True)
+    out = PRIVATE_DIR / "reference_submission.csv"
+    pd.DataFrame({ID: test[ID], TARGET: (p > 0.5).astype(int)}).to_csv(out, index=False)
+    print(f"{name}: test accuracy {info['test_acc']:.4f}, wrote {out}")
+
+
 def score(path):
     sol = pd.read_csv(PRIVATE_DIR / "solution.csv")
     sub = pd.read_csv(path)
@@ -65,5 +81,7 @@ def score(path):
 if __name__ == "__main__":
     if len(sys.argv) > 2 and sys.argv[1] == "score":
         score(sys.argv[2])
+    elif len(sys.argv) > 1 and sys.argv[1] == "reference":
+        reference()
     else:
         export()
