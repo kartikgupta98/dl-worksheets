@@ -84,7 +84,7 @@ python summary.py exp2
 
 ## Next steps
 
-0. **The GitHub repo kartikgupta98/dl-worksheets is public.** exp2.py (final KNOBS) plus the seed in export_kaggle.py let anyone regenerate the hidden test labels, and materials/instructor_* and instructor_guide.md are the answer key. Do not push these to the public repo before the competition ends: keep them uncommitted, move the competition to a private repo, or make this repo private.
+0. **Everything above is in the public repo kartikgupta98/dl-worksheets** (pushed 2026-09-13 by choice), including exp2.py and the instructor materials. A student who finds it can regenerate the hidden test labels (exp2.KNOBS + seed 2026) and read the solutions; the Kaggle data and private/solution.csv are git-ignored and were not pushed. If that matters before class, make the repo private, or export with a new seed kept out of git (then rerun `calibrate.py`, `test_cards.py` and update the guide's numbers, which will shift slightly).
 1. Check that "Lumen Pay" and "Flagged or Fraud?" do not collide with real brands.
 2. Follow `materials/kaggle_setup_checklist.md`: create the competition, upload data and solution, starter notebook, TA dry run, time a 100-epoch run on Kaggle CPU.
 3. Optional: print the technique cards (`materials/technique_cards.md`) as a handout.
