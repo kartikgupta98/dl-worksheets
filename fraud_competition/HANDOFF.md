@@ -63,7 +63,7 @@ cd fraud_competition
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python generate_data.py          # best possible accuracy ~0.92 at the end
+python export_kaggle.py          # writes kaggle/ + private/, best possible accuracy public 0.9198, private 0.9213
 python smoke_test.py             # L00 0.4959, L01 ~0.685, L06 ~0.867
 sysctl -n hw.perflevel0.physicalcpu   # performance cores = max workers
 caffeinate -i python -u calibrate.py exp1 8 2>&1 | tee exp1.log   # resumes, skips the 35 done runs
