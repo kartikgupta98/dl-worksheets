@@ -15,6 +15,17 @@ dependencies, no network calls at runtime.
 | Lecture 06: Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
 | Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
 
+## Kaggle competition: Flagged or Fraud?
+
+Handouts for the in-class Kaggle competition, built from `fraud_competition/materials/technique_cards.md`
+on the `fraud-competition` branch. Unlike the worksheets, these pages load their fonts from Google Fonts
+(offline they fall back to system fonts).
+
+| Page | File | Contents |
+|---|---|---|
+| Technique Cards | [`flagged_or_fraud_techniques.html`](flagged_or_fraud_techniques.html) | what to try, where it goes in the notebook, how to check it worked |
+| Technique Cards with Code | [`flagged_or_fraud_techniques_code.html`](flagged_or_fraud_techniques_code.html) | the same cards, each with a closed code hint |
+
 ## Running locally
 
 Because every file is self-contained, you can just open one in a browser:
