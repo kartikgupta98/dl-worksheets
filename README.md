@@ -14,6 +14,7 @@ dependencies, no network calls at runtime.
 | Backpropagation 03: Output Layer | [`backprop_worksheet_output_layer.html`](backprop_worksheet_output_layer.html) | forward pass, loss, chain rule, weight gradients |
 | Lecture 06: Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
 | Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
+| Worksheet 09: Regularisation | [`worksheet09_regularisation.html`](worksheet09_regularisation.html) | overfitting, L2, L1, early stopping, dropout, live training lab |
 
 ## Kaggle competition: Flagged or Fraud?
 

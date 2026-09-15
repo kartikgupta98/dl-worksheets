@@ -1,0 +1,1771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Worksheet 09: Regularisation</title>
+<meta name="description" content="Overfitting, L2, L1, early stopping and dropout, built up slowly with small numericals by hand and a live two-class training lab in the browser.">
+<style>
+:root{
+  --bg:#FAF8F4; --paper:#FFFFFF; --ink:#2A2E3A; --muted:#6B7080; --faint:#9A9EA8;
+  --rule:#E6E2DA; --rule2:#D6D1C7;
+  --blue:#4E6FA3; --blue-soft:#D9E2F0; --blue-tint:#EEF2F8;
+  --rose:#B4606B; --rose-soft:#F0DCDE; --rose-tint:#F8EEEE;
+  --amber:#C48A3F; --amber-soft:#F1E3CB; --amber-tint:#F8F1E3;
+  --green:#3C8C5A; --green-tint:#EAF5EE;
+  --curve-train:#5A6070; --curve-val:#C48A3F;
+  --serif:"Charter","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,"Cascadia Mono",monospace;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:19px; line-height:1.7}
+.wrap{max-width:800px; margin:0 auto; padding:0 24px 96px}
+
+/* masthead */
+.mast{padding:64px 0 28px; border-bottom:1px solid var(--rule2); margin-bottom:8px}
+.eyebrow{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); font-weight:600; margin:0 0 14px}
+h1{font-family:var(--serif); font-weight:700; font-size:40px; line-height:1.15; margin:0 0 14px; letter-spacing:-.01em}
+.lede{font-family:var(--serif); font-size:21px; color:var(--muted); margin:0; max-width:36em; line-height:1.5}
+.howto{margin:26px 0 0; padding:16px 20px; background:var(--paper); border:1px solid var(--rule); border-radius:var(--r); font-size:17px; color:var(--muted)}
+.howto b{color:var(--ink); font-weight:600}
+
+/* sticky nav */
+.toc{position:sticky; top:0; z-index:5; background:rgba(250,248,244,.94); backdrop-filter:blur(6px); border-bottom:1px solid var(--rule); margin:0 -24px 40px; padding:10px 24px; display:flex; gap:4px; overflow-x:auto; scrollbar-width:none}
+.toc::-webkit-scrollbar{display:none}
+.toc a{flex:0 0 auto; font-size:13.5px; color:var(--muted); text-decoration:none; padding:5px 10px; border-radius:6px; letter-spacing:.01em; white-space:nowrap}
+.toc a b{font-weight:600; color:var(--faint); margin-right:5px}
+.toc a.on{background:var(--paper); color:var(--ink); box-shadow:0 0 0 1px var(--rule)}
+.toc a.on b{color:var(--amber)}
+
+/* sections */
+section.part{padding-top:8px; margin-bottom:72px}
+.pnum{font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); font-weight:600; margin:0 0 6px}
+h2{font-family:var(--serif); font-size:32px; font-weight:700; line-height:1.2; margin:0 0 10px; letter-spacing:-.01em}
+.h2sub{font-family:var(--serif); font-size:19px; color:var(--muted); margin:0 0 36px; line-height:1.5}
+h3{font-family:var(--serif); font-size:23px; font-weight:700; margin:48px 0 12px; line-height:1.3}
+h3 .n{color:var(--faint); font-weight:400; margin-right:10px; font-size:19px}
+p{margin:0 0 16px}
+ul,ol{margin:0 0 16px; padding-left:24px}
+li{margin:0 0 6px}
+li::marker{color:var(--faint)}
+b,strong{font-weight:600}
+i,em{font-style:italic}
+.small{font-size:16px; color:var(--muted)}
+
+/* text accents */
+.t{color:var(--blue); font-weight:600}
+.r{color:var(--rose); font-weight:600}
+.g{color:var(--green); font-weight:600}
+.du{text-decoration:underline; text-decoration-style:dashed; text-decoration-color:var(--amber); text-underline-offset:5px; text-decoration-thickness:1.5px}
+.hl{background:linear-gradient(transparent 55%, var(--amber-soft) 55%); padding:0 2px}
+.gk{font-family:"Times New Roman",Georgia,serif; font-style:normal}
+code{font-family:var(--mono); font-size:.86em; background:#F1EEE7; padding:2px 6px; border-radius:5px; color:#3A3F4B}
+
+/* maths */
+.m{font-family:var(--serif); font-size:1.05em; white-space:nowrap}
+.m i{font-style:italic}
+.eq{font-family:var(--serif); font-size:23px; text-align:center; margin:18px 0 22px; padding:14px 12px; background:var(--paper); border:1px solid var(--rule); border-radius:var(--r); line-height:1.6}
+.eq i{font-style:italic}
+.eq sub,.m sub{font-size:.72em}
+.frac{display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; line-height:1.15; margin:0 4px; font-size:.86em}
+.frac span:first-child{border-bottom:1.5px solid currentColor; padding:0 3px}
+.new{color:var(--rose)}
+.steps{counter-reset:st; margin:16px 0 22px; padding:0; list-style:none}
+.steps li{display:grid; grid-template-columns:34px 1fr; gap:12px; align-items:center; padding:12px 0; border-top:1px solid var(--rule)}
+.steps li:last-child{border-bottom:1px solid var(--rule)}
+.steps li::before{counter-increment:st; content:counter(st); width:26px; height:26px; border-radius:50%; background:var(--ink); color:#fff; font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center}
+.steps .what{font-size:15.5px; color:var(--muted); margin:0 0 4px}
+.steps .eqs{font-family:var(--serif); font-size:22px; margin:0; line-height:1.5}
+.steps .eqs i{font-style:italic}
+
+/* boxes */
+.box{border-radius:var(--r); padding:18px 22px 6px; margin:24px 0 28px; border:1px solid transparent}
+.box .tag{display:block; font-family:var(--sans); font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; margin:0 0 8px}
+.box p:last-child,.box ul:last-child,.box table:last-child,.box ol:last-child{margin-bottom:12px}
+.key{background:var(--blue-tint); border-color:#DCE3EE}
+.key .tag{color:var(--blue)}
+.hand{background:var(--amber-tint); border-color:#EADFC8}
+.hand .tag{color:var(--amber)}
+.warn{background:var(--rose-tint); border-color:#EBDADC}
+.warn .tag{color:var(--rose)}
+.note{background:var(--paper); border-color:var(--rule)}
+.note .tag{color:var(--faint)}
+
+/* blanks, inputs, answers */
+.bl{display:inline-block; min-width:52px; border-bottom:1.5px solid var(--ink); height:1.1em; vertical-align:baseline; margin:0 3px}
+.qin{width:70px; font:inherit; font-size:16.5px; padding:5px 8px; border:1.5px solid var(--rule2); border-radius:7px; background:#fff; text-align:center; margin:0 3px; color:var(--ink); transition:border-color .2s,background .2s}
+.qin:focus{outline:none; border-color:var(--blue)}
+.qin.ok{border-color:var(--green); background:var(--green-tint)}
+.qin.no{border-color:var(--rose); background:var(--rose-tint)}
+.qin.wide{width:110px}
+.chkrow{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:6px 0 14px}
+.chkbtn{appearance:none; font:inherit; font-size:14.5px; font-weight:600; letter-spacing:.04em; color:#fff; background:var(--ink); border:1px solid var(--ink); border-radius:999px; padding:5px 16px; cursor:pointer}
+.chkbtn:hover{opacity:.88}
+.chkmsg{font-size:15px; color:var(--muted)}
+.chkmsg.good{color:var(--green); font-weight:600}
+details.ans{margin:0 0 6px; display:inline-block}
+details.ans summary{list-style:none; cursor:pointer; display:inline-block; font-size:14.5px; font-weight:600; letter-spacing:.04em; color:var(--muted); background:var(--paper); border:1px solid var(--rule2); border-radius:999px; padding:5px 14px; user-select:none}
+details.ans summary::-webkit-details-marker{display:none}
+details.ans summary:hover{color:var(--ink); border-color:var(--faint)}
+details.ans[open]{display:block}
+details.ans[open] summary{color:var(--ink)}
+details.ans .a{margin-top:12px; padding:12px 16px; background:var(--paper); border-left:3px solid var(--amber); border-radius:0 8px 8px 0; font-size:17.5px; animation:fade .35s ease}
+details.ans .a p:last-child{margin-bottom:0}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.worked td.v{color:var(--amber); font-weight:600}
+
+/* tables */
+table{border-collapse:collapse; width:100%; margin:14px 0 18px; font-size:17px; background:var(--paper); border-radius:8px; overflow:hidden}
+th,td{padding:9px 12px; text-align:left; border-bottom:1px solid var(--rule); vertical-align:middle}
+th{font-weight:600; font-size:14.5px; letter-spacing:.03em; color:var(--muted); background:#F4F1EB}
+tr:last-child td{border-bottom:0}
+.tnum td:not(:first-child),.tnum th:not(:first-child){text-align:center}
+.tnum td:first-child{font-weight:600; color:var(--muted); font-size:15.5px}
+.compare td:first-child{font-weight:600; color:var(--muted); font-size:15.5px}
+.tscroll{overflow-x:auto; margin:14px 0 18px}
+.tscroll table{margin:0; min-width:560px}
+
+/* code */
+.code2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:14px 0 12px}
+.code2 > div{min-width:0}
+.code2 > div > .cl{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); font-weight:600; margin:0 0 6px}
+pre{margin:0; background:#F4F1EB; border:1px solid var(--rule); border-radius:8px; padding:12px 14px; font-family:var(--mono); font-size:13.5px; line-height:1.55; color:#3A3F4B; overflow-x:auto; white-space:pre}
+pre .c{color:var(--faint)}
+pre .bad{color:var(--rose)}
+pre .good{color:var(--green)}
+
+/* figures */
+figure.fig{margin:22px -40px 30px; background:var(--paper); border:1px solid var(--rule); border-radius:var(--r); padding:16px 16px 12px}
+figure.fig svg{display:block; width:100%; height:auto; font-family:var(--sans)}
+figcaption{font-size:15.5px; color:var(--muted); margin:10px 6px 0; line-height:1.5}
+figcaption b{color:var(--ink)}
+.fignum{font-weight:600; color:var(--ink); margin-right:6px}
+.figctrl{display:flex; align-items:center; gap:10px 18px; flex-wrap:wrap; margin:0 6px 12px}
+.figctrl .cl{font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:600}
+.figstat{font-size:15.5px; color:var(--ink); margin:8px 6px 0; min-height:1.4em}
+
+/* lab */
+.lab{margin:34px -40px 20px; background:var(--paper); border:1px solid var(--rule2); border-radius:14px; padding:22px 26px 18px; box-shadow:0 1px 2px rgba(42,46,58,.04)}
+.lab-head{display:flex; align-items:baseline; gap:12px; margin-bottom:6px}
+.lab-head .ltag{font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); font-weight:600}
+.lab-head h4{font-family:var(--serif); font-size:22px; margin:0; font-weight:700}
+.lab-intro{font-size:16.5px; color:var(--muted); margin:0 0 10px; line-height:1.55}
+.lab-intro b{color:var(--ink)}
+.lab pre{margin:0 0 16px; font-size:13px}
+.ctrls{display:flex; flex-wrap:wrap; gap:14px 26px; margin:0 0 16px; padding:14px 0 16px; border-top:1px solid var(--rule); border-bottom:1px solid var(--rule)}
+.ctrl{display:flex; flex-direction:column; gap:6px}
+.ctrl .cl{font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:600}
+.seg{display:inline-flex; border:1px solid var(--rule2); border-radius:8px; overflow:hidden; background:#F4F1EB}
+.seg button{appearance:none; border:0; background:transparent; font:inherit; font-size:14.5px; color:var(--muted); padding:6px 12px; cursor:pointer; font-variant-numeric:tabular-nums; transition:background .2s,color .2s}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button.on{background:var(--ink); color:#fff}
+.seg button:hover:not(.on){color:var(--ink)}
+.chk{display:flex; align-items:center; gap:8px; font-size:15px; color:var(--muted); padding-top:6px}
+.chk input{width:16px; height:16px; accent-color:var(--ink)}
+.runrow{display:flex; align-items:center; flex-wrap:wrap; gap:10px 14px; margin:0 0 16px}
+.btn{appearance:none; font:inherit; font-size:15px; font-weight:600; border-radius:8px; padding:8px 18px; cursor:pointer; border:1px solid var(--ink); background:var(--ink); color:#fff; transition:opacity .2s}
+.btn:hover{opacity:.88}
+.btn.ghost{background:transparent; color:var(--ink); border-color:var(--rule2)}
+.btn.ghost:hover{border-color:var(--ink); opacity:1}
+.btn[disabled]{opacity:.4; cursor:default}
+.btn.sm{font-size:14px; padding:6px 14px}
+.runrow .sp{margin-left:auto; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--faint); letter-spacing:.08em; text-transform:uppercase; font-weight:600}
+.panels{display:grid; grid-template-columns:1fr 1.18fr; gap:20px; align-items:start}
+.bpanel{position:relative; aspect-ratio:1/1; border:1px solid var(--rule); border-radius:8px; overflow:hidden; background:#FBFAF7}
+.bpanel canvas{position:absolute; inset:0; width:100%; height:100%; image-rendering:auto}
+.bpanel canvas.top{opacity:0; transition:opacity .7s ease}
+.bpanel canvas.top.show{opacity:1}
+.bpanel canvas.top.snap{transition:none}
+.bpanel svg{position:absolute; inset:0; width:100%; height:100%}
+.ptitle{font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:600; margin:0 0 8px}
+.cpanel > svg{display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:8px; background:#FBFAF7}
+.legend{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:14px; color:var(--muted); margin-top:8px; align-items:center}
+.legend .sw{display:inline-block; width:18px; height:0; border-top:2.5px solid; vertical-align:middle; margin-right:6px}
+.legend svg{vertical-align:middle; margin-right:5px}
+.legend label{display:inline-flex; align-items:center; gap:6px; cursor:pointer; margin-left:auto}
+.legend label input{accent-color:var(--ink)}
+.readout{display:flex; flex-wrap:wrap; gap:8px 26px; margin-top:16px; padding-top:14px; border-top:1px solid var(--rule); font-size:15px; color:var(--muted)}
+.readout div{display:flex; flex-direction:column; gap:1px; min-width:70px}
+.readout .k{font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); font-weight:600}
+.readout .v{font-family:var(--mono); font-size:16px; color:var(--ink); font-variant-numeric:tabular-nums}
+.readout .v.tr{color:var(--curve-train)}
+.readout .v.va{color:var(--curve-val)}
+.status{margin-top:12px; font-size:15.5px; color:var(--ink); min-height:1.4em}
+.status:empty{display:none}
+.testrow{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:14px; padding-top:14px; border-top:1px solid var(--rule)}
+.testrow .tv{font-family:var(--mono); font-size:16px; color:var(--ink)}
+.testrow .tn{font-size:14px; color:var(--faint)}
+.lab-notice{margin:14px 0 0; font-size:16.5px; color:var(--ink)}
+.lab-notice ul{margin:6px 0 0}
+.lab-notice li{margin-bottom:4px}
+.lab-notice .tag{font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); font-weight:600; display:block; margin-bottom:2px}
+
+footer{margin-top:64px; padding-top:22px; border-top:1px solid var(--rule2); font-size:15px; color:var(--faint)}
+footer a{color:var(--blue)}
+
+@media (max-width:900px){
+  figure.fig,.lab{margin-left:0; margin-right:0}
+}
+@media (max-width:640px){
+  body{font-size:17.5px}
+  .wrap{padding:0 18px 72px}
+  .toc{margin-left:-18px; margin-right:-18px; padding:10px 18px}
+  h1{font-size:32px} h2{font-size:27px} h3{font-size:21px}
+  .eq{font-size:20px} .steps .eqs{font-size:19px}
+  .panels{grid-template-columns:1fr}
+  .code2{grid-template-columns:1fr}
+  .lab{padding:18px 16px 14px}
+  .runrow .sp{margin-left:0}
+  table{font-size:15.5px} th,td{padding:7px 8px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .bpanel canvas.top{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">Deep Learning · Worksheet 09</p>
+  <h1>Learning the Pattern, Not the Noise</h1>
+  <p class="lede">What overfitting is, where it comes from, and four ways to hold a model back: L2, L1, early stopping and dropout. Small numbers by hand, then a live model to watch.</p>
+  <div class="howto"><b>How to use this sheet.</b> Read one section at a time. Type your answers into the boxes and press <b>Check</b>; open <i>Show answer</i> only after that. Each part ends with a lab: a two-class model that trains in your browser while you watch its decision boundary and its training and validation curves. Nothing plays until you press <b>Train</b>.</div>
+</header>
+
+<nav class="toc" id="toc">
+  <a href="#p1"><b>1</b>Overfitting</a>
+  <a href="#p2"><b>2</b>L2</a>
+  <a href="#p3"><b>3</b>L1</a>
+  <a href="#p4"><b>4</b>Early stopping</a>
+  <a href="#p5"><b>5</b>Dropout</a>
+  <a href="#p6"><b>6</b>Together</a>
+  <a href="#p7"><b>7</b>Check</a>
+</nav>
+
+<!-- ============================================================ PART 1 -->
+<section class="part" id="p1">
+<p class="pnum">Part 1</p>
+<h2>What overfitting really is</h2>
+<p class="h2sub">A model is not built to score well on data it has already seen. It is built to work on data it has never seen.</p>
+
+<h3><span class="n">1.1</span>What we actually want</h3>
+<p>Two students prepare for an exam with past papers. One <span class="r">memorises</span> the answers to every past question. The other <span class="g">learns the method</span> behind the questions. On the past papers both score 100%. On the real exam, only the second does well.</p>
+<ul>
+  <li><span class="t">Training data</span> is the past papers.</li>
+  <li><span class="t">Test data</span> is the real exam.</li>
+  <li><span class="t">Generalisation</span> is doing well on the real exam.</li>
+</ul>
+<div class="box key"><span class="tag">Key idea</span><p>A low training error is <span class="du">not the goal</span>. A low error on <b>new</b> data is.</p></div>
+
+<h3><span class="n">1.2</span>Signal and noise</h3>
+<p>Real data is always <span class="hl"><b>pattern + noise</b></span>. Two houses of the same size sell for different prices because of things we did not measure. The model cannot tell which part of a point is pattern and which is noise. It only sees the points.</p>
+<p>A model that fits every point exactly has <span class="r">learned the noise too</span>, and the noise will not repeat on new data.</p>
+<figure class="fig"><div data-fig="f12"></div><figcaption><span class="fignum">Figure 1.2</span>Ten measurements of a smooth underlying pattern (dashed). Each point sits a little above or below it. The amber distance is that point's noise.</figcaption></figure>
+
+<h3><span class="n">1.3</span>Three models, same data</h3>
+<figure class="fig"><div data-fig="f13"></div><figcaption><span class="fignum">Figure 1.3</span>The same ten points fitted by a straight line, a gentle curve and a curve with enough freedom to pass through every point. Only the middle one is close to the dashed pattern.</figcaption></figure>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>Squared error = (actual − predicted)². <span class="t">MSE</span> is the average of the squared errors.</p>
+<table class="tnum">
+<tr><th></th><th colspan="4">Training set</th><th colspan="2">Test set</th></tr>
+<tr><td>Actual</td><td>5</td><td>7</td><td>6</td><td>8</td><td>6</td><td>9</td></tr>
+<tr><td>Model A (smooth) predicts</td><td>6</td><td>6</td><td>7</td><td>7</td><td>7</td><td>8</td></tr>
+<tr><td>Model B (wiggly) predicts</td><td>5</td><td>7</td><td>6</td><td>8</td><td>9</td><td>6</td></tr>
+</table>
+<p>a) Training MSE: A = <input class="qin" data-a="1"> B = <input class="qin" data-a="0"><br>
+b) Test MSE: A = <input class="qin" data-a="1"> B = <input class="qin" data-a="9"><br>
+c) Which model would you deploy? <input class="qin" data-a="A|Model A|smooth"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>a) A = (1+1+1+1)/4 = <b>1</b>. B = <b>0</b>.<br>b) A = (1+1)/2 = <b>1</b>. B = (9+9)/2 = <b>9</b>.<br>c) <b>A.</b> Model B looked perfect on the training data and was nine times worse on new data.</p></div></details></div>
+</div>
+
+<h3><span class="n">1.4</span>The same story in classification</h3>
+<p>In classification the model draws a <span class="t">decision boundary</span>: the line that separates the <span style="color:var(--blue);font-weight:600">blue ○</span> class from the <span style="color:var(--rose);font-weight:600">red ×</span> class. A stray point, a red × sitting among the blue ○s, is noise. An overfit model draws an <span class="r">island</span> around it, and new blue ○ points that land inside the island are then classified wrongly.</p>
+<figure class="fig"><div data-fig="f14"></div><figcaption><span class="fignum">Figure 1.4</span>The same twenty training points three times. Left: a straight line. Middle: a smooth curve. Right: the same curve plus an island around each stray point. The islands fix two training mistakes and will cause new ones.</figcaption></figure>
+<div class="box key"><span class="tag">Key idea</span><p>Overfitting in classification looks like <span class="hl"><b>islands and sharp bends</b></span> around individual points.</p></div>
+
+<h3><span class="n">1.5</span>How overfitting shows up in the curves</h3>
+<p>During training we measure the loss on the training set and on a separate <span class="t">validation set</span> after every epoch. The space between the two curves is the <span class="t">generalisation gap</span>.</p>
+<figure class="fig"><div data-fig="f15"></div><figcaption><span class="fignum">Figure 1.5</span>Three real runs on the lab data of Part 1. Left: a one-neuron network. Middle: the 50·50 network with its weights kept small. Right: the same 50·50 network left free. Grey is training loss, amber is validation loss.</figcaption></figure>
+<ul>
+  <li><span class="r">Underfit:</span> both curves stay high and close together.</li>
+  <li><span class="g">Good fit:</span> both curves are low, with a small gap.</li>
+  <li><span class="r">Overfit:</span> training loss keeps falling. Validation loss falls, reaches a lowest point, then <span class="du">rises</span>.</li>
+</ul>
+<div class="box hand"><span class="tag">Check</span><p>Match each curve panel to a boundary panel in Figure 1.4: left → <input class="qin wide" data-a="line|straight line|straight"> middle → <input class="qin wide" data-a="curve|smooth|smooth curve"> right → <input class="qin wide" data-a="islands|island"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>Left → straight line. Middle → smooth curve. Right → islands.</p></div></details></div></div>
+<div class="box warn"><span class="tag">Common mistake</span><p>“Training loss is still falling, so the model is still improving.” Watch the <b>validation</b> curve instead.</p></div>
+
+<h3><span class="n">1.6</span>Why overfitting happens: three ingredients</h3>
+<ol>
+  <li><span class="t">Too much capacity.</span> The model has far more freedom than the data needs.</li>
+  <li><span class="t">Too little data.</span> Few points to pin the pattern down.</li>
+  <li><span class="t">Training too long.</span> Once the pattern is learned, the model starts chasing the noise.</li>
+</ol>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>The lab network has 2 inputs, then 50 neurons, then 50 neurons, then 1 output. Each layer has (inputs × outputs) weights plus one bias per output.</p>
+<p>Layer 1: 2 × 50 + 50 = <input class="qin" data-a="150"><br>Layer 2: 50 × 50 + 50 = <input class="qin" data-a="2550"><br>Layer 3: 50 × 1 + 1 = <input class="qin" data-a="51"><br>Total = <input class="qin" data-a="2751">. The lab trains on 40 points. Parameters per training point ≈ <input class="qin" data-a="69" data-tol="1"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>150, 2 550 and 51, so <b>2 751</b> parameters. That is about <b>69 per training point</b>: plenty of freedom to memorise.</p></div></details></div>
+</div>
+
+<h3><span class="n">1.7</span>Where does overfitting come from? Big weights</h3>
+<p>A neuron computes <span class="m"><i>z</i> = <i>w</i>·<i>x</i></span> and passes it through a sigmoid. The <span class="du">size of <i>w</i></span> decides how sharply the output changes.</p>
+<p class="small">Sigmoid values you will need: σ(−5) = 0.007, σ(−0.1) = 0.475, σ(0) = 0.5, σ(0.1) = 0.525, σ(5) = 0.993.</p>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>Find the output σ(<i>w</i>·<i>x</i>) at three nearby inputs.</p>
+<table class="tnum">
+<tr><th></th><th><i>x</i> = −0.1</th><th><i>x</i> = 0</th><th><i>x</i> = 0.1</th></tr>
+<tr><td><i>w</i> = 1</td><td><input class="qin" data-a="0.475"></td><td><input class="qin" data-a="0.5"></td><td><input class="qin" data-a="0.525"></td></tr>
+<tr><td><i>w</i> = 50</td><td><input class="qin" data-a="0.007"></td><td><input class="qin" data-a="0.5"></td><td><input class="qin" data-a="0.993"></td></tr>
+</table>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p><i>w</i> = 1: 0.475, 0.5, 0.525. A gentle change.<br><i>w</i> = 50: 0.007, 0.5, 0.993. A step of 0.1 in <i>x</i> flips the prediction completely.</p></div></details></div>
+</div>
+<figure class="fig"><div data-fig="f17"></div><figcaption><span class="fignum">Figure 1.7</span>σ(<i>w</i>·<i>x</i>) for <i>w</i> = 1 and <i>w</i> = 50. A big weight turns a smooth slope into a cliff.</figcaption></figure>
+<div class="box key"><span class="tag">Key idea</span><p>Sharp bends and islands <span class="hl"><b>need big weights</b></span>. Small weights can only draw gentle, smooth boundaries. This one idea explains most of what follows.</p></div>
+
+<h3><span class="n">1.8</span>What “regularisation” means</h3>
+<p><span class="t">Regularisation</span> is any change that makes a model prefer a <span class="du">simpler explanation</span>, even if it fits the training data slightly worse. This sheet builds four of them.</p>
+<table class="compare">
+<tr><th>Method</th><th>The idea in one line</th></tr>
+<tr><td>L2</td><td>Charge a price for <b>big</b> weights</td></tr>
+<tr><td>L1</td><td>Charge a price for <b>every</b> weight, so useless ones become zero</td></tr>
+<tr><td>Early stopping</td><td>Stop <b>before</b> the model starts memorising</td></tr>
+<tr><td>Dropout</td><td>Randomly switch neurons off, so memorising becomes <b>hard</b></td></tr>
+</table>
+
+<div class="lab" data-lab="lab1"></div>
+<div class="lab-notice"><span class="tag">What to notice</span>
+<ul>
+  <li>The boundary starts almost straight, bends to follow the two arcs, then wraps <span class="r">islands</span> around single points.</li>
+  <li>Training loss keeps falling. Validation loss turns up after about epoch 75, and the hollow marker stays at that lowest point.</li>
+  <li>The largest weight grows past 5. Islands need big weights (1.7).</li>
+</ul></div>
+</section>
+
+<!-- ============================================================ PART 2 -->
+<section class="part" id="p2">
+<p class="pnum">Part 2</p>
+<h2>L2 regularisation</h2>
+<p class="h2sub">Until now the model only cared about the data loss. Now every weight has a price.</p>
+
+<h3><span class="n">2.1</span>Weights cost something</h3>
+<div class="eq">Total loss = Data loss + <span class="new">Penalty</span></div>
+<p>Think of it as a budget. The model may keep a big weight only if that weight <span class="du">earns back</span> more, in lower data loss, than it costs.</p>
+
+<h3><span class="n">2.2</span>The L2 penalty</h3>
+<div class="eq">Penalty = <span class="frac"><span>λ</span><span>2</span></span> (<i>w</i><sub>1</sub>² + <i>w</i><sub>2</sub>² + … )</div>
+<ul>
+  <li><span class="t">λ</span> (lambda) is how expensive weights are. <span class="du">You choose it.</span></li>
+  <li>Squaring means big weights pay much more. A weight of 1 costs 1; a weight of 10 costs 100.</li>
+</ul>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p><span class="gk">λ</span> = 0.1, so <span class="gk">λ</span>/2 = 0.05.</p>
+<p>Weights [3, −1, 2]: sum of squares = <input class="qin" data-a="14">, penalty = <input class="qin" data-a="0.7"><br>
+Weights [30, −10, 20]: sum of squares = <input class="qin" data-a="1400">, penalty = <input class="qin" data-a="70"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>14 → penalty <b>0.7</b>. 1 400 → penalty <b>70</b>. Ten-times-bigger weights cost a hundred times more.</p></div></details></div>
+</div>
+<p class="small">Keras writes the penalty as <span class="gk">λ</span> Σ<i>w</i>², without the ½. That changes the number you type, not the idea.</p>
+
+<h3><span class="n">2.3</span>The update rule, step by step</h3>
+<ol class="steps">
+  <li><div><p class="what">Plain gradient descent. <span class="gk">α</span> is the learning rate.</p><p class="eqs"><i>w</i><sub>new</sub> = <i>w</i> − <span class="gk">α</span> <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span></p></div></li>
+  <li><div><p class="what">Add the penalty to the loss.</p><p class="eqs"><i>L</i><sub>total</sub> = <i>L</i> <span class="new">+ <span class="frac"><span>λ</span><span>2</span></span> <i>w</i>²</span></p></div></li>
+  <li><div><p class="what">Differentiate. The gradient of (<span class="gk">λ</span>/2)<i>w</i>² is <span class="gk">λ</span><i>w</i>, so a <span class="new">new term</span> appears.</p><p class="eqs"><span class="frac"><span>∂<i>L</i><sub>total</sub></span><span>∂<i>w</i></span></span> = <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span> <span class="new">+ <span class="gk">λ</span><i>w</i></span></p></div></li>
+  <li><div><p class="what">Put it into the update rule.</p><p class="eqs"><i>w</i><sub>new</sub> = <i>w</i> − <span class="gk">α</span> ( <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span> <span class="new">+ <span class="gk">λ</span><i>w</i></span> )</p></div></li>
+  <li><div><p class="what">Rearrange: collect the two <i>w</i> terms.</p><p class="eqs"><i>w</i><sub>new</sub> = <span class="new">(1 − <span class="gk">α</span><span class="gk">λ</span>)</span> · <i>w</i> − <span class="gk">α</span> <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span></p></div></li>
+</ol>
+<p>The step now has two parts:</p>
+<ol>
+  <li><span class="r">Shrink</span> the weight a little: multiply by (1 − <span class="gk">α</span><span class="gk">λ</span>).</li>
+  <li>Take the <span class="t">usual step</span>: subtract <span class="gk">α</span> ∂<i>L</i>/∂<i>w</i>.</li>
+</ol>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p><i>w</i> = 2, ∂<i>L</i>/∂<i>w</i> = 0.5, <span class="gk">α</span> = 0.1, <span class="gk">λ</span> = 1.</p>
+<p>Shrink factor (1 − <span class="gk">α</span><span class="gk">λ</span>) = <input class="qin" data-a="0.9"><br><i>w</i><sub>new</sub> with L2 = <input class="qin" data-a="1.75"><br><i>w</i><sub>new</sub> without L2 = <input class="qin" data-a="1.95"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>0.9. Then 0.9 × 2 − 0.1 × 0.5 = <b>1.75</b>. Without L2: 2 − 0.05 = <b>1.95</b>.</p></div></details></div>
+</div>
+
+<h3><span class="n">2.4</span>Why it is called “weight decay”</h3>
+<p>Suppose a weight is <span class="r">useless</span>: its data gradient ∂<i>L</i>/∂<i>w</i> is 0. With a shrink factor of 0.9 it fades step by step.</p>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>2 → <input class="qin" data-a="1.8"> → <input class="qin" data-a="1.62"> → <input class="qin" data-a="1.458" data-tol="0.002"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>1.8 → 1.62 → 1.458. A useless weight decays away.</p></div></details></div>
+</div>
+<p>A <span class="g">useful</span> weight survives because its data gradient keeps pushing back. It settles where the push from the data balances the shrink.</p>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>The data loss is ½(<i>w</i> − 4)², so without a penalty the best weight is 4. With L2 the best weight becomes <span class="m"><i>w</i> = 4 / (1 + <span class="gk">λ</span>)</span>.</p>
+<table class="tnum"><tr><th><span class="gk">λ</span></th><th>0</th><th>1</th><th>3</th></tr><tr><td>best <i>w</i></td><td><input class="qin" data-a="4"></td><td><input class="qin" data-a="2"></td><td><input class="qin" data-a="1"></td></tr></table>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>4, 2, 1. A bigger <span class="gk">λ</span> means a smaller weight, but never exactly zero.</p></div></details></div>
+</div>
+
+<h3><span class="n">2.5</span>Why L2 gives a smoother boundary</h3>
+<p>Go back to 1.7: an island around one stray point needs big weights. L2 asks whether the island is <span class="du">worth its cost</span>.</p>
+<figure class="fig"><div data-fig="f25"></div><figcaption><span class="fignum">Figure 2.5</span>The same stray point with and without an island, <span class="gk">λ</span> = 0.1. The island lowers the data loss by 0.3 but its big weights raise the penalty by 1.0. The total goes up, so a model trained with L2 does not draw it.</figcaption></figure>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p>Drawing the island lowers the data loss by <b>0.3</b> and raises the sum of squared weights by <b>20</b>.</p>
+<table class="tnum"><tr><th><span class="gk">λ</span></th><th>Extra penalty = (<span class="gk">λ</span>/2) × 20</th><th>Island worth it?</th></tr>
+<tr><td>0.01</td><td><input class="qin" data-a="0.1"></td><td><input class="qin" data-a="yes|y"></td></tr>
+<tr><td>0.1</td><td><input class="qin" data-a="1"></td><td><input class="qin" data-a="no|n"></td></tr></table>
+<p>At what <span class="gk">λ</span> is the trade exactly break-even? <input class="qin" data-a="0.03"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p><span class="gk">λ</span> = 0.01: penalty 0.1 &lt; 0.3, so <b>yes</b>, the island stays. <span class="gk">λ</span> = 0.1: penalty 1.0 &gt; 0.3, so <b>no</b>, it disappears. Break-even at (<span class="gk">λ</span>/2) × 20 = 0.3, so <b><span class="gk">λ</span> = 0.03</b>.</p></div></details></div>
+</div>
+<div class="box key"><span class="tag">Key idea</span><p>L2 does not forbid islands. It makes the model <span class="hl"><b>pay</b></span> for them. An island around a single noisy point rarely pays for itself. A real pattern supported by many points does, so it stays.</p></div>
+
+<h3><span class="n">2.6</span>Two practical rules</h3>
+<p><span class="t">Do not penalise biases.</span> A bias only <b>shifts</b> the boundary; it cannot bend it. There are also very few biases.</p>
+<p><span class="t">Scale your features first.</span> Suppose house size (around 100 m²) and number of rooms (around 3) matter equally, each adding about 30 to the output.</p>
+<div class="box hand"><span class="tag">Try it by hand</span>
+<p><i>w</i><sub>size</sub> = <input class="qin" data-a="0.3"> (because <i>w</i> × 100 = 30). <i>w</i><sub>rooms</sub> = <input class="qin" data-a="10"> (because <i>w</i> × 3 = 30).<br>Their L2 costs, <i>w</i>²: <input class="qin" data-a="0.09"> and <input class="qin" data-a="100"></p>
+<div class="chkrow"><button class="chkbtn" type="button">Check</button><span class="chkmsg"></span>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>0.3 and 10, costing 0.09 and 100. L2 would crush the rooms weight purely because of the <b>units</b>. Scale features to similar ranges so the penalty is fair.</p></div></details></div>
+</div>
+
+<h3><span class="n">2.7</span>A note on Adam</h3>
+<p>With plain gradient descent, “add L2 to the loss” and “shrink the weights each step” are <span class="du">the same thing</span> (2.3). With <span class="t">Adam</span> they are not: Adam rescales every gradient, and if the penalty sits inside the loss it gets rescaled too, so equal weights no longer shrink equally. The fix is <span class="t">AdamW</span>, which takes the Adam step from the data gradient only and shrinks the weights separately.</p>
+<div class="box warn"><span class="tag">Common mistake</span>
+<p>Both of these put the penalty <b>inside the loss</b>. Use AdamW for true weight decay.</p>
+<div class="code2">
+<div><p class="cl">PyTorch</p><pre><span class="c"># L2 inside the loss (rescaled by Adam)</span>
+<span class="bad">optim.Adam(params, lr=1e-3, weight_decay=1e-4)</span>
+
+<span class="c"># true weight decay</span>
+<span class="good">optim.AdamW(params, lr=1e-3, weight_decay=1e-2)</span></pre></div>
+<div><p class="cl">Keras</p><pre><span class="c"># L2 inside the loss (rescaled by Adam)</span>
+<span class="bad">Dense(50, kernel_regularizer=l2(1e-4))</span>
+
+<span class="c"># true weight decay</span>
+<span class="good">optimizers.AdamW(learning_rate=1e-3,
+                 weight_decay=1e-2)</span></pre></div>
+</div>
+<p class="small">The lab uses plain gradient descent with momentum, so its <span class="gk">λ</span> means exactly what 2.3 says.</p>
+</div>
+
+<div class="lab" data-lab="lab2"></div>
+<div class="lab-notice"><span class="tag">What to notice</span>
+<ul>
+  <li><span class="gk">λ</span> = 0.03 keeps the two arcs and no island closes, though the boundary still bends towards the mislabelled points. The validation curve rises far more slowly.</li>
+  <li><span class="gk">λ</span> = 0.3 flattens the boundary to nearly a line, and the training curve stays high: <span class="r">underfitting</span>.</li>
+  <li>The largest weight tracks <span class="gk">λ</span>: the stronger the penalty, the smaller it stays.</li>
+  <li>Try values on a <span class="du">log scale</span> (0.003, 0.01, 0.03, 0.1) and choose with the <b>validation</b> readout, never the test score.</li>
+</ul></div>
+</section>
+
+<!-- ============================================================ PART 3 -->
+<section class="part" id="p3">
+<p class="pnum">Part 3</p>
+<h2>L1 regularisation</h2>
+<p class="h2sub">A different price, and one very different consequence: weights that become exactly zero.</p>
+
+<h3><span class="n">3.1</span>A different price</h3>
+<div class="eq">Penalty = <span class="gk">λ</span> (|<i>w</i><sub>1</sub>| + |<i>w</i><sub>2</sub>| + … )</div>
+<div class="box hand worked"><span class="tag">Worked example</span>
+<p>The two costs side by side, leaving <span class="gk">λ</span> out.</p>
+<table class="tnum"><tr><th><i>w</i></th><th>0.1</th><th>1</th><th>10</th></tr>
+<tr><td>L2 cost <i>w</i>²</td><td class="v">0.01</td><td class="v">1</td><td class="v">100</td></tr>
+<tr><td>L1 cost |<i>w</i>|</td><td class="v">0.1</td><td class="v">1</td><td class="v">10</td></tr></table>
+<p>L2 barely charges for small weights and charges heavily for big ones. L1 charges <span class="du">every unit of weight the same</span>, including the small ones.</p>
+</div>
+
+<h3><span class="n">3.2</span>The update rule, step by step</h3>
+<p>Same flow as 2.3. The only change is the penalty.</p>
+<ol class="steps">
+  <li><div><p class="what">Plain gradient descent.</p><p class="eqs"><i>w</i><sub>new</sub> = <i>w</i> − <span class="gk">α</span> <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span></p></div></li>
+  <li><div><p class="what">Add the L1 penalty to the loss.</p><p class="eqs"><i>L</i><sub>total</sub> = <i>L</i> <span class="new">+ <span class="gk">λ</span> |<i>w</i>|</span></p></div></li>
+  <li><div><p class="what">Differentiate. The slope of |<i>w</i>| is +1 for positive <i>w</i> and −1 for negative <i>w</i>: <b>sign(<i>w</i>)</b>.</p><p class="eqs"><span class="frac"><span>∂<i>L</i><sub>total</sub></span><span>∂<i>w</i></span></span> = <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span> <span class="new">+ <span class="gk">λ</span> sign(<i>w</i>)</span></p></div></li>
+  <li><div><p class="what">Put it into the update rule.</p><p class="eqs"><i>w</i><sub>new</sub> = <i>w</i> − <span class="gk">α</span> <span class="frac"><span>∂<i>L</i></span><span>∂<i>w</i></span></span> <span class="new">− <span class="gk">α</span><span class="gk">λ</span> sign(<i>w</i>)</span></p></div></li>
+</ol>
+<div class="box key"><span class="tag">Key idea</span><p>The new term does not depend on the size of <i>w</i>. Every weight moves the <span class="hl"><b>same fixed amount</b></span>, <span class="gk">α</span><span class="gk">λ</span>, towards zero at every step. L2 shrinks in proportion; L1 subtracts a constant.</p></div>
+
+<h3><span class="n">3.3</span>The push towards zero, L2 against L1</h3>
+<ul>
+  <li><span class="t">L2 push</span> = <span class="gk">λ</span><i>w</i>. It gets <b>weaker</b> as <i>w</i> shrinks.</li>
+  <li><span class="t">L1 push</span> = <span class="gk">λ</span> sign(<i>w</i>). It <b>stays the same size</b> all the way to zero.</li>
+</ul>
+<div class="box hand worked"><span class="tag">Worked example</span>
+<p><span class="gk">λ</span> = 0.5.</p>
+<table class="tnum"><tr><th><i>w</i></th><th>4</th><th>2</th><th>1</th><th>0.5</th><th>0.1</th></tr>
+<tr><td>L2 push <span class="gk">λ</span><i>w</i></td><td class="v">2</td><td class="v">1</td><td class="v">0.5</td><td class="v">0.25</td><td class="v">0.05</td></tr>
+<tr><td>L1 push <span class="gk">λ</span></td><td class="v">0.5</td><td class="v">0.5</td><td class="v">0.5</td><td class="v">0.5</td><td class="v">0.5</td></tr></table>
+</div>
+
+<h3><span class="n">3.4</span>Walk it to zero</h3>
+<p>A useless weight (∂<i>L</i>/∂<i>w</i> = 0) starts at <i>w</i> = 1, with <span class="gk">α</span> = 0.1 and <span class="gk">λ</span> = 2.5, so <span class="gk">α</span><span class="gk">λ</span> = 0.25.</p>
+<ul><li><span class="t">L2:</span> multiply by 0.75 each step.</li><li><span class="t">L1:</span> subtract 0.25 each step, and stop at 0.</li></ul>
+<div class="box hand worked"><span class="tag">Worked example</span>
+<table class="tnum"><tr><th>Step</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+<tr><td>L2</td><td>1</td><td class="v">0.75</td><td class="v">0.56</td><td class="v">0.42</td><td class="v">0.32</td></tr>
+<tr><td>L1</td><td>1</td><td class="v">0.75</td><td class="v">0.50</td><td class="v">0.25</td><td class="v">0</td></tr></table>
+<p>L2 <span class="r">never reaches zero</span>. L1 reaches it in four steps and stays.</p>
+</div>
+<figure class="fig"><div data-fig="f33"></div><figcaption><span class="fignum">Figure 3.4</span>The two sequences continued for eight steps. L2 flattens out above zero. L1 reaches it and stays.</figcaption></figure>
+<div class="box key"><span class="tag">Key idea</span>
+<ul>
+  <li>L2 <span class="du">divides</span> every weight. All get smaller, none becomes zero.</li>
+  <li>L1 <span class="du">subtracts</span> a fixed amount. Weak weights become <b>exactly zero</b>. Strong weights lose less than under L2.</li>
+</ul></div>
+
+<h3><span class="n">3.5</span>What that buys: automatic feature selection</h3>
+<p>If an input is useless, L1 drives its weights to <span class="hl"><b>exactly zero</b></span> and the model ignores that input. L2 leaves every weight small but alive.</p>
+<figure class="fig"><div data-fig="f35"></div><figcaption><span class="fignum">Figure 3.5</span>Twelve weights after training. Left: with no penalty. Middle: with L2, all twelve shrunk. Right: with L1, six are exactly zero. Schematic.</figcaption></figure>
+
+<h3><span class="n">3.6</span>When to use L2, when to use L1</h3>
+<p><span class="t">L2 is the default</span> in deep learning.</p>
+<ul>
+  <li>Hidden neurons are not meaningful features. Deep networks spread a pattern across <span class="du">many weights, each contributing a little</span>. L2 keeps all of them alive and small, which is exactly that regime.</li>
+  <li>Its effect changes <b>gradually</b> with <span class="gk">λ</span>, so it is easy to tune.</li>
+  <li>It is what “weight decay” means in every framework (with AdamW, 2.7).</li>
+</ul>
+<p><span class="t">L1 is a tool for specific jobs.</span></p>
+<ul>
+  <li><b>Feature selection</b> on the first layer, when you suspect many inputs are useless.</li>
+  <li><b>Compression</b>: a sparse model with most weights at zero is smaller and faster.</li>
+  <li>Its effect has a <span class="r">cliff</span>: a <span class="gk">λ</span> that zeroes 90% of the weights may still overfit, and a slightly larger one may zero almost everything. Harder to tune.</li>
+  <li>With plain gradient steps a weight can jump back and forth across zero. Libraries handle this; the lab clips at zero.</li>
+  <li><b>Elastic net</b> is L1 and L2 together, when you want a little of each.</li>
+</ul>
+
+<div class="lab" data-lab="lab3"></div>
+<div class="lab-notice"><span class="tag">What to notice</span>
+<ul>
+  <li>Even with 90% of the weights at exactly zero (<span class="gk">λ</span> = 0.003), the model still overfits. The few surviving weights are enough to build islands.</li>
+  <li>L1 only regularises here at <span class="gk">λ</span> = 0.03, and the boundary it leaves is coarser than L2's.</li>
+</ul></div>
+<div class="box note"><span class="tag">Why the result differs from L2</span>
+<p>L2 at 0.03 keeps all 2 751 weights alive and small: a smooth boundary with no closed island, but it still bends towards three of the four mislabelled points, and validation loss creeps up to about 0.64. L1 at 0.03 keeps <b>ten</b> weights and sets the rest to zero: a tiny sub-network that can draw two arcs and nothing else, validation loss about 0.54.</p>
+<p><span class="t">Which is better here?</span> L1, narrowly, because this problem needs very few weights. Two arcs is a job for a handful of neurons, and L1 found that handful. But look at how it got there: 0.01 zeroed 99% of the weights and <span class="r">still overfit</span>, then 0.03 worked. That is the cliff of 3.6.</p>
+<p><span class="t">What would make L2 win?</span> A finer search between 0.03 and 0.1, or a problem where many weights each carry a little signal, which is most real problems. There, zeroing weights throws useful signal away, and L2's gentle shrink keeps it.</p>
+</div>
+</section>
+
+<!-- ============================================================ PART 4 -->
+<section class="part" id="p4">
+<p class="pnum">Part 4</p>
+<h2>Early stopping</h2>
+<p class="h2sub">The simplest method of all: stop training before the model starts memorising.</p>
+
+<h3><span class="n">4.1</span>What early stopping is</h3>
+<p><span class="t">Intuitively:</span> training has two phases. First the model learns the <span class="g">pattern</span>, and both losses fall. Then it starts memorising the <span class="r">noise</span>: training loss keeps falling, validation loss stops falling and turns up. Stop at the border between the two.</p>
+<p><span class="t">Formally:</span> measure the validation loss after every epoch. While it is still going down, keep training. When it <span class="du">stops improving</span>, or the two curves start to separate, stop and keep the weights from the epoch with the lowest validation loss.</p>
+<figure class="fig"><div data-fig="f41"></div><figcaption><span class="fignum">Figure 4.1</span>The unregularised run from Lab 1. Blue phase: both curves fall, the model is learning the pattern. Rose phase: the gap opens, the model is memorising noise. The border is epoch 73, the lowest validation loss.</figcaption></figure>
+
+<h3><span class="n">4.2</span>Should we stop at the first bad epoch?</h3>
+<p>Validation loss is <span class="r">noisy</span>. One epoch that is slightly worse than the last does not mean the model has started memorising. If we stop at the first rise, we often stop too soon.</p>
+<p>So we wait. <span class="t">Patience</span> is how many epochs in a row without a new best we allow before stopping. While we wait, we <span class="du">save the weights</span> every time a new best appears.</p>
+<figure class="fig"><div class="figctrl" data-figctrl="f42"></div><div data-fig="f42"></div><div class="figstat" data-figstat="f42"></div><figcaption><span class="fignum">Figure 4.2</span>Twelve epochs of a noisy validation loss. Press Play and watch the counter: it rises on every epoch without a new best and resets when one appears. Training stops when the counter reaches the patience. The saved weights are the last new best.</figcaption></figure>
+<ul>
+  <li><b>Patience 1</b> stops after epoch 6 and restores epoch 5. It gave up too soon and missed epoch 7.</li>
+  <li><b>Patience 3</b> stops after epoch 10 and restores epoch 7, the true minimum.</li>
+  <li><b>Patience 5</b> finds the same epoch 7, at the cost of two more epochs of training.</li>
+</ul>
+
+<h3><span class="n">4.3</span>Always restore the best weights</h3>
+<p>When training stops, the weights in the model are the <span class="r">last</span> ones, not the best ones. With patience 3 above, that is epoch 10 (loss 0.54) rather than epoch 7 (loss 0.50). The saved weights have to be put back.</p>
+<div class="box warn"><span class="tag">Common mistake</span>
+<p>Keras does not restore by default.</p>
+<div class="code2">
+<div><p class="cl">Keras</p><pre>EarlyStopping(monitor="val_loss",
+              patience=20,
+              <span class="good">restore_best_weights=True</span>)
+<span class="c"># default is False: keeps the last weights</span></pre></div>
+<div><p class="cl">PyTorch (by hand)</p><pre>if val_loss &lt; best:
+    best = val_loss
+    <span class="good">best_state = copy.deepcopy(model.state_dict())</span>
+    wait = 0
+else:
+    wait += 1
+    if wait &gt;= patience: break
+<span class="good">model.load_state_dict(best_state)</span></pre></div>
+</div>
+</div>
+
+<h3><span class="n">4.4</span>Why early weights are simple</h3>
+<ul>
+  <li>Weights <span class="du">start small</span>, at initialisation, and grow gradually during training.</li>
+  <li>Early on, the biggest drops in loss come from the <span class="g">big, clear pattern</span>, which the model closes quickly.</li>
+  <li>The <span class="r">noise</span> is learned slowly, one point at a time, and needs many more epochs.</li>
+</ul>
+<div class="box key"><span class="tag">Key idea</span><p>Stopping early keeps most of the pattern and little of the noise. Fewer steps also means smaller weights, so early stopping ends up doing a job very similar to L2.</p></div>
+
+<h3><span class="n">4.5</span>Two notes</h3>
+<ul>
+  <li>Early stopping is almost free. Use it <span class="hl"><b>nearly always</b></span>, as a safety net alongside the other methods.</li>
+  <li>You chose the stopping epoch <i>using</i> the validation set, so that set has influenced the model. Keep a separate <span class="t">test set</span> for the final score.</li>
+</ul>
+
+<div class="lab" data-lab="lab4"></div>
+<div class="lab-notice"><span class="tag">What to notice</span>
+<ul>
+  <li>The dashed line marks the best epoch so far. The run stops once it has waited <i>patience</i> epochs beyond it, and the boundary fades back to that epoch's shape.</li>
+  <li>Patience 5 quits at epoch 9 with a nearly straight boundary. Patience 50 waits, finds epoch 73, and keeps the arcs without the islands.</li>
+  <li>Switch <i>restore best weights</i> off and the run keeps the later, worse weights. Compare the validation loss.</li>
+</ul></div>
+</section>
+
+<!-- ============================================================ PART 5 -->
+<section class="part" id="p5">
+<p class="pnum">Part 5</p>
+<h2>Dropout</h2>
+<p class="h2sub">Make memorising hard by switching neurons off at random.</p>
+
+<h3><span class="n">5.1</span>Neurons that lean on each other</h3>
+<p>The finely balanced big weights behind an island (1.7) usually involve <span class="du">several neurons working together</span>, each correcting another's quirks. This is called <span class="t">co-adaptation</span>. In a team where any member may be absent on a given day, nobody can rely on one partner. Everyone has to understand the work themselves.</p>
+
+<h3><span class="n">5.2</span>How dropout works</h3>
+<p>At <b>each training step</b>, every neuron in the layer is switched off with probability <span class="t"><i>r</i></span>, the dropout rate. A <span class="du">different random set</span> is switched off every step.</p>
+<figure class="fig"><div data-fig="f52"></div><figcaption><span class="fignum">Figure 5.2</span>The same network over three training steps with <i>r</i> = 0.5. Greyed neurons are off for that step, and so are their connections.</figcaption></figure>
+
+<h3><span class="n">5.3</span>The scaling problem</h3>
+<p>Four neurons each output 1.0 and feed a sum. With <i>r</i> = 0.5, about half are off during training, so the next layer receives about 2. At test time all four are on and it receives 4: <span class="r">twice what it was trained on</span>.</p>
+<figure class="fig"><div data-fig="f53"></div><figcaption><span class="fignum">Figure 5.3</span>Left: training without scaling, the sum is 2. Middle: test time, all neurons on, the sum is 4. Right: <b>inverted dropout</b>, every kept neuron is multiplied by 1 / (1 − <i>r</i>) = 2 during training, so the sum is 4 again and matches test time.</figcaption></figure>
+<div class="box key"><span class="tag">Key idea</span><p>During training, multiply every kept neuron by <span class="m">1 / (1 − <i>r</i>)</span>. At test time change nothing: all neurons on, no scaling. One step is noisy, but <span class="hl"><b>on average</b></span> training matches testing.</p></div>
+
+<h3><span class="n">5.4</span>Why it works (1): no neuron can lean on a partner</h3>
+<p>Any partner might vanish on the next step, so each neuron must learn something that is <span class="g">useful by itself</span>. Fragile, finely balanced combinations, the building blocks of islands, never become reliable, and the model stops depending on them.</p>
+
+<h3><span class="n">5.5</span>Why it works (2): many networks in one</h3>
+<p>Every dropout mask gives a different smaller network, and all of them <span class="du">share the same weights</span>. Three hidden neurons give 2³ = 8 possible networks; a hundred give 2¹⁰⁰. Averaging many different models cancels their individual mistakes, an <span class="t">ensemble</span>, and dropout trains a huge one at the cost of a single network.</p>
+<figure class="fig"><div data-fig="f55"></div><figcaption><span class="fignum">Figure 5.5</span>Two neurons contributing 1 and 3 to an output, <i>r</i> = 0.5, scale 2. The four possible masks give 8, 2, 6 and 0. Their average is 4, exactly what the full network gives at test time. Exact for a linear layer, approximate once there is an activation.</figcaption></figure>
+
+<h3><span class="n">5.6</span>Training mode and test mode</h3>
+<p>Dropout is <span class="hl"><b>on only during training</b></span>.</p>
+<div class="box warn"><span class="tag">Common mistake</span>
+<div class="code2">
+<div><p class="cl">PyTorch</p><pre>model.train()   <span class="c"># dropout on</span>
+...
+<span class="good">model.eval()</span>    <span class="c"># dropout off: do not forget</span>
+with torch.no_grad():
+    preds = model(x_test)</pre></div>
+<div><p class="cl">Keras</p><pre>model.fit(...)      <span class="c"># dropout on</span>
+model.predict(...)  <span class="c"># dropout off, automatic</span>
+
+<span class="c"># Dropout(0.5) in the model definition</span></pre></div>
+</div>
+</div>
+
+<h3><span class="n">5.7</span>Costs and surprises</h3>
+<ul>
+  <li><span class="r">Slower, noisier training.</span> You usually need more epochs.</li>
+  <li><span class="r">Small network + dropout = underfitting.</span> A small network cannot afford to lose neurons. Add dropout to networks big enough to overfit.</li>
+  <li><span class="t">Typical rates:</span> 0.2 to 0.5 on hidden layers, 0 to 0.2 on inputs.</li>
+  <li><span class="t">Surprise:</span> with dropout, training loss can sit <b>above</b> validation loss. Training loss is measured <i>with neurons switched off</i>; validation uses the full network.</li>
+</ul>
+
+<div class="lab" data-lab="lab5"></div>
+<div class="lab-notice"><span class="tag">What to notice</span>
+<ul>
+  <li>The boundary jitters while training: a different set of neurons is off each step. It settles smooth.</li>
+  <li><i>r</i> = 0.5 on the wide network gives the best validation accuracy in this sheet. <i>r</i> = 0.7 struggles to fit even the training points.</li>
+  <li>The narrow network with <i>r</i> = 0.5 <span class="r">underfits</span>: it has no neurons to spare.</li>
+</ul></div>
+</section>
+
+<!-- ============================================================ PART 6 -->
+<section class="part" id="p6">
+<p class="pnum">Part 6</p>
+<h2>Putting it together</h2>
+<p class="h2sub">Diagnose before you treat.</p>
+
+<h3><span class="n">6.1</span>Read the curves first</h3>
+<table class="compare">
+<tr><th>What you see</th><th>Diagnosis</th><th>What to do</th></tr>
+<tr><td>Both poor</td><td><span class="r">Underfitting</span></td><td>Bigger model, train longer, <b>less</b> regularisation</td></tr>
+<tr><td>Train great, validation much worse and rising</td><td><span class="r">Overfitting</span></td><td><b>More</b> regularisation, or more data</td></tr>
+<tr><td>Both good, small gap</td><td><span class="g">Healthy</span></td><td>Stop tuning. Check the test set once.</td></tr>
+</table>
+
+<h3><span class="n">6.2</span>A simple recipe</h3>
+<ol>
+  <li>First get a model that <span class="du">can</span> overfit. If it cannot fit the training data, regularisation will not help.</li>
+  <li>Add <span class="t">early stopping</span> with best-weight restore, as the safety net.</li>
+  <li>Add <b>one</b> of L2 (with AdamW) or dropout. Tune it on a log scale, coarse first, then fine.</li>
+  <li>Re-read the curves and the gap after every change.</li>
+  <li>Report the <span class="t">test</span> score <span class="hl"><b>once</b></span>, at the end.</li>
+</ol>
+
+<h3><span class="n">6.3</span>Stacking has diminishing returns</h3>
+<p>Every method attacks the same gap. Once the gap is closed, adding another method only pushes the model into <span class="r">underfitting</span>.</p>
+
+<h3><span class="n">6.4</span>One-page comparison</h3>
+<div class="tscroll"><table class="compare">
+<tr><th></th><th>L2</th><th>L1</th><th>Early stopping</th><th>Dropout</th></tr>
+<tr><td>What it does</td><td>Shrinks all weights in proportion</td><td>Subtracts a fixed amount; some weights become 0</td><td>Stops before the noise is learned</td><td>Switches neurons off at random</td></tr>
+<tr><td>Boundary</td><td>Smooth</td><td>Smooth, ignores useless inputs</td><td>An earlier, simpler epoch</td><td>Smooth, robust</td></tr>
+<tr><td>Your dial</td><td><span class="gk">λ</span></td><td><span class="gk">λ</span></td><td>patience</td><td>rate <i>r</i></td></tr>
+<tr><td>Watch out</td><td>Use AdamW; scale features</td><td>Rarely helps hidden layers</td><td>Restore best weights</td><td>Needs more epochs; hurts small networks</td></tr>
+</table></div>
+
+<h3><span class="n">6.5</span>Other tools you will meet later</h3>
+<ul>
+  <li><span class="t">More data:</span> the best regulariser of all.</li>
+  <li><span class="t">Data augmentation:</span> make new training examples (flip or crop an image).</li>
+  <li><span class="t">Batch normalisation:</span> mainly speeds up training, with a mild regularising side effect.</li>
+  <li><span class="t">Label smoothing:</span> stop the model being 100% sure of its answers.</li>
+</ul>
+
+<div class="lab" data-lab="lab6"></div>
+<div class="box hand"><span class="tag">Try it: the recipe</span>
+<p>Fill the table from Lab 6. Use the validation numbers to choose; press the test button only for the final row.</p>
+<table class="tnum"><tr><th>Setting</th><th>Train acc</th><th>Val loss</th><th>Val acc</th></tr>
+<tr><td>Nothing</td><td><span class="bl"></span></td><td><span class="bl"></span></td><td><span class="bl"></span></td></tr>
+<tr><td>Patience 50 only</td><td><span class="bl"></span></td><td><span class="bl"></span></td><td><span class="bl"></span></td></tr>
+<tr><td>Dropout 0.5 only</td><td><span class="bl"></span></td><td><span class="bl"></span></td><td><span class="bl"></span></td></tr>
+<tr><td>L2 0.03 + dropout 0.5</td><td><span class="bl"></span></td><td><span class="bl"></span></td><td><span class="bl"></span></td></tr>
+<tr><td>Your best (test once)</td><td><span class="bl"></span></td><td><span class="bl"></span></td><td><span class="bl"></span></td></tr></table>
+<details class="ans"><summary>Show answer</summary><div class="a"><p>Roughly: nothing 100 / 1.59 / 80. Patience 50: 88 / 0.47 / 85. Dropout 0.5: 88 / 0.78 / 87. L2 0.03 + dropout 0.5: 80 / 0.53 / 77, which is underfitting: two regularisers stacked have pushed the model too far. One well-chosen method beats two.</p></div></details>
+</div>
+</section>
+
+<!-- ============================================================ PART 7 -->
+<section class="part" id="p7">
+<p class="pnum">Part 7</p>
+<h2>Check yourself</h2>
+<p class="h2sub">Eight questions and three short explanations.</p>
+
+<div class="box hand"><span class="tag">Multiple choice</span>
+<ol>
+  <li>Training accuracy 99%, validation 71%, validation loss rising since epoch 30. Best first move?<br><span class="small">(a) Train more epochs (b) Add early stopping or L2 (c) Make the network larger (d) Raise the learning rate</span></li>
+  <li>After raising <span class="gk">λ</span> from 0.001 to 1, training accuracy is 70% and validation 69%. What happened?<br><span class="small">(a) Overfitting (b) Underfitting, so lower <span class="gk">λ</span> (c) Healthy (d) The data is broken</span></li>
+  <li>Which method can make a weight <b>exactly</b> zero?<br><span class="small">(a) L2 (b) L1 (c) Dropout (d) Early stopping</span></li>
+  <li>Dropout rate 0.25. A kept neuron outputs 2.0. During training it becomes<br><span class="small">(a) 1.5 (b) 2.0 (c) 2.67 (d) 8.0</span></li>
+  <li>With dropout, training loss sits above validation loss. Why?<br><span class="small">(a) A bug (b) Training loss is measured with neurons switched off (c) Validation data is easier (d) Learning rate too high</span></li>
+  <li>Why use AdamW instead of Adam + L2?<br><span class="small">(a) It is faster (b) Adam rescales the penalty along with the gradient, so equal weights shrink unequally (c) L2 does not work with Adam (d) AdamW has no learning rate</span></li>
+  <li>Patience 2, validation losses 0.80, 0.60, 0.62, 0.59, 0.61, 0.63. When does training stop, and which epoch is restored?</li>
+  <li>Why do we not penalise biases?</li>
+</ol>
+<details class="ans"><summary>Show answers</summary><div class="a"><p>1 (b). 2 (b). 3 (b). 4 (c): 2.0 / 0.75. 5 (b). 6 (b). 7: stops after epoch 6, restores epoch 4. 8: a bias only shifts the boundary; it cannot create bends or islands, and there are very few of them.</p></div></details>
+</div>
+
+<div class="box hand"><span class="tag">Explain in two or three sentences</span>
+<ol>
+  <li>Why do small weights produce smooth decision boundaries?</li>
+  <li>Why does L1 reach zero when L2 does not?</li>
+  <li>Why does stopping early act like a penalty on weights?</li>
+</ol>
+<details class="ans"><summary>Show model answers</summary><div class="a"><p>1. A neuron's output changes by about <i>w</i> per unit of input. With small <i>w</i> nearby inputs get nearly the same output, so the boundary cannot bend sharply or wrap a single point (1.7).<br>2. L2's push is <span class="gk">λ</span><i>w</i> and fades as <i>w</i> shrinks, so it approaches zero without arriving. L1's push is a constant <span class="gk">λ</span> that does not fade, so it carries the weight all the way (3.3, 3.4).<br>3. Weights start small and grow with training. Fewer steps means less growth, and the clear pattern is learned in the first steps while the noise needs many more (4.4).</p></div></details>
+</div>
+</section>
+
+<footer>
+  <p>Worksheet 09 of the Deep Learning interactive worksheets. Everything runs in your browser; nothing is loaded from the network. <a href="index.html">All worksheets</a>.</p>
+</footer>
+
+</div>
+<script>
+/* Regularisation lab engine: tiny MLP, full-batch SGD with momentum.
+   Works in node (calibration) and in the browser (inlined). */
+(function(root){
+"use strict";
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function gauss(rand){
+  var u = 1 - rand(), v = rand();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+/* ---------- data: two moons in [-1,1]^2, label noise ---------- */
+function makeMoons(n, seed, flipFrac, noise){
+  var rand = mulberry32(seed), X = [], y = [], i, t, px, py, c;
+  for(i = 0; i < n; i++){
+    c = i % 2;
+    t = rand() * Math.PI;
+    if(c === 0){ px = Math.cos(t); py = Math.sin(t); }
+    else { px = 1 - Math.cos(t); py = 0.5 - Math.sin(t); }
+    px += gauss(rand) * noise; py += gauss(rand) * noise;
+    /* centre & scale: x in [-1,2] -> [-1,1]; y in [-0.5,1] -> [-1,1] */
+    X.push([ (px - 0.5) / 1.5 * 1.0, (py - 0.25) / 1.0 * 1.0 ]);
+    y.push(c);
+  }
+  var nflip = Math.round(n * flipFrac), idx = [], k;
+  for(i = 0; i < n; i++){ idx.push(i); }
+  for(i = idx.length - 1; i > 0; i--){ k = Math.floor(rand() * (i + 1)); t = idx[i]; idx[i] = idx[k]; idx[k] = t; }
+  for(i = 0; i < nflip; i++){ y[idx[i]] = 1 - y[idx[i]]; }
+  return { X: X, y: y, flipped: idx.slice(0, nflip) };
+}
+
+/* ---------- model ---------- */
+function Net(h, seed){
+  this.h = h;
+  var rand = mulberry32(seed);
+  function uni(n, fan_in, fan_out){
+    var a = Math.sqrt(6 / (fan_in + fan_out)), arr = new Float64Array(n), i;
+    for(i = 0; i < n; i++){ arr[i] = (rand() * 2 - 1) * a; }
+    return arr;
+  }
+  this.W1 = uni(h * 2, 2, h); this.b1 = new Float64Array(h);
+  this.W2 = uni(h * h, h, h); this.b2 = new Float64Array(h);
+  this.W3 = uni(h, h, 1);     this.b3 = new Float64Array(1);
+  this.params = ["W1","b1","W2","b2","W3","b3"];
+  this.vel = {}; var p;
+  for(p = 0; p < 6; p++){ this.vel[this.params[p]] = new Float64Array(this[this.params[p]].length); }
+}
+Net.prototype.copyWeights = function(){
+  var out = {}, p;
+  for(p = 0; p < 6; p++){ out[this.params[p]] = new Float64Array(this[this.params[p]]); }
+  return out;
+};
+Net.prototype.loadWeights = function(w){
+  var p; for(p = 0; p < 6; p++){ this[this.params[p]].set(w[this.params[p]]); }
+};
+/* forward on array of points; returns probabilities. No dropout. */
+Net.prototype.predict = function(X){
+  var h = this.h, n = X.length, out = new Float64Array(n), i, j, k, s, h1 = new Float64Array(h), h2 = new Float64Array(h);
+  for(i = 0; i < n; i++){
+    var x0 = X[i][0], x1 = X[i][1];
+    for(j = 0; j < h; j++){ h1[j] = Math.tanh(this.W1[j*2] * x0 + this.W1[j*2+1] * x1 + this.b1[j]); }
+    for(j = 0; j < h; j++){
+      s = this.b2[j]; var row = j * h;
+      for(k = 0; k < h; k++){ s += this.W2[row + k] * h1[k]; }
+      h2[j] = Math.tanh(s);
+    }
+    s = this.b3[0];
+    for(j = 0; j < h; j++){ s += this.W3[j] * h2[j]; }
+    out[i] = 1 / (1 + Math.exp(-s));
+  }
+  return out;
+};
+function bce(p, y){
+  var s = 0, i, n = p.length, e = 1e-7;
+  for(i = 0; i < n; i++){ var q = Math.min(Math.max(p[i], e), 1 - e); s += y[i] ? -Math.log(q) : -Math.log(1 - q); }
+  return s / n;
+}
+function acc(p, y){
+  var c = 0, i; for(i = 0; i < p.length; i++){ if((p[i] >= 0.5 ? 1 : 0) === y[i]){ c++; } }
+  return c / p.length;
+}
+Net.prototype.maxAbsW = function(){
+  var m = 0, i, W = [this.W1, this.W2, this.W3], w;
+  for(w = 0; w < 3; w++){ for(i = 0; i < W[w].length; i++){ if(Math.abs(W[w][i]) > m){ m = Math.abs(W[w][i]); } } }
+  return m;
+};
+Net.prototype.zeroFrac = function(){
+  var z = 0, t = 0, i, W = [this.W1, this.W2, this.W3], w;
+  for(w = 0; w < 3; w++){ for(i = 0; i < W[w].length; i++){ t++; if(W[w][i] === 0){ z++; } } }
+  return z / t;
+};
+
+/* One full-batch step.  opt = {lr, mom, l2, l1, dropout, rand} */
+Net.prototype.step = function(X, y, opt){
+  var h = this.h, n = X.length, i, j, k, s, row;
+  var lr = opt.lr, mom = opt.mom, r = opt.dropout || 0, keep = 1 - r, scale = r > 0 ? 1 / keep : 1;
+  var gW1 = new Float64Array(h*2), gb1 = new Float64Array(h), gW2 = new Float64Array(h*h), gb2 = new Float64Array(h), gW3 = new Float64Array(h), gb3 = 0;
+  var a1 = new Float64Array(h), d1 = new Float64Array(h), m1 = new Float64Array(h);
+  var a2 = new Float64Array(h), d2 = new Float64Array(h), m2 = new Float64Array(h);
+  var dd2 = new Float64Array(h), dd1 = new Float64Array(h);
+  var loss = 0;
+  for(i = 0; i < n; i++){
+    var x0 = X[i][0], x1 = X[i][1];
+    for(j = 0; j < h; j++){
+      a1[j] = Math.tanh(this.W1[j*2] * x0 + this.W1[j*2+1] * x1 + this.b1[j]);
+      m1[j] = (r > 0 && opt.rand() < r) ? 0 : scale;
+      d1[j] = a1[j] * m1[j];
+    }
+    for(j = 0; j < h; j++){
+      s = this.b2[j]; row = j * h;
+      for(k = 0; k < h; k++){ s += this.W2[row + k] * d1[k]; }
+      a2[j] = Math.tanh(s);
+      m2[j] = (r > 0 && opt.rand() < r) ? 0 : scale;
+      d2[j] = a2[j] * m2[j];
+    }
+    s = this.b3[0];
+    for(j = 0; j < h; j++){ s += this.W3[j] * d2[j]; }
+    var p = 1 / (1 + Math.exp(-s));
+    var q = Math.min(Math.max(p, 1e-7), 1 - 1e-7);
+    loss += y[i] ? -Math.log(q) : -Math.log(1 - q);
+    var dz = (p - y[i]) / n;
+    gb3 += dz;
+    for(j = 0; j < h; j++){
+      gW3[j] += dz * d2[j];
+      dd2[j] = dz * this.W3[j] * m2[j] * (1 - a2[j] * a2[j]);
+    }
+    for(j = 0; j < h; j++){
+      gb2[j] += dd2[j]; row = j * h;
+      for(k = 0; k < h; k++){ gW2[row + k] += dd2[j] * d1[k]; }
+    }
+    for(k = 0; k < h; k++){
+      s = 0;
+      for(j = 0; j < h; j++){ s += dd2[j] * this.W2[j * h + k]; }
+      dd1[k] = s * m1[k] * (1 - a1[k] * a1[k]);
+    }
+    for(j = 0; j < h; j++){
+      gb1[j] += dd1[j];
+      gW1[j*2] += dd1[j] * x0; gW1[j*2+1] += dd1[j] * x1;
+    }
+  }
+  /* momentum update; L2 as (1 - lr*l2) shrink on weights only; L1 as subtract-and-clip on weights only */
+  var grads = { W1: gW1, b1: gb1, W2: gW2, b2: gb2, W3: gW3, b3: new Float64Array([gb3]) };
+  var pi, name, P, V, G, isW;
+  for(pi = 0; pi < 6; pi++){
+    name = this.params[pi]; P = this[name]; V = this.vel[name]; G = grads[name]; isW = name.charAt(0) === "W";
+    for(i = 0; i < P.length; i++){
+      V[i] = mom * V[i] + G[i];
+      var w = P[i] - lr * V[i];
+      if(isW && opt.l2 > 0){ w -= lr * opt.l2 * P[i]; }
+      if(isW && opt.l1 > 0){
+        var t = lr * opt.l1;
+        w = w > t ? w - t : (w < -t ? w + t : 0);
+      }
+      P[i] = w;
+    }
+  }
+  return loss / n;
+};
+
+/* ---------- a full run, used by calibration and the page ---------- */
+function Trainer(cfg){
+  /* cfg: {h, seed, lr, mom, l2, l1, dropout, patience, restore, data, maxEpochs} */
+  this.cfg = cfg;
+  this.net = new Net(cfg.h, cfg.seed);
+  this.rand = mulberry32(cfg.seed + 101);
+  this.epoch = 0;
+  this.trainLoss = []; this.valLoss = [];
+  this.trainAcc = []; this.valAcc = [];
+  this.best = { epoch: -1, val: Infinity, weights: null };
+  this.stopped = false; this.stoppedAt = -1;
+}
+Trainer.prototype.evaluate = function(){
+  var d = this.cfg.data, pt = this.net.predict(d.Xtr), pv = this.net.predict(d.Xva);
+  return { tl: bce(pt, d.ytr), vl: bce(pv, d.yva), ta: acc(pt, d.ytr), va: acc(pv, d.yva) };
+};
+Trainer.prototype.record = function(){
+  var e = this.evaluate();
+  this.trainLoss.push(e.tl); this.valLoss.push(e.vl); this.trainAcc.push(e.ta); this.valAcc.push(e.va);
+  if(e.vl < this.best.val - 1e-9){
+    this.best.val = e.vl; this.best.epoch = this.epoch;
+    if(this.cfg.patience > 0){ this.best.weights = this.net.copyWeights(); }
+  }
+  return e;
+};
+Trainer.prototype.runEpoch = function(){
+  if(this.stopped){ return false; }
+  if(this.epoch === 0 && this.trainLoss.length === 0){ this.record(); }
+  var c = this.cfg;
+  this.net.step(c.data.Xtr, c.data.ytr, { lr: c.lr, mom: c.mom, l2: c.l2 || 0, l1: c.l1 || 0, dropout: c.dropout || 0, rand: this.rand });
+  this.epoch++;
+  this.record();
+  if(c.patience > 0 && this.epoch - this.best.epoch >= c.patience){
+    this.stopped = true; this.stoppedAt = this.epoch;
+    this.lastWeights = this.net.copyWeights();
+    if(c.restore !== false && this.best.weights){ this.net.loadWeights(this.best.weights); }
+    return false;
+  }
+  if(this.epoch >= c.maxEpochs){ this.stopped = true; this.stoppedAt = this.epoch; return false; }
+  return true;
+};
+
+var api = { mulberry32: mulberry32, makeMoons: makeMoons, Net: Net, Trainer: Trainer, bce: bce, acc: acc };
+if(typeof module !== "undefined" && module.exports){ module.exports = api; } else { root.RegLab = api; }
+})(typeof window !== "undefined" ? window : this);
+
+</script>
+<script>
+(function(){
+"use strict";
+var L = window.RegLab;
+var NS = "http://www.w3.org/2000/svg";
+var C = { ink:"#2A2E3A", muted:"#6B7080", faint:"#9A9EA8", rule:"#E6E2DA", rule2:"#D6D1C7",
+          blue:"#4E6FA3", blueSoft:"#D9E2F0", blueTint:"#EEF2F8", rose:"#B4606B", roseSoft:"#F0DCDE", roseTint:"#F8EEEE",
+          amber:"#C48A3F", amberSoft:"#F1E3CB", green:"#3C8C5A", train:"#5A6070", val:"#C48A3F", paper:"#FBFAF7", white:"#FFFFFF" };
+
+function S(tag, attrs, parent){
+  var e = document.createElementNS(NS, tag), k;
+  for(k in attrs){ if(Object.prototype.hasOwnProperty.call(attrs, k)){ e.setAttribute(k, attrs[k]); } }
+  if(parent){ parent.appendChild(e); }
+  return e;
+}
+function T(parent, x, y, s, attrs){
+  var a = { x:x, y:y, "font-size":13, fill:C.muted, "font-family":"inherit" }, k;
+  for(k in attrs){ a[k] = attrs[k]; }
+  var e = S("text", a, parent); e.textContent = s; return e;
+}
+function svgInto(slot, w, h){
+  var svg = S("svg", { viewBox:"0 0 " + w + " " + h, width:w, height:h, role:"img" });
+  slot.appendChild(svg); return svg;
+}
+function fmt(x, d){ return Number(x).toFixed(d); }
+function slot(name){ return document.querySelector('[data-fig="' + name + '"]'); }
+function el(tag, cls, html, parent){ var e = document.createElement(tag); if(cls){ e.className = cls; } if(html !== undefined){ e.innerHTML = html; } if(parent){ parent.appendChild(e); } return e; }
+
+/* class markers: blue dot (class 1) and red cross (class 0) */
+function dot(g, x, y, r, cls, opts){
+  opts = opts || {};
+  if(cls){
+    return S("circle", { cx:x, cy:y, r:r, fill:opts.hollow ? C.white : C.blue, stroke:C.blue, "stroke-width":opts.hollow ? 1.6 : 1.2, opacity:opts.op || 1 }, g);
+  }
+  return S("path", { d:"M" + (x-r) + " " + (y-r) + "L" + (x+r) + " " + (y+r) + "M" + (x+r) + " " + (y-r) + "L" + (x-r) + " " + (y+r),
+    stroke:C.rose, "stroke-width":opts.hollow ? 1.5 : Math.max(2.2, r * 0.45), "stroke-linecap":"round", fill:"none", opacity:opts.op || 1 }, g);
+}
+
+/* three-panel helper: 720 wide, panels 224 */
+var TP = { W:720, pw:224, ph:224, gap:24, top:8 };
+function panelGroup(svg, k){ return S("g", { transform:"translate(" + (k * (TP.pw + TP.gap)) + "," + TP.top + ")" }, svg); }
+function panelCap(g, cap, sub){
+  T(g, TP.pw / 2, TP.ph + 22, cap, { "text-anchor":"middle", fill:C.ink, "font-size":15, "font-weight":600 });
+  if(sub){ T(g, TP.pw / 2, TP.ph + 40, sub, { "text-anchor":"middle", "font-size":13 }); }
+}
+
+/* ---------------------------------------------------------------- regression points */
+var REG = (function(){
+  var rand = L.mulberry32(5), pts = [], i, x;
+  function f(x){ return 0.5 + 0.28 * Math.sin(2 * Math.PI * x - 0.5); }
+  for(i = 0; i < 10; i++){
+    x = (i + 0.5) / 10;
+    var u = 1 - rand(), v = rand(), g = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    pts.push([x, f(x) + 0.07 * g]);
+  }
+  return { f:f, pts:pts };
+})();
+
+function fig12(){
+  var sl = slot("f12"); if(!sl){ return; }
+  var W = 720, H = 330, svg = svgInto(sl, W, H), ml = 36, mr = 16, mt = 16, mb = 32;
+  var px = function(x){ return ml + x * (W - ml - mr); }, py = function(y){ return H - mb - y * (H - mt - mb); };
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:"none", stroke:C.rule }, svg);
+  var d = "", i, x;
+  for(i = 0; i <= 100; i++){ x = i / 100; d += (i ? "L" : "M") + px(x) + " " + py(REG.f(x)); }
+  S("path", { d:d, fill:"none", stroke:C.faint, "stroke-width":1.6, "stroke-dasharray":"6 5" }, svg);
+  REG.pts.forEach(function(p){
+    var y1 = py(p[1]), y2 = py(REG.f(p[0])), above = p[1] > REG.f(p[0]);
+    S("line", { x1:px(p[0]), y1:y1, x2:px(p[0]), y2:y2, stroke:C.amber, "stroke-width":1.6 }, svg);
+    T(svg, px(p[0]) + 7, above ? (y1 + y2) / 2 + 4 : (y1 + y2) / 2 + 4, "noise", { fill:C.amber, "font-size":11.5 });
+    S("circle", { cx:px(p[0]), cy:y2, r:2.2, fill:C.faint }, svg);
+    S("circle", { cx:px(p[0]), cy:y1, r:5, fill:C.ink }, svg);
+  });
+  T(svg, W - mr, H - 8, "input", { "text-anchor":"end", fill:C.faint, "font-size":12.5 });
+  T(svg, ml + 8, mt + 16, "output", { fill:C.faint, "font-size":12.5 });
+  T(svg, px(0.985), py(REG.f(0.985)) - 10, "underlying pattern", { "text-anchor":"end", fill:C.faint, "font-size":12.5 });
+}
+
+function polyfit(pts, deg){
+  var n = deg + 1, A = [], b = [], i, j, k;
+  for(i = 0; i < n; i++){ A.push(new Array(n).fill(0)); b.push(0); }
+  pts.forEach(function(p){ for(i = 0; i < n; i++){ b[i] += Math.pow(p[0], i) * p[1]; for(j = 0; j < n; j++){ A[i][j] += Math.pow(p[0], i + j); } } });
+  for(i = 0; i < n; i++){
+    var piv = i; for(k = i + 1; k < n; k++){ if(Math.abs(A[k][i]) > Math.abs(A[piv][i])){ piv = k; } }
+    var t = A[i]; A[i] = A[piv]; A[piv] = t; t = b[i]; b[i] = b[piv]; b[piv] = t;
+    for(k = i + 1; k < n; k++){ var f = A[k][i] / A[i][i]; for(j = i; j < n; j++){ A[k][j] -= f * A[i][j]; } b[k] -= f * b[i]; }
+  }
+  var c = new Array(n).fill(0);
+  for(i = n - 1; i >= 0; i--){ var s = b[i]; for(j = i + 1; j < n; j++){ s -= A[i][j] * c[j]; } c[i] = s / A[i][i]; }
+  return function(x){ var y = 0, p = 1; for(i = 0; i < n; i++){ y += c[i] * p; p *= x; } return y; };
+}
+function lagrange(pts){
+  return function(x){ var s = 0, i, j, n = pts.length; for(i = 0; i < n; i++){ var li = 1; for(j = 0; j < n; j++){ if(j !== i){ li *= (x - pts[j][0]) / (pts[i][0] - pts[j][0]); } } s += li * pts[i][1]; } return s; };
+}
+function fig13(){
+  var sl = slot("f13"); if(!sl){ return; }
+  var svg = svgInto(sl, TP.W, 290), pw = TP.pw, ph = TP.ph;
+  var fits = [ { f:polyfit(REG.pts, 1), cap:"Underfit", sub:"straight line" }, { f:polyfit(REG.pts, 3), cap:"Good fit", sub:"gentle curve" }, { f:lagrange(REG.pts), cap:"Overfit", sub:"through every point" } ];
+  var clip = S("clipPath", { id:"clip13" }, S("defs", {}, svg)); S("rect", { x:0, y:0, width:pw, height:ph }, clip);
+  fits.forEach(function(ft, k){
+    var g = panelGroup(svg, k);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:"none", stroke:C.rule }, g);
+    var gg = S("g", { "clip-path":"url(#clip13)" }, g);
+    var px = function(x){ return 14 + x * (pw - 28); }, py = function(y){ return ph - 14 - y * (ph - 28); };
+    var d = "", i, x;
+    for(i = 0; i <= 100; i++){ x = i / 100; d += (i ? "L" : "M") + px(x) + " " + py(REG.f(x)); }
+    S("path", { d:d, fill:"none", stroke:C.faint, "stroke-width":1.4, "stroke-dasharray":"5 4" }, gg);
+    d = "";
+    for(i = 0; i <= 300; i++){ x = i / 300; d += (i ? "L" : "M") + px(x) + " " + py(ft.f(x)); }
+    S("path", { d:d, fill:"none", stroke:k === 1 ? C.green : C.rose, "stroke-width":2.4 }, gg);
+    REG.pts.forEach(function(p){ S("circle", { cx:px(p[0]), cy:py(p[1]), r:4.5, fill:C.ink }, gg); });
+    panelCap(g, ft.cap, ft.sub);
+  });
+}
+
+/* ---------------------------------------------------------------- Figure 1.4 */
+var F14 = {
+  curve: function(x){ return 0.5 + 0.17 * Math.sin(2 * Math.PI * x + 0.4); },
+  train: [[0.08,0.78,1],[0.20,0.85,1],[0.34,0.90,1],[0.47,0.80,1],[0.60,0.62,1],[0.72,0.55,1],[0.85,0.60,1],[0.80,0.44,1],[0.28,0.70,1],
+          [0.10,0.40,0],[0.24,0.42,0],[0.40,0.30,0],[0.55,0.20,0],[0.62,0.12,0],[0.78,0.25,0],[0.90,0.35,0],[0.50,0.34,0],[0.20,0.56,0],
+          [0.30,0.83,0],[0.70,0.22,1]],
+  islands: [[0.30,0.83,0.085],[0.70,0.22,0.085]]
+};
+function fig14(){
+  var sl = slot("f14"); if(!sl){ return; }
+  var svg = svgInto(sl, TP.W, 272), pw = TP.pw, ph = TP.ph;
+  var kinds = [ { cap:"Straight line", mode:"line" }, { cap:"Smooth curve", mode:"smooth" }, { cap:"Curve with islands", mode:"island" } ];
+  kinds.forEach(function(kd, k){
+    var g = panelGroup(svg, k);
+    var px = function(x){ return x * pw; }, py = function(y){ return ph - y * ph; };
+    var cl = S("clipPath", { id:"clip14_" + k }, S("defs", {}, svg)); S("rect", { x:0, y:0, width:pw, height:ph }, cl);
+    var gg = S("g", { "clip-path":"url(#clip14_" + k + ")" }, g);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.roseTint }, gg);
+    var d = "", i, x;
+    if(kd.mode === "line"){ d = "M0 " + py(0.5) + "L" + pw + " " + py(0.5); }
+    else { for(i = 0; i <= 120; i++){ x = i / 120; d += (i ? "L" : "M") + px(x) + " " + py(F14.curve(x)); } }
+    S("path", { d:d + "L" + pw + " 0L0 0Z", fill:C.blueTint, stroke:"none" }, gg);
+    S("path", { d:d, fill:"none", stroke:C.ink, "stroke-width":2 }, gg);
+    if(kd.mode === "island"){
+      F14.islands.forEach(function(c, j){
+        var inside = F14.train[18 + j][2];
+        S("circle", { cx:px(c[0]), cy:py(c[1]), r:c[2] * pw, fill:inside ? C.blueTint : C.roseTint, stroke:C.ink, "stroke-width":2 }, gg);
+      });
+    }
+    F14.train.forEach(function(p){ dot(gg, px(p[0]), py(p[1]), 6, p[2]); });
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:"none", stroke:C.rule }, g);
+    panelCap(g, kd.cap);
+  });
+}
+
+/* ---------------------------------------------------------------- curves panel helper */
+function curvesPanel(g, pw, ph, tl, vl, maxE, yMax){
+  var ml = 32, mb = 26, mt = 8, mr = 8;
+  var px = function(e){ return ml + e / maxE * (pw - ml - mr); }, py = function(v){ return mt + (1 - Math.min(v, yMax) / yMax) * (ph - mt - mb); };
+  S("rect", { x:ml, y:mt, width:pw-ml-mr, height:ph-mt-mb, fill:C.paper, stroke:C.rule }, g);
+  [0, 0.5, 1.0, 1.5].forEach(function(v){ if(v <= yMax){ S("line", { x1:ml, x2:pw-mr, y1:py(v), y2:py(v), stroke:C.rule, "stroke-dasharray":"2 3" }, g); T(g, ml - 4, py(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":11, fill:C.faint }); } });
+  T(g, ml, ph - 8, "0", { "font-size":11, fill:C.faint }); T(g, pw - mr, ph - 8, maxE + " epochs", { "text-anchor":"end", "font-size":11, fill:C.faint });
+  function path(arr, col){ var d = "", i; for(i = 0; i < arr.length; i++){ d += (i ? "L" : "M") + fmt(px(i), 1) + " " + fmt(py(arr[i]), 1); } S("path", { d:d, fill:"none", stroke:col, "stroke-width":2, "stroke-linejoin":"round" }, g); }
+  path(tl, C.train); path(vl, C.val);
+  return { px:px, py:py };
+}
+var BASE = null; /* baseline run, shared by 1.5 and 4.1 */
+function baselineRun(){
+  if(!BASE){ BASE = new L.Trainer({ h:50, seed:3, lr:0.3, mom:0.9, l2:0, l1:0, dropout:0, patience:0, data:DATA, maxEpochs:800 }); while(BASE.runEpoch()){} }
+  return BASE;
+}
+function fig15(){
+  var sl = slot("f15"); if(!sl){ return; }
+  var svg = svgInto(sl, TP.W, 290), pw = TP.pw, ph = TP.ph;
+  var note = T(svg, TP.W / 2, 120, "computing three runs…", { "text-anchor":"middle", "font-size":13 });
+  setTimeout(function(){
+    var cfgs = [ { cap:"Underfit", sub:"one neuron", over:{ h:1 } }, { cap:"Good fit", sub:"weights kept small", over:{ l2:0.1 } }, { cap:"Overfit", sub:"nothing held back", over:null } ];
+    svg.removeChild(note);
+    cfgs.forEach(function(cf, k){
+      var t;
+      if(cf.over){ t = new L.Trainer(Object.assign({ h:50, seed:3, lr:0.3, mom:0.9, l2:0, l1:0, dropout:0, patience:0, data:DATA, maxEpochs:800 }, cf.over)); while(t.runEpoch()){} }
+      else { t = baselineRun(); }
+      var g = panelGroup(svg, k);
+      curvesPanel(g, pw, ph, t.trainLoss, t.valLoss, 800, 1.6);
+      panelCap(g, cf.cap, cf.sub);
+    });
+    var lg = S("g", { transform:"translate(" + (TP.W - 8) + "," + 284 + ")" }, svg);
+    S("line", { x1:-200, x2:-182, y1:-4, y2:-4, stroke:C.train, "stroke-width":2.2 }, lg); T(lg, -176, 0, "training", { "font-size":12 });
+    S("line", { x1:-104, x2:-86, y1:-4, y2:-4, stroke:C.val, "stroke-width":2.2 }, lg); T(lg, -80, 0, "validation", { "font-size":12 });
+    fig41();
+  }, 60);
+}
+
+/* ---------------------------------------------------------------- Figure 1.7 */
+function fig17(){
+  var sl = slot("f17"); if(!sl){ return; }
+  var W = 720, H = 290, svg = svgInto(sl, W, H), ml = 40, mr = 76, mt = 14, mb = 34;
+  var px = function(x){ return ml + (x + 1) / 2 * (W - ml - mr); }, py = function(y){ return mt + (1 - y) * (H - mt - mb); };
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:"none", stroke:C.rule }, svg);
+  [0, 0.5, 1].forEach(function(v){ S("line", { x1:ml, x2:W-mr, y1:py(v), y2:py(v), stroke:C.rule, "stroke-dasharray":"2 3" }, svg); T(svg, ml - 6, py(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":12, fill:C.faint }); });
+  [-1, -0.5, 0, 0.5, 1].forEach(function(v){ T(svg, px(v), H - 12, String(v), { "text-anchor":"middle", "font-size":12, fill:C.faint }); });
+  T(svg, W - mr + 10, H - 12, "x", { "font-size":13, fill:C.faint, "font-style":"italic" });
+  [[1, C.blue, "w = 1"], [50, C.rose, "w = 50"]].forEach(function(cv){
+    var d = "", i, x;
+    for(i = 0; i <= 400; i++){ x = -1 + 2 * i / 400; d += (i ? "L" : "M") + fmt(px(x), 1) + " " + fmt(py(1 / (1 + Math.exp(-cv[0] * x))), 1); }
+    S("path", { d:d, fill:"none", stroke:cv[1], "stroke-width":2.4 }, svg);
+    T(svg, W - mr + 8, py(1 / (1 + Math.exp(-cv[0]))) + 4, cv[2], { fill:cv[1], "font-size":14, "font-style":"italic" });
+  });
+}
+
+/* ---------------------------------------------------------------- Figure 2.5: is the island worth it? */
+function fig25(){
+  var sl = slot("f25"); if(!sl){ return; }
+  var W = 720, H = 290, svg = svgInto(sl, W, H);
+  var cases = [ { cap:"No island", data:0.5, pen:0.5, island:false, x0:0 }, { cap:"Island", data:0.2, pen:1.5, island:true, x0:378 } ];
+  cases.forEach(function(cs){
+    var g = S("g", { transform:"translate(" + cs.x0 + ",8)" }, svg), pw = 168, ph = 168;
+    var cl = S("clipPath", { id:"clip25_" + (cs.island ? 1 : 0) }, S("defs", {}, svg)); S("rect", { x:0, y:0, width:pw, height:ph }, cl);
+    var gg = S("g", { "clip-path":"url(#clip25_" + (cs.island ? 1 : 0) + ")" }, g);
+    var px = function(x){ return x * pw; }, py = function(y){ return ph - y * ph; };
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.roseTint }, gg);
+    var d = "", i, x;
+    for(i = 0; i <= 80; i++){ x = i / 80; d += (i ? "L" : "M") + px(x) + " " + py(0.5 + 0.12 * Math.sin(2 * Math.PI * x)); }
+    S("path", { d:d + "L" + pw + " 0L0 0Z", fill:C.blueTint }, gg);
+    S("path", { d:d, fill:"none", stroke:C.ink, "stroke-width":2 }, gg);
+    if(cs.island){ S("circle", { cx:px(0.35), cy:py(0.78), r:0.13 * pw, fill:C.roseTint, stroke:C.ink, "stroke-width":2 }, gg); }
+    [[0.12,0.8,1],[0.5,0.85,1],[0.75,0.72,1],[0.9,0.85,1],[0.6,0.66,1],[0.15,0.3,0],[0.4,0.2,0],[0.65,0.28,0],[0.85,0.35,0],[0.3,0.4,0]].forEach(function(p){ dot(gg, px(p[0]), py(p[1]), 5.5, p[2]); });
+    dot(gg, px(0.35), py(0.78), 5.5, 0);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:"none", stroke:C.rule }, g);
+    T(g, pw / 2, ph + 22, cs.cap, { "text-anchor":"middle", fill:C.ink, "font-size":15, "font-weight":600 });
+    /* bars */
+    var bx = pw + 24, bw = 34, base = ph, scale = 76;
+    var bars = [ ["data loss", cs.data, C.train], ["penalty", cs.pen, C.rose], ["total", cs.data + cs.pen, C.ink] ];
+    bars.forEach(function(b, k){
+      var x = bx + k * (bw + 14), h = b[1] * scale;
+      S("rect", { x:x, y:base - h, width:bw, height:h, fill:b[2], opacity:k === 2 ? .9 : .7, rx:3 }, g);
+      T(g, x + bw / 2, base - h - 6, fmt(b[1], 1), { "text-anchor":"middle", "font-size":13, fill:C.ink, "font-weight":600 });
+      T(g, x + bw / 2, base + 18, b[0], { "text-anchor":"middle", "font-size":12 });
+    });
+    S("line", { x1:bx - 6, x2:bx + 3 * (bw + 14) - 8, y1:base, y2:base, stroke:C.rule2 }, g);
+  });
+  S("path", { d:"M346 92 l22 0 m-6 -6 l6 6 -6 6", fill:"none", stroke:C.faint, "stroke-width":1.6 }, svg);
+  T(svg, 357, 78, "add the", { "text-anchor":"middle", "font-size":12, fill:C.faint });
+  T(svg, 357, 116, "island", { "text-anchor":"middle", "font-size":12, fill:C.faint });
+  T(svg, W / 2, 248, "data loss − 0.3, penalty + 1.0, total + 0.7", { "text-anchor":"middle", "font-size":13, fill:C.ink, "font-weight":600 });
+  T(svg, W / 2, 272, "λ = 0.1 · the total is what the model minimises, and the island makes it larger", { "text-anchor":"middle", "font-size":12.5, fill:C.faint });
+}
+
+/* ---------------------------------------------------------------- Figure 3.4: sequences to zero */
+function fig33(){
+  var sl = slot("f33"); if(!sl){ return; }
+  var W = 720, H = 280, svg = svgInto(sl, W, H), ml = 40, mr = 90, mt = 16, mb = 40, steps = 8;
+  var px = function(k){ return ml + k / steps * (W - ml - mr); }, py = function(y){ return mt + (1 - y) * (H - mt - mb); };
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:"none", stroke:C.rule }, svg);
+  [0, 0.5, 1].forEach(function(v){ S("line", { x1:ml, x2:W-mr, y1:py(v), y2:py(v), stroke:C.rule, "stroke-dasharray":"2 3" }, svg); T(svg, ml - 6, py(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":12, fill:C.faint }); });
+  var k; for(k = 0; k <= steps; k++){ T(svg, px(k), H - 18, String(k), { "text-anchor":"middle", "font-size":12, fill:C.faint }); }
+  T(svg, (ml + W - mr) / 2, H - 3, "step", { "text-anchor":"middle", "font-size":12, fill:C.faint });
+  T(svg, ml + 8, mt + 16, "w", { "font-size":13, fill:C.faint, "font-style":"italic" });
+  var seqs = [ { f:function(k){ return Math.pow(0.75, k); }, col:C.blue, name:"L2: × 0.75" }, { f:function(k){ return Math.max(1 - 0.25 * k, 0); }, col:C.rose, name:"L1: − 0.25" } ];
+  seqs.forEach(function(sq){
+    var d = "";
+    for(k = 0; k <= steps; k++){ d += (k ? "L" : "M") + px(k) + " " + py(sq.f(k)); }
+    S("path", { d:d, fill:"none", stroke:sq.col, "stroke-width":1.4, opacity:.5 }, svg);
+    for(k = 0; k <= steps; k++){ S("circle", { cx:px(k), cy:py(sq.f(k)), r:4.6, fill:sq.col }, svg); }
+    T(svg, W - mr + 10, py(sq.f(steps)) + 4, sq.name, { fill:sq.col, "font-size":14 });
+  });
+}
+
+/* ---------------------------------------------------------------- Figure 3.5: twelve weights */
+function fig35(){
+  var sl = slot("f35"); if(!sl){ return; }
+  var a = [3.2, 0.4, -2.5, 0.7, 1.8, -0.3, 0.9, 2.6, -0.6, 0.2, 1.4, -1.1], lam = 1;
+  var sets = [ { cap:"No penalty", v:a, col:C.train }, { cap:"With L2", v:a.map(function(x){ return x / (1 + lam); }), col:C.blue }, { cap:"With L1", v:a.map(function(x){ return Math.sign(x) * Math.max(Math.abs(x) - lam, 0); }), col:C.rose } ];
+  var svg = svgInto(sl, TP.W, 272), pw = TP.pw, ph = TP.ph;
+  sets.forEach(function(st, k){
+    var g = panelGroup(svg, k);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.paper, stroke:C.rule }, g);
+    var py = function(y){ return ph / 2 - y / 3.6 * (ph / 2 - 12); }, bw = (pw - 24) / 12;
+    S("line", { x1:8, x2:pw-8, y1:py(0), y2:py(0), stroke:C.rule2 }, g);
+    st.v.forEach(function(v, i){
+      var x = 12 + i * bw + 2, y0 = py(Math.max(v, 0)), hgt = Math.abs(py(v) - py(0));
+      if(v === 0){ S("circle", { cx:x + (bw-4)/2, cy:py(0), r:3.2, fill:"none", stroke:C.rose, "stroke-width":1.6 }, g); }
+      else { S("rect", { x:x, y:y0, width:bw - 4, height:hgt, fill:st.col, opacity:.85, rx:2 }, g); }
+    });
+    panelCap(g, st.cap, k === 2 ? "rings: exactly zero" : "");
+  });
+}
+
+/* ---------------------------------------------------------------- Figure 4.1: two phases */
+function fig41(){
+  var sl = slot("f41"); if(!sl){ return; }
+  var t = baselineRun(), W = 720, H = 320, svg = svgInto(sl, W, H), ml = 44, mr = 16, mt = 30, mb = 40, maxE = 800, yMax = 1.6;
+  var px = function(e){ return ml + e / maxE * (W - ml - mr); }, py = function(v){ return mt + (1 - Math.min(v, yMax) / yMax) * (H - mt - mb); };
+  var be = t.best.epoch;
+  S("rect", { x:ml, y:mt, width:px(be) - ml, height:H-mt-mb, fill:C.blueTint }, svg);
+  S("rect", { x:px(be), y:mt, width:W - mr - px(be), height:H-mt-mb, fill:C.roseTint }, svg);
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:"none", stroke:C.rule }, svg);
+  [0, 0.5, 1.0, 1.5].forEach(function(v){ S("line", { x1:ml, x2:W-mr, y1:py(v), y2:py(v), stroke:C.rule, "stroke-dasharray":"2 3" }, svg); T(svg, ml - 6, py(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":12, fill:C.faint }); });
+  [0, 200, 400, 600, 800].forEach(function(e){ T(svg, px(e), H - 16, String(e), { "text-anchor":"middle", "font-size":12, fill:C.faint }); });
+  T(svg, W - mr, H - 2, "epoch", { "text-anchor":"end", "font-size":12, fill:C.faint });
+  function path(arr, col){ var d = "", i; for(i = 0; i < arr.length; i++){ d += (i ? "L" : "M") + fmt(px(i), 1) + " " + fmt(py(arr[i]), 1); } S("path", { d:d, fill:"none", stroke:col, "stroke-width":2.2, "stroke-linejoin":"round" }, svg); }
+  path(t.trainLoss, C.train); path(t.valLoss, C.val);
+  S("line", { x1:px(be), x2:px(be), y1:mt, y2:H-mb, stroke:C.ink, "stroke-width":1.4, "stroke-dasharray":"5 4" }, svg);
+  S("circle", { cx:px(be), cy:py(t.best.val), r:5.5, fill:C.paper, stroke:C.val, "stroke-width":2 }, svg);
+  T(svg, px(be) + 8, py(t.best.val) - 12, "stop here: epoch " + be, { "font-size":13, fill:C.ink, "font-weight":600 });
+  T(svg, (ml + px(be)) / 2, mt - 10, "learning the pattern", { "text-anchor":"middle", "font-size":13, fill:C.blue, "font-weight":600 });
+  T(svg, (px(be) + W - mr) / 2, mt - 10, "memorising the noise", { "text-anchor":"middle", "font-size":13, fill:C.rose, "font-weight":600 });
+  T(svg, px(600), py(t.trainLoss[600]) - 10, "training", { "text-anchor":"middle", "font-size":12, fill:C.train });
+  T(svg, px(600), py(t.valLoss[600]) - 10, "validation", { "text-anchor":"middle", "font-size":12, fill:C.val });
+  /* gap arrow */
+  S("line", { x1:px(500), x2:px(500), y1:py(t.valLoss[500]), y2:py(t.trainLoss[500]), stroke:C.rose, "stroke-width":1.4, "stroke-dasharray":"3 3" }, svg);
+  T(svg, px(500) + 6, (py(t.valLoss[500]) + py(t.trainLoss[500])) / 2 + 4, "gap", { "font-size":12, fill:C.rose });
+}
+
+/* ---------------------------------------------------------------- Figure 4.2: patience animation */
+function fig42(){
+  var sl = slot("f42"), ctl = document.querySelector('[data-figctrl="f42"]'), stat = document.querySelector('[data-figstat="f42"]'); if(!sl){ return; }
+  var VAL = [0.90, 0.72, 0.61, 0.55, 0.52, 0.53, 0.50, 0.51, 0.52, 0.54, 0.53, 0.56], TR = [0.95, 0.80, 0.70, 0.62, 0.56, 0.50, 0.45, 0.41, 0.37, 0.34, 0.31, 0.28];
+  var W = 720, H = 320, svg = svgInto(sl, W, H), ml = 44, mr = 16, mt = 44, mb = 40, n = 12;
+  var px = function(e){ return ml + (e - 0.5) / n * (W - ml - mr); }, py = function(v){ return mt + (1 - (v - 0.2) / 0.8) * (H - mt - mb); };
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:C.paper, stroke:C.rule }, svg);
+  [0.3, 0.5, 0.7, 0.9].forEach(function(v){ S("line", { x1:ml, x2:W-mr, y1:py(v), y2:py(v), stroke:C.rule, "stroke-dasharray":"2 3" }, svg); T(svg, ml - 6, py(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":12, fill:C.faint }); });
+  var i; for(i = 1; i <= n; i++){ T(svg, px(i), H - 16, String(i), { "text-anchor":"middle", "font-size":12, fill:C.faint }); }
+  T(svg, W - mr, H - 2, "epoch", { "text-anchor":"end", "font-size":12, fill:C.faint });
+  (function(){ var d = "", k; for(k = 0; k < n; k++){ d += (k ? "L" : "M") + px(k + 1) + " " + py(VAL[k]); } S("path", { d:d, fill:"none", stroke:C.val, "stroke-width":1.4, opacity:.25, "stroke-dasharray":"3 4" }, svg); T(svg, px(n) - 4, py(VAL[n-1]) - 12, "what is coming", { "text-anchor":"end", "font-size":11, fill:C.faint }); })();
+  var pTr = S("path", { d:"", fill:"none", stroke:C.train, "stroke-width":2, opacity:.5 }, svg);
+  var pVa = S("path", { d:"", fill:"none", stroke:C.val, "stroke-width":2.2 }, svg);
+  var gDots = S("g", {}, svg);
+  var bestLine = S("line", { x1:0, x2:0, y1:mt, y2:H-mb, stroke:C.val, "stroke-dasharray":"5 4", opacity:0 }, svg);
+  var bestTag = S("g", { opacity:0 }, svg);
+  var bestBox = S("rect", { x:0, y:mt + 6, width:118, height:22, rx:5, fill:C.green }, bestTag);
+  var bestTxt = T(bestTag, 0, mt + 21, "", { fill:"#fff", "font-size":12, "font-weight":600, "text-anchor":"middle" });
+  var counter = S("g", {}, svg);
+  var cLabel = T(svg, ml, mt - 24, "epochs without a new best", { "font-size":12.5, fill:C.muted });
+  var cBoxes = [];
+  var stopTag = S("g", { opacity:0 }, svg);
+  var stopBox = S("rect", { x:0, y:mt + 36, width:0, height:22, rx:5, fill:C.rose }, stopTag);
+  var stopTxt = T(stopTag, 0, mt + 51, "", { fill:"#fff", "font-size":12, "font-weight":600, "text-anchor":"middle" });
+  var lastMark = S("circle", { r:6, fill:"none", stroke:C.rose, "stroke-width":2, opacity:0 }, svg);
+
+  var patience = 3, shown = 0, timer = 0, best = Infinity, bestEp = 0, wait = 0, stopped = false;
+  function buildCounter(){
+    while(counter.firstChild){ counter.removeChild(counter.firstChild); }
+    cBoxes = [];
+    for(var k = 0; k < patience; k++){ cBoxes.push(S("rect", { x:ml + 196 + k * 22, y:mt - 36, width:16, height:16, rx:3, fill:C.paper, stroke:C.rule2, "stroke-width":1.4 }, counter)); }
+    T(counter, ml + 196 + patience * 22 + 6, mt - 23, "of " + patience, { "font-size":12, fill:C.faint });
+  }
+  function draw(){
+    var d1 = "", d2 = "", k;
+    while(gDots.firstChild){ gDots.removeChild(gDots.firstChild); }
+    for(k = 0; k < shown; k++){
+      d1 += (k ? "L" : "M") + px(k + 1) + " " + py(TR[k]); d2 += (k ? "L" : "M") + px(k + 1) + " " + py(VAL[k]);
+      S("circle", { cx:px(k + 1), cy:py(VAL[k]), r:4.5, fill:(k + 1 === bestEp) ? C.green : C.val }, gDots);
+      T(gDots, px(k + 1), py(VAL[k]) - 10, fmt(VAL[k], 2), { "text-anchor":"middle", "font-size":11, fill:C.muted });
+    }
+    pTr.setAttribute("d", d1); pVa.setAttribute("d", d2);
+    cBoxes.forEach(function(b, k){ b.setAttribute("fill", k < wait ? C.rose : C.paper); b.setAttribute("stroke", k < wait ? C.rose : C.rule2); });
+    if(bestEp){
+      bestLine.setAttribute("x1", px(bestEp)); bestLine.setAttribute("x2", px(bestEp)); bestLine.setAttribute("opacity", .8);
+      bestTag.setAttribute("opacity", 1); bestBox.setAttribute("x", px(bestEp) - 59); bestTxt.setAttribute("x", px(bestEp)); bestTxt.textContent = "saved: epoch " + bestEp;
+    } else { bestLine.setAttribute("opacity", 0); bestTag.setAttribute("opacity", 0); }
+  }
+  function step(){
+    if(shown >= n){ finish("Reached the last epoch."); return; }
+    var v = VAL[shown]; shown++;
+    if(v < best){ best = v; bestEp = shown; wait = 0; stat.textContent = "Epoch " + shown + ": " + fmt(v, 2) + " is a new best. Weights saved, counter reset."; }
+    else { wait++; stat.textContent = "Epoch " + shown + ": " + fmt(v, 2) + " is not better than " + fmt(best, 2) + ". Counter " + wait + " of " + patience + "."; }
+    draw();
+    if(wait >= patience){ finish("Stopped after epoch " + shown + ": " + patience + " epoch" + (patience > 1 ? "s" : "") + " without a new best. Restored epoch " + bestEp + " (" + fmt(best, 2) + "); the last weights, epoch " + shown + " (" + fmt(VAL[shown-1], 2) + "), are discarded."); return; }
+    timer = setTimeout(step, 750);
+  }
+  function finish(msg){
+    stopped = true; timer = 0; stat.textContent = msg; btnPlay.textContent = "Play"; btnPlay.disabled = true;
+    stopTag.setAttribute("opacity", 1); var w = 128; stopBox.setAttribute("width", w); stopBox.setAttribute("x", px(shown) - w / 2); stopTxt.setAttribute("x", px(shown)); stopTxt.textContent = "stop after epoch " + shown;
+    lastMark.setAttribute("cx", px(shown)); lastMark.setAttribute("cy", py(VAL[shown-1])); lastMark.setAttribute("opacity", 1);
+  }
+  function reset(){
+    if(timer){ clearTimeout(timer); timer = 0; }
+    shown = 0; best = Infinity; bestEp = 0; wait = 0; stopped = false;
+    stopTag.setAttribute("opacity", 0); lastMark.setAttribute("opacity", 0);
+    btnPlay.textContent = "Play"; btnPlay.disabled = false; stat.textContent = "";
+    buildCounter(); draw();
+  }
+  /* controls */
+  el("span", "cl", "Patience", ctl);
+  var seg = el("div", "seg", "", ctl);
+  [1, 3, 5].forEach(function(p){
+    var b = el("button", p === 3 ? "on" : "", String(p), seg); b.type = "button";
+    b.addEventListener("click", function(){ patience = p; Array.prototype.forEach.call(seg.children, function(x){ x.classList.remove("on"); }); b.classList.add("on"); reset(); });
+  });
+  var btnPlay = el("button", "btn sm", "Play", ctl); btnPlay.type = "button";
+  var btnReset = el("button", "btn ghost sm", "Reset", ctl); btnReset.type = "button";
+  btnPlay.addEventListener("click", function(){ if(timer){ clearTimeout(timer); timer = 0; btnPlay.textContent = "Play"; return; } if(stopped){ return; } btnPlay.textContent = "Pause"; step(); });
+  btnReset.addEventListener("click", reset);
+  reset();
+}
+
+/* ---------------------------------------------------------------- Figure 5.2: dropout masks */
+function fig52(){
+  var sl = slot("f52"); if(!sl){ return; }
+  var svg = svgInto(sl, TP.W, 268), pw = TP.pw, ph = 200, rand = L.mulberry32(21), layers = [2, 5, 5, 1], k;
+  for(k = 0; k < 3; k++){
+    var g = S("g", { transform:"translate(" + (k * (pw + TP.gap)) + ",8)" }, svg);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.paper, stroke:C.rule }, g);
+    var pos = [], masks = [], li, ni;
+    for(li = 0; li < layers.length; li++){
+      pos.push([]); masks.push([]);
+      for(ni = 0; ni < layers[li]; ni++){
+        pos[li].push([30 + li * (pw - 60) / 3, ph / 2 + (ni - (layers[li] - 1) / 2) * 32]);
+        masks[li].push((li === 1 || li === 2) ? (rand() < 0.5 ? 0 : 1) : 1);
+      }
+    }
+    for(li = 0; li < layers.length - 1; li++){ for(ni = 0; ni < layers[li]; ni++){ for(var nj = 0; nj < layers[li+1]; nj++){
+      var on = masks[li][ni] && masks[li+1][nj];
+      S("line", { x1:pos[li][ni][0], y1:pos[li][ni][1], x2:pos[li+1][nj][0], y2:pos[li+1][nj][1], stroke:on ? C.muted : C.rule, "stroke-width":on ? 1.1 : 0.7, opacity:on ? .7 : .6 }, g);
+    } } }
+    for(li = 0; li < layers.length; li++){ for(ni = 0; ni < layers[li]; ni++){
+      var on2 = masks[li][ni], cx = pos[li][ni][0], cy = pos[li][ni][1];
+      S("circle", { cx:cx, cy:cy, r:9.5, fill:on2 ? C.white : "#EDEAE3", stroke:on2 ? C.ink : C.rule2, "stroke-width":on2 ? 1.6 : 1.2 }, g);
+      if(!on2){ S("path", { d:"M" + (cx-4) + " " + (cy-4) + "l8 8M" + (cx+4) + " " + (cy-4) + "l-8 8", stroke:C.faint, "stroke-width":1.3 }, g); }
+    } }
+    T(g, pw / 2, ph + 24, "Step " + (k + 1), { "text-anchor":"middle", fill:C.ink, "font-size":15, "font-weight":600 });
+    T(g, pw / 2, ph + 42, (masks[1].filter(function(m){ return !m; }).length + masks[2].filter(function(m){ return !m; }).length) + " of 10 hidden neurons off", { "text-anchor":"middle", "font-size":12.5 });
+  }
+}
+
+/* ---------------------------------------------------------------- Figure 5.3: scaling */
+function fig53(){
+  var sl = slot("f53"); if(!sl){ return; }
+  var svg = svgInto(sl, TP.W, 262), pw = TP.pw, ph = 196;
+  var cases = [ { cap:"Training, no scaling", mask:[1,0,1,0], scale:1, sum:"2", bad:true }, { cap:"Test time", mask:[1,1,1,1], scale:1, sum:"4" }, { cap:"Training, × 2", mask:[1,0,1,0], scale:2, sum:"4" } ];
+  cases.forEach(function(cs, k){
+    var g = S("g", { transform:"translate(" + (k * (pw + TP.gap)) + ",8)" }, svg);
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.paper, stroke:C.rule }, g);
+    var sx = pw - 46, sy = ph / 2;
+    cs.mask.forEach(function(m, i){
+      var cx = 44, cy = 34 + i * 43;
+      S("line", { x1:cx + 16, y1:cy, x2:sx - 22, y2:sy, stroke:m ? C.muted : C.rule, "stroke-width":m ? 1.3 : 0.8 }, g);
+      S("circle", { cx:cx, cy:cy, r:16, fill:m ? C.white : "#EDEAE3", stroke:m ? C.ink : C.rule2, "stroke-width":1.6 }, g);
+      T(g, cx, cy + 4.5, m ? fmt(1 * cs.scale, 1) : "off", { "text-anchor":"middle", "font-size":m ? 13 : 11, fill:m ? C.ink : C.faint, "font-weight":m ? 600 : 400 });
+    });
+    S("rect", { x:sx - 22, y:sy - 22, width:44, height:44, rx:8, fill:cs.bad ? C.roseTint : C.blueTint, stroke:cs.bad ? C.rose : C.blue, "stroke-width":1.6 }, g);
+    T(g, sx, sy + 6, cs.sum, { "text-anchor":"middle", "font-size":19, fill:C.ink, "font-weight":600 });
+    T(g, sx, sy + 40, "sum", { "text-anchor":"middle", "font-size":12, fill:C.faint });
+    T(g, pw / 2, ph + 24, cs.cap, { "text-anchor":"middle", fill:C.ink, "font-size":15, "font-weight":600 });
+    T(g, pw / 2, ph + 42, k === 0 ? "half the neurons, half the sum" : (k === 1 ? "what the next layer expects" : "kept neurons scaled by 1 / (1 − r)"), { "text-anchor":"middle", "font-size":12.5 });
+  });
+}
+
+/* ---------------------------------------------------------------- Figure 5.5: ensemble of masks */
+function fig55(){
+  var sl = slot("f55"); if(!sl){ return; }
+  var W = 720, H = 250, svg = svgInto(sl, W, H), pw = 150, gap = 20, x0 = 8;
+  var masks = [ { m:[1,1], out:8, cap:"both on" }, { m:[1,0], out:2, cap:"only first" }, { m:[0,1], out:6, cap:"only second" }, { m:[0,0], out:0, cap:"both off" } ];
+  masks.forEach(function(ms, k){
+    var g = S("g", { transform:"translate(" + (x0 + k * (pw + gap)) + ",8)" }, svg), ph = 160;
+    S("rect", { x:0, y:0, width:pw, height:ph, fill:C.paper, stroke:C.rule }, g);
+    var ox = pw - 40, oy = ph / 2;
+    [1, 3].forEach(function(v, i){
+      var cx = 40, cy = 50 + i * 60, on = ms.m[i];
+      S("line", { x1:cx + 16, y1:cy, x2:ox - 18, y2:oy, stroke:on ? C.muted : C.rule, "stroke-width":on ? 1.3 : 0.8 }, g);
+      S("circle", { cx:cx, cy:cy, r:16, fill:on ? C.white : "#EDEAE3", stroke:on ? C.ink : C.rule2, "stroke-width":1.6 }, g);
+      T(g, cx, cy + 4.5, on ? String(v * 2) : "off", { "text-anchor":"middle", "font-size":on ? 13 : 11, fill:on ? C.ink : C.faint, "font-weight":on ? 600 : 400 });
+      if(on){ T(g, cx, cy - 22, v + " × 2", { "text-anchor":"middle", "font-size":11, fill:C.faint }); }
+    });
+    S("rect", { x:ox - 18, y:oy - 18, width:36, height:36, rx:7, fill:C.blueTint, stroke:C.blue, "stroke-width":1.5 }, g);
+    T(g, ox, oy + 5.5, String(ms.out), { "text-anchor":"middle", "font-size":17, fill:C.ink, "font-weight":600 });
+    T(g, pw / 2, ph + 22, ms.cap, { "text-anchor":"middle", fill:C.ink, "font-size":14, "font-weight":600 });
+  });
+  T(svg, W / 2, H - 14, "average of the four outputs: (8 + 2 + 6 + 0) / 4 = 4 = the full network, 1 + 3, at test time", { "text-anchor":"middle", "font-size":13.5, fill:C.ink });
+}
+
+/* ================================================================ THE LAB */
+var DATA = (function(){
+  var tr = L.makeMoons(40, 11, 0.10, 0.12), va = L.makeMoons(200, 12, 0.10, 0.12), te = L.makeMoons(200, 13, 0.10, 0.12);
+  return { Xtr:tr.X, ytr:tr.y, Xva:va.X, yva:va.y, Xte:te.X, yte:te.y };
+})();
+var GRID_N = 56, DOM = 1.1;
+var GRID = (function(){ var g = [], i, j; for(i = 0; i < GRID_N; i++){ for(j = 0; j < GRID_N; j++){ g.push([ -DOM + (j + 0.5) / GRID_N * 2 * DOM, DOM - (i + 0.5) / GRID_N * 2 * DOM ]); } } return g; })();
+
+var CTRL = {
+  l2:       { label:"L2 λ", key:"l2", vals:[0, 0.003, 0.01, 0.03, 0.1, 0.3], names:["0", "0.003", "0.01", "0.03", "0.1", "0.3"] },
+  l1:       { label:"L1 λ", key:"l1", vals:[0, 0.001, 0.003, 0.01, 0.03], names:["0", "0.001", "0.003", "0.01", "0.03"] },
+  dropout:  { label:"Dropout rate r", key:"dropout", vals:[0, 0.2, 0.5, 0.7], names:["0", "0.2", "0.5", "0.7"] },
+  width:    { label:"Hidden width", key:"h", vals:[4, 50], names:["4 · 4", "50 · 50"] },
+  patience: { label:"Early stopping patience", key:"patience", vals:[0, 5, 20, 50], names:["off", "5", "20", "50"] }
+};
+var MODEL_CODE = 'model = Sequential([\n    Dense(50, activation="tanh"),      # 2 inputs -> 50\n    Dense(50, activation="tanh"),      # 50 -> 50\n    Dense(1,  activation="sigmoid"),   # 50 -> 1\n])';
+var LABS = {
+  lab1: { n:"Lab 1", title:"Watch it overfit", intro:"<b>Model:</b> 2 inputs → 50 tanh → 50 tanh → 1 sigmoid, 2 751 parameters. <b>Data:</b> 40 training points, 4 with a wrong label; 200 validation points. <b>Training:</b> gradient descent with momentum, learning rate 0.3, 800 epochs, nothing held back. The hollow marker follows the lowest validation loss so far.", code:MODEL_CODE, controls:[] },
+  lab2: { n:"Lab 2", title:"Charge for big weights", intro:"Same model, same data, with the L2 shrink of 2.3 applied to every weight and no bias. Pick λ, then Train.", controls:["l2"] },
+  lab3: { n:"Lab 3", title:"Subtract and clip", intro:"Same model with L1: after each step every weight moves a fixed amount αλ towards zero and is clipped there. The readout counts weights that are exactly zero.", controls:["l1"], zero:true },
+  lab4: { n:"Lab 4", title:"Stop at the right epoch", intro:"No penalty. The run stops once validation loss has not improved for the chosen number of epochs, then restores the best weights. The dashed line marks the best epoch so far.", controls:["patience"], restore:true, bestline:true, compare:true },
+  lab5: { n:"Lab 5", title:"Switch neurons off", intro:"No penalty. Each training step switches every hidden neuron off with probability r, and scales the kept ones as in 5.3. Compare the wide network with a narrow one.", controls:["dropout", "width"] },
+  lab6: { n:"Lab 6", title:"Tune like a practitioner", intro:"Every control at once, plus a locked test set of 200 points. Tune with the validation readout. Press the test button once, at the end.", controls:["width", "l2", "l1", "dropout", "patience"], restore:true, bestline:true, compare:true, zero:true, test:true }
+};
+var SPEEDS = { slow:6, normal:24, fast:96 };
+
+function Lab(root, spec){
+  var self = this;
+  this.spec = spec; this.root = root;
+  this.set = { h:50, l2:0, l1:0, dropout:0, patience:0, restore:true };
+  this.speed = SPEEDS.normal; this.running = false; this.raf = 0; this.accum = 0; this.last = 0;
+  this.testUses = 0; this.showVal = false;
+
+  var head = el("div", "lab-head", "", root);
+  el("span", "ltag", spec.n, head); el("h4", "", spec.title, head);
+  el("p", "lab-intro", spec.intro, root);
+  if(spec.code){ var pre = el("pre", "", "", root); pre.textContent = spec.code; }
+
+  if(spec.controls.length || spec.restore){
+    var ctr = el("div", "ctrls", "", root);
+    spec.controls.forEach(function(name){
+      var c = CTRL[name], box = el("div", "ctrl", "", ctr); el("span", "cl", c.label, box);
+      var seg = el("div", "seg", "", box);
+      c.vals.forEach(function(v, i){
+        var b = el("button", v === self.set[c.key] ? "on" : "", c.names[i], seg); b.type = "button";
+        b.addEventListener("click", function(){
+          if(self.set[c.key] === v){ return; }
+          self.set[c.key] = v;
+          Array.prototype.forEach.call(seg.children, function(x){ x.classList.remove("on"); }); b.classList.add("on");
+          self.reset("Settings changed. Press Train to start a new run.");
+        });
+      });
+    });
+    if(spec.restore){
+      var lab = el("label", "chk", "", ctr), inp = el("input", "", "", lab); inp.type = "checkbox"; inp.checked = true;
+      lab.appendChild(document.createTextNode("restore best weights"));
+      inp.addEventListener("change", function(){ self.set.restore = inp.checked; self.reset("Settings changed. Press Train to start a new run."); });
+    }
+  }
+
+  var run = el("div", "runrow", "", root);
+  this.btnRun = el("button", "btn", "Train", run); this.btnRun.type = "button";
+  this.btnReset = el("button", "btn ghost", "Reset", run); this.btnReset.type = "button";
+  var sp = el("div", "sp", "", run); el("span", "", "Speed", sp);
+  var sseg = el("div", "seg", "", sp);
+  ["slow", "normal", "fast"].forEach(function(k){
+    var b = el("button", k === "normal" ? "on" : "", k, sseg); b.type = "button";
+    b.addEventListener("click", function(){ self.speed = SPEEDS[k]; Array.prototype.forEach.call(sseg.children, function(x){ x.classList.remove("on"); }); b.classList.add("on"); });
+  });
+  this.btnRun.addEventListener("click", function(){ if(self.running){ self.pause(); } else { self.play(); } });
+  this.btnReset.addEventListener("click", function(){ self.reset(""); });
+
+  var panels = el("div", "panels", "", root);
+  var left = el("div", "", "", panels); el("p", "ptitle", "Decision boundary", left);
+  var bp = el("div", "bpanel", "", left);
+  this.cvBase = el("canvas", "", "", bp); this.cvBase.width = GRID_N; this.cvBase.height = GRID_N;
+  this.cvTop = el("canvas", "top", "", bp); this.cvTop.width = GRID_N; this.cvTop.height = GRID_N;
+  this.ov = S("svg", { viewBox:"0 0 300 300" }, bp);
+  this.gContour = S("g", {}, this.ov); this.gVal = S("g", { style:"display:none" }, this.ov); this.gPts = S("g", {}, this.ov);
+  var lg1 = el("div", "legend", "", left);
+  lg1.innerHTML = '<span><svg width="14" height="14"><circle cx="7" cy="7" r="5.5" fill="' + C.blue + '"/></svg>class ○</span><span><svg width="14" height="14"><path d="M2 2L12 12M12 2L2 12" stroke="' + C.rose + '" stroke-width="2.6" stroke-linecap="round"/></svg>class ×</span><label><input type="checkbox"> validation points</label>';
+  lg1.querySelector("input").addEventListener("change", function(e){ self.showVal = e.target.checked; self.gVal.style.display = self.showVal ? "" : "none"; });
+
+  var right = el("div", "cpanel", "", panels); el("p", "ptitle", "Loss per epoch", right);
+  this.cv = S("svg", { viewBox:"0 0 400 300" }, right);
+  this.buildCurves();
+  var lg2 = el("div", "legend", "", right);
+  lg2.innerHTML = '<span><span class="sw" style="border-color:' + C.train + '"></span>training loss</span><span><span class="sw" style="border-color:' + C.val + '"></span>validation loss</span><span><svg width="14" height="14"><circle cx="7" cy="7" r="4.5" fill="#FBFAF7" stroke="' + C.val + '" stroke-width="1.8"/></svg>lowest validation loss</span>';
+
+  var ro = el("div", "readout", "", root);
+  this.ro = {};
+  var items = [["epoch", "Epoch"], ["tl", "Train loss"], ["ta", "Train acc"], ["vl", "Val loss"], ["va", "Val acc"], ["mw", "Largest |w|"]];
+  if(spec.zero){ items.push(["zero", "Weights at 0"]); }
+  items.forEach(function(it){ var d = el("div", "", "", ro); el("span", "k", it[1], d); self.ro[it[0]] = el("span", "v" + (it[0] === "tl" || it[0] === "ta" ? " tr" : (it[0] === "vl" || it[0] === "va" ? " va" : "")), "–", d); });
+  this.status = el("div", "status", "", root);
+
+  if(spec.compare){
+    this.cmpRow = el("div", "runrow", "", root); this.cmpRow.style.display = "none"; this.cmpRow.style.marginTop = "10px";
+    el("span", "cl", "Show boundary from", this.cmpRow).style.cssText = "font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:" + C.faint + ";font-weight:600";
+    var cseg = el("div", "seg", "", this.cmpRow);
+    [["best", "best epoch"], ["last", "last epoch"]].forEach(function(o){
+      var b = el("button", o[0] === "best" ? "on" : "", o[1], cseg); b.type = "button";
+      b.addEventListener("click", function(){
+        Array.prototype.forEach.call(cseg.children, function(x){ x.classList.remove("on"); }); b.classList.add("on");
+        var w = o[0] === "best" ? self.trainer.best.weights : self.trainer.lastWeights;
+        if(w){ self.drawNet.loadWeights(w); self.paintBoundary(self.drawNet, true); }
+      });
+    });
+    this.cmpSeg = cseg;
+  }
+  if(spec.test){
+    var tr = el("div", "testrow", "", root);
+    this.btnTest = el("button", "btn ghost", "Evaluate on the test set", tr); this.btnTest.type = "button";
+    this.testVal = el("span", "tv", "", tr); this.testNote = el("span", "tn", "Each press is a look at the exam paper.", tr);
+    this.btnTest.addEventListener("click", function(){
+      if(!self.trainer || self.trainer.epoch === 0){ return; }
+      self.testUses++;
+      var p = self.trainer.net.predict(DATA.Xte), a = L.acc(p, DATA.yte);
+      self.testVal.textContent = "Test accuracy " + Math.round(a * 100) + "%";
+      self.testNote.textContent = "Looked at the test set " + self.testUses + (self.testUses === 1 ? " time." : " times.");
+    });
+  }
+
+  this.drawPoints();
+  this.reset("");
+}
+
+Lab.prototype.buildCurves = function(){
+  var svg = this.cv, ml = 46, mr = 14, mt = 16, mb = 36, W = 400, H = 300, self = this;
+  this.maxE = 800;
+  this.cx = function(e){ return ml + e / self.maxE * (W - ml - mr); };
+  this.cy = function(v){ return mt + (1 - Math.min(v, 1.6) / 1.6) * (H - mt - mb); };
+  S("rect", { x:ml, y:mt, width:W-ml-mr, height:H-mt-mb, fill:"none", stroke:C.rule }, svg);
+  [0, 0.5, 1.0, 1.5].forEach(function(v){ S("line", { x1:ml, x2:W-mr, y1:self.cy(v), y2:self.cy(v), stroke:C.rule, "stroke-dasharray":"2 3" }, svg); T(svg, ml - 6, self.cy(v) + 4, fmt(v, 1), { "text-anchor":"end", "font-size":11.5, fill:C.faint }); });
+  [0, 200, 400, 600, 800].forEach(function(e){ T(svg, self.cx(e), H - 14, String(e), { "text-anchor":"middle", "font-size":11.5, fill:C.faint }); });
+  T(svg, W - mr, H - 2, "epoch", { "text-anchor":"end", "font-size":11.5, fill:C.faint });
+  T(svg, ml - 30, mt + 4, "loss", { "font-size":11.5, fill:C.faint });
+  this.bestLine = S("line", { x1:0, x2:0, y1:mt, y2:H-mb, stroke:C.val, "stroke-width":1, "stroke-dasharray":"4 4", opacity:0 }, svg);
+  this.pTrain = S("path", { d:"", fill:"none", stroke:C.train, "stroke-width":2, "stroke-linejoin":"round" }, svg);
+  this.pVal = S("path", { d:"", fill:"none", stroke:C.val, "stroke-width":2, "stroke-linejoin":"round" }, svg);
+  this.bestDot = S("circle", { r:4.5, fill:C.paper, stroke:C.val, "stroke-width":1.8, opacity:0 }, svg);
+  this.bestTxt = T(svg, 0, 0, "", { "font-size":11.5, fill:C.val, "text-anchor":"middle", opacity:0 });
+};
+
+function toPx(x){ return (x + DOM) / (2 * DOM) * 300; }
+function toPy(y){ return (DOM - y) / (2 * DOM) * 300; }
+Lab.prototype.drawPoints = function(){
+  var g = this.gPts, i;
+  for(i = 0; i < DATA.Xtr.length; i++){ dot(g, toPx(DATA.Xtr[i][0]), toPy(DATA.Xtr[i][1]), 5.4, DATA.ytr[i]); }
+  g = this.gVal;
+  for(i = 0; i < DATA.Xva.length; i++){ dot(g, toPx(DATA.Xva[i][0]), toPy(DATA.Xva[i][1]), 3, DATA.yva[i], { hollow:true, op:.55 }); }
+};
+
+Lab.prototype.reset = function(msg){
+  this.pause();
+  var c = this.set;
+  this.trainer = new L.Trainer({ h:c.h, seed:3, lr:0.3, mom:0.9, l2:c.l2, l1:c.l1, dropout:c.dropout, patience:c.patience, restore:c.restore, data:DATA, maxEpochs:800 });
+  this.drawNet = new L.Net(c.h, 3);
+  this.accum = 0;
+  this.btnRun.textContent = "Train"; this.btnRun.disabled = false;
+  if(this.cmpRow){ this.cmpRow.style.display = "none"; Array.prototype.forEach.call(this.cmpSeg.children, function(x, i){ x.classList.toggle("on", i === 0); }); }
+  if(this.testVal){ this.testVal.textContent = ""; }
+  this.cvTop.classList.add("snap"); this.cvTop.classList.remove("show"); var t = this.cvTop; requestAnimationFrame(function(){ t.classList.remove("snap"); });
+  this.paintBoundary(this.trainer.net, false);
+  this.pTrain.setAttribute("d", ""); this.pVal.setAttribute("d", "");
+  this.bestDot.setAttribute("opacity", 0); this.bestTxt.setAttribute("opacity", 0); this.bestLine.setAttribute("opacity", 0);
+  this.updateReadout();
+  this.status.textContent = msg || "";
+};
+Lab.prototype.play = function(){
+  if(this.trainer.stopped){ return; }
+  this.running = true; this.last = 0; this.btnRun.textContent = "Pause";
+  var self = this; this.raf = requestAnimationFrame(function(ts){ self.frame(ts); });
+  if(this.status.textContent.indexOf("Settings changed") === 0){ this.status.textContent = ""; }
+};
+Lab.prototype.pause = function(){
+  this.running = false; if(this.raf){ cancelAnimationFrame(this.raf); this.raf = 0; }
+  if(this.btnRun && this.trainer && !this.trainer.stopped){ this.btnRun.textContent = this.trainer.epoch > 0 ? "Resume" : "Train"; }
+};
+Lab.prototype.frame = function(ts){
+  if(!this.running){ return; }
+  if(!this.last){ this.last = ts; }
+  var dt = Math.min((ts - this.last) / 1000, 0.1); this.last = ts;
+  this.accum += dt * this.speed;
+  var n = Math.min(Math.floor(this.accum), 12), i, alive = true; this.accum -= n;
+  for(i = 0; i < n; i++){ if(!this.trainer.runEpoch()){ alive = false; break; } }
+  this.paintBoundary(this.trainer.net, false);
+  this.drawCurves(); this.updateReadout();
+  if(!alive){ this.finish(); return; }
+  var self = this; this.raf = requestAnimationFrame(function(t){ self.frame(t); });
+};
+Lab.prototype.finish = function(){
+  var t = this.trainer; this.running = false; this.raf = 0;
+  this.btnRun.textContent = "Done"; this.btnRun.disabled = true;
+  if(this.set.patience > 0 && t.epoch < 800){
+    var msg = "Stopped at epoch " + t.epoch + ": no improvement for " + this.set.patience + " epochs. ";
+    if(this.set.restore){ msg += "Restored epoch " + t.best.epoch + " (validation loss " + fmt(t.best.val, 3) + ")."; this.paintBoundary(t.net, true); }
+    else { msg += "Kept the epoch-" + t.epoch + " weights (validation loss " + fmt(t.valLoss[t.valLoss.length-1], 3) + "). Best was epoch " + t.best.epoch + " at " + fmt(t.best.val, 3) + "."; }
+    this.status.textContent = msg;
+    if(this.cmpRow && this.set.restore && t.best.weights && t.lastWeights){ this.cmpRow.style.display = ""; }
+  } else {
+    this.status.textContent = "Finished 800 epochs. Lowest validation loss " + fmt(t.best.val, 3) + " at epoch " + t.best.epoch + ".";
+  }
+  this.updateReadout();
+};
+Lab.prototype.updateReadout = function(){
+  var t = this.trainer, r = this.ro, n = t.trainLoss.length;
+  r.epoch.textContent = String(t.epoch);
+  if(n){ r.tl.textContent = fmt(t.trainLoss[n-1], 3); r.vl.textContent = fmt(t.valLoss[n-1], 3); r.ta.textContent = Math.round(t.trainAcc[n-1] * 100) + "%"; r.va.textContent = Math.round(t.valAcc[n-1] * 100) + "%"; }
+  else { r.tl.textContent = r.vl.textContent = r.ta.textContent = r.va.textContent = "–"; }
+  r.mw.textContent = fmt(t.net.maxAbsW(), 2);
+  if(r.zero){ var zf = t.net.zeroFrac() * 100; r.zero.textContent = (zf > 99 && zf < 100 ? zf.toFixed(1) : Math.round(zf)) + "%"; }
+  if(t.stopped && this.set.patience > 0 && this.set.restore){ var e = t.evaluate(); r.tl.textContent = fmt(e.tl, 3); r.vl.textContent = fmt(e.vl, 3); r.ta.textContent = Math.round(e.ta * 100) + "%"; r.va.textContent = Math.round(e.va * 100) + "%"; }
+};
+Lab.prototype.drawCurves = function(){
+  var t = this.trainer, tl = t.trainLoss, vl = t.valLoss, n = tl.length, i, d1 = "", d2 = "";
+  for(i = 0; i < n; i++){ var x = fmt(this.cx(i), 1); d1 += (i ? "L" : "M") + x + " " + fmt(this.cy(tl[i]), 1); d2 += (i ? "L" : "M") + x + " " + fmt(this.cy(vl[i]), 1); }
+  this.pTrain.setAttribute("d", d1); this.pVal.setAttribute("d", d2);
+  if(t.best.epoch >= 0){
+    var bx = this.cx(t.best.epoch), by = this.cy(t.best.val);
+    this.bestDot.setAttribute("cx", bx); this.bestDot.setAttribute("cy", by); this.bestDot.setAttribute("opacity", 1);
+    if(this.spec.bestline){
+      var rightSide = bx < 300;
+      this.bestLine.setAttribute("x1", bx); this.bestLine.setAttribute("x2", bx); this.bestLine.setAttribute("opacity", 0.7);
+      this.bestTxt.setAttribute("x", rightSide ? bx + 6 : bx - 6); this.bestTxt.setAttribute("y", 30); this.bestTxt.setAttribute("text-anchor", rightSide ? "start" : "end");
+      this.bestTxt.textContent = "best: epoch " + t.best.epoch; this.bestTxt.setAttribute("opacity", 1);
+    }
+  }
+};
+
+function mix(a, b, t){ return [a[0] + (b[0]-a[0]) * t, a[1] + (b[1]-a[1]) * t, a[2] + (b[2]-a[2]) * t]; }
+var COL_PAPER = [251, 250, 247], COL_BLUE = [204, 217, 238], COL_ROSE = [240, 214, 218];
+Lab.prototype.paintBoundary = function(net, fade){
+  var P = net.predict(GRID), cv = fade ? this.cvTop : this.cvBase, ctx = cv.getContext("2d"), img = ctx.createImageData(GRID_N, GRID_N), d = img.data, i, p, c;
+  for(i = 0; i < P.length; i++){
+    p = P[i];
+    c = p >= 0.5 ? mix(COL_PAPER, COL_BLUE, Math.min((p - 0.5) * 2.2, 1)) : mix(COL_PAPER, COL_ROSE, Math.min((0.5 - p) * 2.2, 1));
+    d[i*4] = c[0]; d[i*4+1] = c[1]; d[i*4+2] = c[2]; d[i*4+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  this.drawContour(P);
+  if(fade){
+    var self = this, top = this.cvTop;
+    top.classList.add("show");
+    setTimeout(function(){ self.cvBase.getContext("2d").putImageData(img, 0, 0); top.classList.add("snap"); top.classList.remove("show"); requestAnimationFrame(function(){ top.classList.remove("snap"); }); }, 760);
+  }
+};
+Lab.prototype.drawContour = function(P){
+  var N = GRID_N, iso = 0.5, i, j, d = "", s = 300 / N;
+  function X(j){ return (j + 0.5) * s; } function Y(i){ return (i + 0.5) * s; }
+  function lerp(a, b){ return (iso - a) / (b - a); }
+  for(i = 0; i < N - 1; i++){ for(j = 0; j < N - 1; j++){
+    var a = P[i*N+j], b = P[i*N+j+1], c = P[(i+1)*N+j+1], e = P[(i+1)*N+j];
+    var idx = (a >= iso ? 8 : 0) | (b >= iso ? 4 : 0) | (c >= iso ? 2 : 0) | (e >= iso ? 1 : 0);
+    if(idx === 0 || idx === 15){ continue; }
+    var top = [X(j) + lerp(a, b) * s, Y(i)], right = [X(j+1), Y(i) + lerp(b, c) * s], bottom = [X(j) + lerp(e, c) * s, Y(i+1)], left = [X(j), Y(i) + lerp(a, e) * s];
+    var segs;
+    switch(idx){
+      case 1: case 14: segs = [[left, bottom]]; break;
+      case 2: case 13: segs = [[bottom, right]]; break;
+      case 3: case 12: segs = [[left, right]]; break;
+      case 4: case 11: segs = [[top, right]]; break;
+      case 6: case 9: segs = [[top, bottom]]; break;
+      case 7: case 8: segs = [[top, left]]; break;
+      case 5: segs = [[top, left], [bottom, right]]; break;
+      case 10: segs = [[top, right], [left, bottom]]; break;
+    }
+    segs.forEach(function(sg){ d += "M" + fmt(sg[0][0], 1) + " " + fmt(sg[0][1], 1) + "L" + fmt(sg[1][0], 1) + " " + fmt(sg[1][1], 1); });
+  } }
+  if(!this.contourPath){ this.contourPath = S("path", { fill:"none", stroke:C.ink, "stroke-width":1.6, "stroke-linecap":"round", opacity:.85 }, this.gContour); }
+  this.contourPath.setAttribute("d", d);
+};
+
+/* ---------------------------------------------------------------- answer checking */
+function checkers(){
+  Array.prototype.forEach.call(document.querySelectorAll(".chkbtn"), function(btn){
+    var box = btn.closest(".box"), msg = btn.parentNode.querySelector(".chkmsg");
+    btn.addEventListener("click", function(){
+      var inputs = box.querySelectorAll(".qin"), right = 0, total = 0;
+      Array.prototype.forEach.call(inputs, function(inp){
+        total++;
+        var raw = inp.value.trim(), ans = inp.getAttribute("data-a").split("|"), tol = parseFloat(inp.getAttribute("data-tol") || "0"), ok = false;
+        if(raw === ""){ inp.classList.remove("ok", "no"); return; }
+        var num = parseFloat(raw.replace(/,/g, "").replace(/%$/, ""));
+        ans.forEach(function(a){
+          var an = parseFloat(a);
+          if(!isNaN(an) && !isNaN(num) && /^[-+]?[\d.,]+%?$/.test(raw)){ var t = tol || Math.max(Math.abs(an) * 0.012, 0.0051); if(Math.abs(num - an) <= t){ ok = true; } }
+          else if(raw.toLowerCase() === a.toLowerCase()){ ok = true; }
+        });
+        inp.classList.toggle("ok", ok); inp.classList.toggle("no", !ok);
+        if(ok){ right++; }
+      });
+      msg.textContent = right === total ? "All " + total + " correct." : right + " of " + total + " correct. Fix the red boxes and check again.";
+      msg.classList.toggle("good", right === total);
+    });
+  });
+}
+
+/* ---------------------------------------------------------------- nav highlighting */
+function nav(){
+  var links = Array.prototype.slice.call(document.querySelectorAll("#toc a")), secs = links.map(function(a){ return document.querySelector(a.getAttribute("href")); }), ticking = false;
+  function update(){
+    ticking = false;
+    var y = window.scrollY + 140, cur = 0, i;
+    for(i = 0; i < secs.length; i++){ if(secs[i] && secs[i].offsetTop <= y){ cur = i; } }
+    links.forEach(function(a, k){ a.classList.toggle("on", k === cur); });
+  }
+  window.addEventListener("scroll", function(){ if(!ticking){ ticking = true; requestAnimationFrame(update); } });
+  update();
+}
+
+/* ---------------------------------------------------------------- boot */
+function boot(){
+  fig12(); fig13(); fig14(); fig17(); fig25(); fig33(); fig35(); fig42(); fig52(); fig53(); fig55();
+  Array.prototype.forEach.call(document.querySelectorAll(".lab[data-lab]"), function(root){ new Lab(root, LABS[root.getAttribute("data-lab")]); });
+  fig15();
+  checkers();
+  nav();
+}
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", boot); } else { boot(); }
+})();
+
+</script>
+</body>
+</html>
