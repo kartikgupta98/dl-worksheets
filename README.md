@@ -14,12 +14,13 @@ dependencies, no network calls at runtime.
 | Backpropagation 03: Output Layer | [`backprop_worksheet_output_layer.html`](backprop_worksheet_output_layer.html) | forward pass, loss, chain rule, weight gradients |
 | Lecture 06: Gradient Descent | [`lecture06_gradient_descent.html`](lecture06_gradient_descent.html) | slope, learning rate, step size, convergence |
 | Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
+| Worksheet 08: Adaptive Learning Rates | [`worksheet08_adaptive_lr.html`](worksheet08_adaptive_lr.html) | AdaGrad, RMSProp, Adam, bias correction |
 | Worksheet 09: Regularisation | [`worksheet09_regularisation.html`](worksheet09_regularisation.html) | overfitting, L2, L1, early stopping, dropout, live training lab |
 
 ## Kaggle competition: Flagged or Fraud?
 
-Handouts for the in-class Kaggle competition, built from `fraud_competition/materials/technique_cards.md`
-on the `fraud-competition` branch. Unlike the worksheets, these pages load their fonts from Google Fonts
+Handouts for the in-class Kaggle competition, built from `fraud_competition/materials/technique_cards.md`.
+Unlike the worksheets, these pages load their fonts from Google Fonts
 (offline they fall back to system fonts).
 
 | Page | File | Contents |

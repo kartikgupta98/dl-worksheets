@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flagged or Fraud? Technique Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+:root {
+  --ground: #f2f5f4;
+  --surface: #ffffff;
+  --ink: #17212b;
+  --muted: #56636f;
+  --rule: #d8dfe1;
+  --accent: #0d5c61;
+  --accent-soft: #dcebea;
+  --code-bg: #eef2f2;
+  --watch: #8a4a00;
+  --removed: #a0413a;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0f1417;
+    --surface: #172026;
+    --ink: #e3e9eb;
+    --muted: #98a6ae;
+    --rule: #28343b;
+    --accent: #6cc2bf;
+    --accent-soft: #173a3b;
+    --code-bg: #1d272d;
+    --watch: #e6b064;
+    --removed: #e59a92;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0f1417;
+  --surface: #172026;
+  --ink: #e3e9eb;
+  --muted: #98a6ae;
+  --rule: #28343b;
+  --accent: #6cc2bf;
+  --accent-soft: #173a3b;
+  --code-bg: #1d272d;
+  --watch: #e6b064;
+  --removed: #e59a92;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  background: var(--code-bg);
+  padding: 0.08em 0.35em;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3.5rem;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 3.5rem 1.25rem 6rem;
+}
+main { min-width: 0; }
+
+/* index */
+.index { display: none; }
+.index a { text-decoration: none; }
+.index-title {
+  display: block;
+  font: 600 0.6875rem/1.2 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+}
+.index-section {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--ink);
+  margin: 1.1rem 0 0.35rem;
+}
+.index ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+.index li a {
+  display: grid;
+  grid-template-columns: 1.9rem minmax(0, 1fr);
+  padding: 0.12rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.index li a:hover, .index-section:hover { color: var(--accent); }
+.index .id, .jump .id { font: 600 0.72rem/1.6 var(--mono); color: var(--accent); }
+@media (min-width: 1000px) {
+  .page { grid-template-columns: 210px minmax(0, 760px); justify-content: center; }
+  .index {
+    display: block;
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding-right: 0.5rem;
+  }
+  .jump { display: none; }
+}
+
+/* masthead */
+.eyebrow {
+  margin: 0 0 0.75rem;
+  font: 600 0.75rem/1.2 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  margin: 0 0 1rem;
+  font: 600 2.625rem/1.1 var(--serif);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.lede { margin: 0; max-width: 62ch; font-size: 1.0625rem; color: var(--muted); }
+
+.jump { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.75rem; }
+.jump a {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: baseline;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+/* notebook order */
+.order {
+  margin-top: 2.5rem;
+  padding: 1.5rem 1.5rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  scroll-margin-top: 1.5rem;
+}
+.order h2 { margin: 0 0 0.25rem; font: 600 1.3125rem/1.3 var(--serif); }
+.order p { margin: 0; color: var(--muted); font-size: 0.9375rem; max-width: 64ch; }
+.steps {
+  list-style: none;
+  margin: 1.25rem 0 1.25rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.1rem 1.5rem;
+}
+.steps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: start;
+  align-items: start;
+  column-gap: 0.7rem;
+}
+.steps strong { font-weight: 600; line-height: 1.6rem; }
+.steps .desc { grid-column: 2; font-size: 0.875rem; line-height: 1.5; color: var(--muted); }
+.step {
+  grid-row: span 2;
+  display: inline-grid;
+  place-items: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font: 600 0.8125rem/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.order-note { padding-top: 1rem; border-top: 1px solid var(--rule); }
+
+/* card groups */
+.group { margin-top: 3.5rem; scroll-margin-top: 1.5rem; }
+.group > h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  font: 600 1.625rem/1.2 var(--serif);
+  text-wrap: balance;
+}
+.letter { font: 600 0.875rem/1 var(--mono); color: var(--accent); letter-spacing: 0.04em; }
+.cards { display: grid; gap: 1rem; }
+.card {
+  padding: 1.25rem 1.5rem 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  scroll-margin-top: 1.5rem;
+}
+.card:target { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.card-head { display: flex; align-items: baseline; gap: 0.6rem; margin-bottom: 0.9rem; }
+.card-head .id { font: 600 0.8125rem/1 var(--mono); color: var(--accent); }
+.card-head h3 { margin: 0; font: 600 1.0625rem/1.35 var(--sans); text-wrap: balance; }
+.fields { display: grid; gap: 0.6rem; margin: 0; }
+.field { display: grid; grid-template-columns: 4.25rem minmax(0, 1fr); gap: 1rem; }
+.field dt {
+  font: 600 0.6875rem/1.5rem var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.field dd { margin: 0; max-width: 64ch; font-size: 0.9375rem; line-height: 1.6; }
+.field-watch dt { color: var(--watch); }
+.step-sm {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-right: 0.45rem;
+  border-width: 1.25px;
+  font-size: 0.6875rem;
+  vertical-align: 0.05em;
+}
+
+/* code hint */
+.hint { margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--rule); }
+.hint summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  list-style: none;
+  font: 600 0.8125rem/1.4 var(--sans);
+  color: var(--accent);
+  border-radius: 4px;
+}
+.hint summary::-webkit-details-marker { display: none; }
+.hint summary::before {
+  content: "";
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+.hint[open] summary::before { transform: rotate(45deg); }
+.hint summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.hint summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .hint summary::before { transition: none; } }
+.hint-note { margin: 0.75rem 0 0.7rem; max-width: 70ch; font-size: 0.8125rem; color: var(--muted); }
+.key { margin-right: 0.35rem; padding: 0.05rem 0.35rem; border-radius: 3px; font: 400 0.75rem/1.4 var(--mono); }
+.key.new { background: var(--accent-soft); color: var(--ink); }
+.key.removed { color: var(--removed); text-decoration: line-through; }
+.snippet + .snippet { margin-top: 0.8rem; }
+.snippet-label {
+  margin: 0 0 0.3rem;
+  font: 600 0.6875rem/1.4 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.snippet pre {
+  margin: 0;
+  padding: 0.6rem 0;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font: 400 0.8125rem/1.6 var(--mono);
+}
+.snippet code { display: block; padding: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+.ln {
+  display: block;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  min-height: 1.6em;
+  padding: 0 1rem 0 1.9rem;
+  white-space: pre;
+}
+.ln::before { position: absolute; left: 0.75rem; }
+.ln.same { color: var(--muted); }
+.ln.new { background: var(--accent-soft); color: var(--ink); }
+.ln.new::before { content: "+"; color: var(--accent); }
+.ln.removed { color: var(--removed); text-decoration: line-through; user-select: none; }
+.ln.removed::before { content: "\2212"; }
+
+@media (max-width: 560px) {
+  h1 { font-size: 2.125rem; }
+  .card { padding: 1.1rem 1.1rem 1.2rem; }
+  .field { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+
+/* pitfalls */
+.pitfalls { list-style: none; margin: 0; padding: 0; }
+.pitfalls li { padding: 0.8rem 0; border-bottom: 1px solid var(--rule); max-width: 66ch; font-size: 0.9375rem; }
+.pitfalls li:first-child { padding-top: 0.2rem; }
+.pitfalls strong { font-weight: 600; }
+
+@media print {
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .index, .jump, .hint { display: none; }
+  .page { display: block; padding: 0; max-width: none; }
+  .card, .order, .steps li { break-inside: avoid; }
+  .card, .order { border-color: #bbb; }
+  .group { margin-top: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<nav class="index" aria-label="All cards">
+<a class="index-title" href="#top">Technique cards</a>
+<a class="index-section" href="#where">Where changes go</a>
+<a class="index-section" href="#A">A &middot; Preparing the data</a><ul><li><a href="#A1"><span class="id">A1</span>Use more columns</a></li><li><a href="#A2"><span class="id">A2</span>Scale the inputs</a></li><li><a href="#A3"><span class="id">A3</span>Log-transform skewed columns</a></li><li><a href="#A4"><span class="id">A4</span>One-hot encode text columns</a></li><li><a href="#A5"><span class="id">A5</span>Label-encode text columns</a></li><li><a href="#A6"><span class="id">A6</span>Fill blanks with the median</a></li><li><a href="#A7"><span class="id">A7</span>Add "was missing" flags</a></li><li><a href="#A8"><span class="id">A8</span>Handle special codes</a></li><li><a href="#A9"><span class="id">A9</span>Drop columns that cannot carry signal</a></li></ul><a class="index-section" href="#B">B &middot; Training settings</a><ul><li><a href="#B1"><span class="id">B1</span>Change the optimizer or learning rate</a></li><li><a href="#B2"><span class="id">B2</span>Train for more epochs</a></li><li><a href="#B3"><span class="id">B3</span>Change the batch size</a></li><li><a href="#B4"><span class="id">B4</span>Lower the learning rate when progress stalls</a></li></ul><a class="index-section" href="#C">C &middot; Model capacity</a><ul><li><a href="#C1"><span class="id">C1</span>A wider or deeper network</a></li><li><a href="#C2"><span class="id">C2</span>A very deep network</a></li><li><a href="#C3"><span class="id">C3</span>A different activation</a></li><li><a href="#C4"><span class="id">C4</span>Batch normalization</a></li></ul><a class="index-section" href="#D">D &middot; Regularisation</a><ul><li><a href="#D1"><span class="id">D1</span>Dropout</a></li><li><a href="#D2"><span class="id">D2</span>L2 penalty</a></li><li><a href="#D3"><span class="id">D3</span>L1 penalty</a></li><li><a href="#D4"><span class="id">D4</span>Early stopping</a></li></ul><a class="index-section" href="#E">E &middot; Feature engineering</a><ul><li><a href="#E1"><span class="id">E1</span>Compare the amount with the customer's usual spend</a></li><li><a href="#E2"><span class="id">E2</span>Treat the hour as a circle</a></li><li><a href="#E3"><span class="id">E3</span>Look at the amounts themselves</a></li></ul><a class="index-section" href="#F">F &middot; Final polish</a><ul><li><a href="#F1"><span class="id">F1</span>Average several models</a></li></ul>
+<a class="index-section" href="#pitfalls">Pitfalls</a>
+</nav>
+<main id="top">
+<header class="masthead">
+<p class="eyebrow">Flagged or Fraud? &middot; Student handout</p>
+<h1>Technique cards</h1>
+<p class="lede">Each card is one change you can try. <strong>Not every card helps on this data</strong>, and some help only after others. Change one thing, re-run the whole notebook (Runtime → Run all), and compare the validation accuracy and the curves with your previous run before keeping it.</p>
+</header>
+<nav class="jump" aria-label="Sections"><a href="#A"><span class="id">A</span>Preparing the data</a><a href="#B"><span class="id">B</span>Training settings</a><a href="#C"><span class="id">C</span>Model capacity</a><a href="#D"><span class="id">D</span>Regularisation</a><a href="#E"><span class="id">E</span>Feature engineering</a><a href="#F"><span class="id">F</span>Final polish</a><a href="#pitfalls">Pitfalls</a></nav>
+<section class="order" id="where">
+<h2>Where changes go</h2>
+<p>Keep your notebook in this order:</p>
+<ol class="steps"><li><span class="step">1</span><strong>Preprocessing</strong><span class="desc">the <code>for df in [train, test]:</code> loop. Anything that creates or changes a column goes here, so train and test get exactly the same change.</span></li><li><span class="step">2</span><strong>Features</strong><span class="desc">which columns go into <code>X</code> and <code>X_test</code>, and how blanks are filled.</span></li><li><span class="step">3</span><strong>Right after the split</strong><span class="desc">anything that learns numbers from the data (medians, a scaler). Learn them from <code>X_train</code> only, then apply them to <code>X_train</code>, <code>X_val</code> and <code>X_test</code>.</span></li><li><span class="step">4</span><strong>Model</strong><span class="desc">the layers and <code>compile</code>.</span></li><li><span class="step">5</span><strong>Training</strong><span class="desc"><code>model.fit(...)</code>.</span></li><li><span class="step">6</span><strong>Submission</strong><span class="desc">the prediction and <code>submission.csv</code>.</span></li></ol>
+<p class="order-note">Inside the Preprocessing loop, create new columns from raw values first, then transform existing columns (for example with log), then add flags for blanks.</p>
+</section>
+<section class="group" id="A"><h2><span class="letter">A</span>Preparing the data</h2><div class="cards"><article class="card" id="A1"><header class="card-head"><span class="id">A1</span><h3>Use more columns</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>The starter uses six columns. The table has many more.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 2: Features">2</span>Features.</dd></div><div class="field field-how"><dt>How</dt><dd>Instead of typing the names, build <code>FEATURES</code> from every numeric column of <code>train</code> except <code>is_fraud</code>. Look up <code>train.select_dtypes(...)</code> and <code>.columns.drop(...)</code>.</dd></div><div class="field field-then"><dt>Then</dt><dd>Look at <code>train.describe()</code>. Are the new columns on very different scales from the old ones?</dd></div><div class="field field-check"><dt>Check</dt><dd><code>len(FEATURES)</code> has grown. Because <code>FEATURES</code> is built after the Preprocessing loop, numeric columns you create there later are picked up automatically.</dd></div></dl></article><article class="card" id="A2"><header class="card-head"><span class="id">A2</span><h3>Scale the inputs</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>A network learns badly when one input is in lakhs and another is between 0 and 1.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 3: Right after the split">3</span>Right after the split.</dd></div><div class="field field-how"><dt>How</dt><dd>Use <code>StandardScaler</code> from <code>sklearn.preprocessing</code>. <code>fit</code> it on <code>X_train</code> only, then <code>transform</code> each of <code>X_train</code>, <code>X_val</code> and <code>X_test</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>X_train.mean(axis=0)</code> is close to 0 and <code>X_train.std(axis=0)</code> close to 1 for every column.</dd></div></dl></article><article class="card" id="A3"><header class="card-head"><span class="id">A3</span><h3>Log-transform skewed columns</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Money, counts and distances often have a long tail: most values are small and a few are huge. A log squashes the tail.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop.</dd></div><div class="field field-how"><dt>How</dt><dd>In <code>train.describe()</code>, find the columns whose <code>max</code> is far larger than their <code>75%</code> value. Replace each of them with <code>np.log1p(...)</code> of itself (<code>log1p</code> also works for 0).</dd></div><div class="field field-check"><dt>Check</dt><dd>In <code>train.describe()</code>, the <code>max</code> of those columns is now only a few times the median.</dd></div><div class="field field-watch"><dt>Watch</dt><dd><code>np.log1p</code> of a negative number gives <code>nan</code> or <code>-inf</code>. One skewed column uses <code>-1</code> as a code: read A8 before logging it.</dd></div></dl></article><article class="card" id="A4"><header class="card-head"><span class="id">A4</span><h3>One-hot encode text columns</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd><code>merchant_category</code>, <code>channel</code>, <code>card_type</code> and <code>city_tier</code> are text, so the starter ignores them. One-hot encoding turns each category into its own 0/1 column.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 2: Features">2</span>Features, where <code>X</code> and <code>X_test</code> are built.</dd></div><div class="field field-how"><dt>How</dt><dd>Select the text columns together with <code>FEATURES</code>, and pass the frame to <code>pd.get_dummies(..., columns=[...], dtype=float)</code>. Do it for <code>train</code> and for <code>test</code>.</dd></div><div class="field field-then"><dt>Then</dt><dd>Train and test can end up with different dummy columns, or the same ones in a different order. Make <code>X_test</code> have exactly the columns of <code>X</code>: look up <code>DataFrame.reindex(columns=..., fill_value=0)</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>list(X.columns) == list(X_test.columns)</code> is <code>True</code>.</dd></div></dl></article><article class="card" id="A5"><header class="card-head"><span class="id">A5</span><h3>Label-encode text columns</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Replace each category with a number (<code>grocery</code> = 0, <code>fuel</code> = 1, ...). Fewer columns than one-hot, but the numbers suggest an order that does not exist.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 2: Features">2</span>Features.</dd></div><div class="field field-how"><dt>How</dt><dd>For each text column, take the sorted list of categories from <code>train</code>. Convert the column in both <code>X</code> and <code>X_test</code> with that same list: <code>pd.Categorical(values, categories=...)</code>, then <code>.codes</code>.</dd></div><div class="field field-watch"><dt>Watch</dt><dd>Converting train and test separately can give the same category different numbers.</dd></div></dl></article><article class="card" id="A6"><header class="card-head"><span class="id">A6</span><h3>Fill blanks with the median</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Filling with 0 claims the value was 0. The median is a typical value.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 3: Right after the split">3</span>Right after the split, before any scaling.</dd></div><div class="field field-how"><dt>How</dt><dd>First remove <code>.fillna(0)</code> from the Features cell, otherwise there is nothing left to fill. Compute the medians of <code>X_train</code> with <code>X_train.median()</code>, and use them to <code>fillna</code> all three of <code>X_train</code>, <code>X_val</code> and <code>X_test</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>X_train.isna().sum().sum()</code> is 0, and the same for <code>X_val</code> and <code>X_test</code>.</dd></div></dl></article><article class="card" id="A7"><header class="card-head"><span class="id">A7</span><h3>Add "was missing" flags</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Sometimes the fact that a value is blank is itself a clue. Filling the blank loses that clue unless you keep a flag.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop, after the other column changes (and before any filling).</dd></div><div class="field field-how"><dt>How</dt><dd>Find the columns with blanks with <code>train.isna().sum()</code>. For each, add a column such as <code>&lt;column&gt;_missing</code> that is 1 where the value is blank and 0 otherwise: <code>.isna()</code>, then <code>.astype(int)</code>.</dd></div><div class="field field-then"><dt>Then</dt><dd>Add the new columns to <code>FEATURES</code> (A1's automatic list already includes them).</dd></div><div class="field field-check"><dt>Check</dt><dd>The mean of each new column equals that column's share of blanks.</dd></div></dl></article><article class="card" id="A8"><header class="card-head"><span class="id">A8</span><h3>Handle special codes</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>In <code>days_since_last_chargeback</code>, <code>-1</code> means "never". To a network, <code>-1</code> just looks like a day before <code>0</code>.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop, before any log.</dd></div><div class="field field-how"><dt>How</dt><dd>Add a 0/1 column that marks the rows with <code>-1</code>. Then <code>replace</code> the <code>-1</code> with a blank (<code>np.nan</code>), so the rest of the column is a real number of days. It is a long-tailed column too, so it can now be logged like A3.</dd></div><div class="field field-then"><dt>Then</dt><dd>Add the new column to <code>FEATURES</code>. The new blanks are filled wherever you fill blanks.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>(train["days_since_last_chargeback"] == -1).sum()</code> is 0.</dd></div></dl></article><article class="card" id="A9"><header class="card-head"><span class="id">A9</span><h3>Drop columns that cannot carry signal</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>IDs and purely administrative columns can only add noise.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 2: Features">2</span>Features.</dd></div><div class="field field-how"><dt>How</dt><dd>Read the Data tab and decide which numeric columns describe bookkeeping rather than the transaction. Remove them from <code>FEATURES</code>, for example with a list comprehension.</dd></div></dl></article></div></section><section class="group" id="B"><h2><span class="letter">B</span>Training settings</h2><div class="cards"><article class="card" id="B1"><header class="card-head"><span class="id">B1</span><h3>Change the optimizer or learning rate</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model, in <code>compile</code>.</dd></div><div class="field field-how"><dt>How</dt><dd>Try <code>keras.optimizers.Adam</code> instead of <code>SGD</code>. <code>learning_rate=1e-3</code> is the usual starting point; try values ten times bigger or smaller.</dd></div></dl></article><article class="card" id="B2"><header class="card-head"><span class="id">B2</span><h3>Train for more epochs</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 5: Training">5</span>Training.</dd></div><div class="field field-how"><dt>How</dt><dd>Increase <code>epochs</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd>In the curves, was the validation loss still going down at the last epoch?</dd></div></dl></article><article class="card" id="B3"><header class="card-head"><span class="id">B3</span><h3>Change the batch size</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 5: Training">5</span>Training.</dd></div><div class="field field-how"><dt>How</dt><dd>Change <code>batch_size</code>, e.g. 64 or 256.</dd></div></dl></article><article class="card" id="B4"><header class="card-head"><span class="id">B4</span><h3>Lower the learning rate when progress stalls</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 5: Training">5</span>Training.</dd></div><div class="field field-how"><dt>How</dt><dd>Create a <code>keras.callbacks.ReduceLROnPlateau</code> that watches <code>"val_loss"</code> (try <code>factor=0.5</code>, <code>patience=5</code>) and pass it to <code>model.fit</code> with <code>callbacks=[...]</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd>Give the callback <code>verbose=1</code> and it prints a line each time it lowers the rate.</dd></div></dl></article></div></section><section class="group" id="C"><h2><span class="letter">C</span>Model capacity</h2><div class="cards"><article class="card" id="C1"><header class="card-head"><span class="id">C1</span><h3>A wider or deeper network</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>More units in the hidden <code>Dense</code> layer, or more <code>Dense</code> layers, e.g. two layers of 128.</dd></div><div class="field field-check"><dt>Check</dt><dd>Compare train and validation accuracy in the curves. A growing gap means the model is memorising the training rows.</dd></div></dl></article><article class="card" id="C2"><header class="card-head"><span class="id">C2</span><h3>A very deep network</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>Five or more hidden <code>Dense</code> layers.</dd></div></dl></article><article class="card" id="C3"><header class="card-head"><span class="id">C3</span><h3>A different activation</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd><code>activation="sigmoid"</code> or <code>"tanh"</code> in the hidden layers instead of <code>"relu"</code>.</dd></div></dl></article><article class="card" id="C4"><header class="card-head"><span class="id">C4</span><h3>Batch normalization</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>Add <code>keras.layers.BatchNormalization()</code> after each hidden <code>Dense</code> layer.</dd></div></dl></article></div></section><section class="group" id="D"><h2><span class="letter">D</span>Regularisation</h2><div class="cards"><article class="card" id="D1"><header class="card-head"><span class="id">D1</span><h3>Dropout</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>Add <code>keras.layers.Dropout(rate)</code> after each hidden <code>Dense</code> layer. Rates between 0.2 and 0.5 are common.</dd></div><div class="field field-check"><dt>Check</dt><dd>Train accuracy drops a little; validation accuracy should not.</dd></div></dl></article><article class="card" id="D2"><header class="card-head"><span class="id">D2</span><h3>L2 penalty</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>Give each hidden <code>Dense</code> layer <code>kernel_regularizer=keras.regularizers.L2(strength)</code>. The strength matters: try values ten times apart, such as <code>1e-4</code>, <code>1e-3</code>, <code>1e-2</code>.</dd></div></dl></article><article class="card" id="D3"><header class="card-head"><span class="id">D3</span><h3>L1 penalty</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 4: Model">4</span>Model.</dd></div><div class="field field-how"><dt>How</dt><dd>As D2, with <code>keras.regularizers.L1(strength)</code>.</dd></div></dl></article><article class="card" id="D4"><header class="card-head"><span class="id">D4</span><h3>Early stopping</h3></header><dl class="fields"><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 5: Training">5</span>Training.</dd></div><div class="field field-how"><dt>How</dt><dd>Create a <code>keras.callbacks.EarlyStopping</code> that watches <code>"val_loss"</code>, with a <code>patience</code> (e.g. 15) and <code>restore_best_weights=True</code>, and pass it in <code>callbacks=[...]</code>. Several callbacks go in the same list. Keep <code>epochs</code> high; training stops by itself.</dd></div><div class="field field-check"><dt>Check</dt><dd>The training log ends before the last epoch.</dd></div></dl></article></div></section><section class="group" id="E"><h2><span class="letter">E</span>Feature engineering</h2><div class="cards"><article class="card" id="E1"><header class="card-head"><span class="id">E1</span><h3>Compare the amount with the customer's usual spend</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>₹20,000 is normal for one customer and alarming for another.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop, before any log of the amount columns (it needs raw rupees).</dd></div><div class="field field-how"><dt>How</dt><dd>Add a column: <code>amount_inr</code> divided by <code>customer_avg_spend_90d</code>. Take <code>np.log</code> of the ratio, so "twice as usual" and "half as usual" are the same distance from 1.</dd></div><div class="field field-then"><dt>Then</dt><dd>Add it to <code>FEATURES</code>. A blank average spend gives a blank ratio; fill it like the other blanks.</dd></div></dl></article><article class="card" id="E2"><header class="card-head"><span class="id">E2</span><h3>Treat the hour as a circle</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Hour 23 and hour 0 are one hour apart, but 23 apart as numbers.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop.</dd></div><div class="field field-how"><dt>How</dt><dd>Add two columns: the sine and the cosine of 2π × hour / 24 (<code>np.sin</code>, <code>np.cos</code>, <code>np.pi</code>).</dd></div><div class="field field-then"><dt>Then</dt><dd>Add them to <code>FEATURES</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd>Hours 23 and 0 now have almost the same pair of values.</dd></div></dl></article><article class="card" id="E3"><header class="card-head"><span class="id">E3</span><h3>Look at the amounts themselves</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Some amounts may have been typed in by a person rather than rung up at a till.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 1: Preprocessing">1</span>Preprocessing loop, before any log of <code>amount_inr</code>.</dd></div><div class="field field-how"><dt>How</dt><dd>Print a few dozen <code>amount_inr</code> values from fraud rows and from genuine rows (<code>train[train["is_fraud"] == 1]</code>). If you spot a pattern, turn it into a 0/1 column. The <code>%</code> operator gives the remainder of a division.</dd></div><div class="field field-then"><dt>Then</dt><dd>Add it to <code>FEATURES</code>.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>train.groupby("&lt;your column&gt;")["is_fraud"].mean()</code> shows whether the pattern is linked to fraud.</dd></div></dl></article></div></section><section class="group" id="F"><h2><span class="letter">F</span>Final polish</h2><div class="cards"><article class="card" id="F1"><header class="card-head"><span class="id">F1</span><h3>Average several models</h3></header><dl class="fields"><div class="field field-idea"><dt>Idea</dt><dd>Networks started from different random weights make slightly different mistakes; averaging them cancels some out.</dd></div><div class="field field-where"><dt>Where</dt><dd><span class="step step-sm" title="Notebook step 6: Submission">6</span>Submission, replacing the prediction line.</dd></div><div class="field field-how"><dt>How</dt><dd>Loop over a few seeds. In each pass: set the seed, build and compile a fresh model, <code>fit</code> it, and keep <code>model.predict(X_test)</code>. Average the kept probabilities with <code>np.mean(..., axis=0)</code>, then threshold at 0.5.</dd></div><div class="field field-check"><dt>Check</dt><dd><code>submission["is_fraud"]</code> still contains only 0 and 1.</dd></div></dl></article></div></section>
+<section class="group" id="pitfalls">
+<h2>Pitfalls</h2>
+<ul class="pitfalls"><li><strong>Changing several things at once.</strong> You will not know which change helped.</li><li><strong>Running cells out of order.</strong> The Preprocessing loop changes <code>train</code> and <code>test</code> in place: running it twice logs columns twice. After editing it, use Runtime → Run all.</li><li><strong>Chasing the public leaderboard.</strong> It uses 30% of the test set; final ranks use the other 70%. Trust your validation split.</li><li><strong>Loss is <code>nan</code>.</strong> Usually an unscaled huge column, a log of a negative number, or blanks left unfilled.</li><li><strong>Validation accuracy stuck at about 50%.</strong> The network predicts one class for everything. Check the inputs.</li><li><strong>Error at <code>model.predict(X_test)</code>.</strong> <code>X_test</code> does not have the same columns as <code>X</code>.</li><li><strong>Submitting probabilities.</strong> <code>is_fraud</code> must be 0 or 1.</li></ul>
+</section>
+</main>
+</div>
+</body>
+</html>
