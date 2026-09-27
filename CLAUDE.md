@@ -41,6 +41,7 @@ from the most recent worksheet rather than inventing one:
 | `worksheet09_regularisation.html` | overfitting, L2, L1, early stopping, dropout, live training lab | yes |
 | `worksheet09_cnn.html` | pixels, Sobel, convolution, ReLU, padding, stride, pooling, LeNet | yes |
 | `worksheet10_architectures.html` | LeNet, AlexNet, VGG-16: diagrams, real activation maps, shapes, parameter counts (~22 MB, data inlined; rebuild with `worksheet_tools/`) | yes |
+| `worksheet11_inception_resnet.html` | Inception and ResNet: connected visual experiments, measured training replays, guided calculations, MCQs, complete architectures | yes |
 
 ## Adding a worksheet
 
