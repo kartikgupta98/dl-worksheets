@@ -39,6 +39,8 @@ from the most recent worksheet rather than inventing one:
 | `worksheet07_momentum_nag.html` | SGD, EWMA, momentum, Nesterov | yes |
 | `worksheet08_adaptive_lr.html` | AdaGrad, RMSProp, Adam, bias correction | **no, still only on `fraud-competition`** |
 | `worksheet09_regularisation.html` | overfitting, L2, L1, early stopping, dropout, live training lab | yes |
+| `worksheet09_cnn.html` | pixels, Sobel, convolution, ReLU, padding, stride, pooling, LeNet | yes |
+| `worksheet10_architectures.html` | LeNet, AlexNet, VGG-16: diagrams, real activation maps, shapes, parameter counts (~22 MB, data inlined; rebuild with `worksheet_tools/`) | yes |
 
 ## Adding a worksheet
 

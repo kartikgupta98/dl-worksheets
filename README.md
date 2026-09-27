@@ -16,6 +16,8 @@ dependencies, no network calls at runtime.
 | Worksheet 07: Momentum & NAG | [`worksheet07_momentum_nag.html`](worksheet07_momentum_nag.html) | SGD, EWMA, momentum, Nesterov |
 | Worksheet 08: Adaptive Learning Rates | [`worksheet08_adaptive_lr.html`](worksheet08_adaptive_lr.html) | AdaGrad, RMSProp, Adam, bias correction |
 | Worksheet 09: Regularisation | [`worksheet09_regularisation.html`](worksheet09_regularisation.html) | overfitting, L2, L1, early stopping, dropout, live training lab |
+| CNN: From Pixels to Patterns | [`worksheet09_cnn.html`](worksheet09_cnn.html) | pixels and RGB, Sobel, convolution, ReLU, padding, stride, pooling, LeNet; section quizzes and animations |
+| Inside LeNet, AlexNet & VGG-16 | [`worksheet10_architectures.html`](worksheet10_architectures.html) | architecture diagrams, handwritten digit inference, real activation maps, guided shape and parameter exercises; self-contained and offline |
 
 ## Kaggle competition: Flagged or Fraud?
 

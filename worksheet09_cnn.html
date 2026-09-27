@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A visual CNN worksheet: pixels, Sobel filters, convolution, ReLU, padding, stride, pooling and LeNet. Interactive, self-contained and offline.">
+<title>From Pixels to Patterns · First CNN Worksheet</title>
+<style>
+:root{--bg:#f8fafc;--ink:#202d46;--blue:#3866cc;--amber:#aa640e;--plum:#b44473;--green:#17866c;--muted:#52627a;--rule:#dde5ef;--paper:#fff;--panel:#f1f5fb;--cream:#fff7e9;--serif:"Segoe UI",Arial,sans-serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;--mono:"SF Mono",Menlo,Consolas,monospace}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font:19px/1.7 var(--sans)}
+button,input,select{font:inherit}
+button,select{cursor:pointer}
+button,a,input,select,summary{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:4px}
+button{border:1px solid #bdc7d9;border-radius:7px;background:#fff;color:var(--ink);padding:8px 14px;min-height:42px;font-weight:600}
+button:hover{background:#edf1f8}
+button.primary,button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+a{color:var(--blue)}
+input[type=number]{width:84px;padding:8px;border:1px solid #a8b5cb;border-radius:6px;background:#fff;color:var(--ink)}
+select{padding:8px;border:1px solid #a8b5cb;border-radius:6px;background:#fff;color:var(--ink)}
+input[type=range]{accent-color:var(--blue);max-width:100%;width:160px}
+h1,h2,h3,p{margin-top:0}
+h1,h2,h3{font-family:var(--serif);line-height:1.13}
+h1{font-size:44px;letter-spacing:-.015em;margin-bottom:18px}
+h2{font-size:32px;letter-spacing:-.015em;margin-bottom:12px}
+h3{font-size:24px;margin-bottom:10px}
+p{margin-bottom:14px}
+.small{font-size:17px;color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--amber)}
+.wrap{max-width:1000px;margin:auto;padding:0 24px}
+.topbar{background:var(--bg);border-bottom:1px solid var(--rule)}
+.top-inner{max-width:1000px;margin:auto;padding:12px 24px;display:flex;align-items:center;gap:16px}
+.top-inner a{text-decoration:none;font-size:14px}
+.top-title{margin-right:auto;font-weight:600;font-family:var(--serif)}
+.top-inner button{min-height:34px;font-size:13px;padding:5px 10px}
+.scroll-track{display:none}
+#reading-progress{height:3px;background:var(--blue);width:0}
+.mast{padding:58px 0 30px;border-bottom:1px solid #d6d1c7;display:block}
+.mast p{max-width:700px;color:var(--muted);font:21px/1.5 var(--serif)}
+.hero-visual{width:100%;max-width:360px;margin:auto}
+.schedule{position:sticky;top:0;z-index:30;display:flex;gap:3px;flex-wrap:wrap;padding:12px 0;background:#f8fafcf2;backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.schedule a{font-size:13px;color:var(--muted);text-decoration:none;padding:5px 8px;border:1px solid transparent;border-radius:6px}
+.schedule a:hover,.schedule a.active{background:var(--paper);border-color:var(--rule);color:var(--ink)}
+section{padding:48px 0 35px;border-bottom:1px solid var(--rule);scroll-margin-top:72px}
+.section-head{display:flex;justify-content:space-between;align-items:start;gap:15px}
+.section-head .time{white-space:nowrap;font-size:13px;color:var(--muted);padding-top:7px}
+.intro{max-width:760px;color:var(--ink)}
+.stage{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:24px;margin:24px -28px 22px;overflow:hidden}
+.stage.white{background:#fff}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 22px}
+.controls label{display:flex;align-items:center;gap:8px;font-size:14px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:25px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:25px}
+.center{text-align:center}
+.caption{font-size:13px;letter-spacing:.04em;color:var(--muted);margin:10px 0}
+.takeaway{border:1px solid #eadfc8;border-radius:10px;padding:15px 19px;margin-top:22px;color:var(--ink);background:var(--cream);font-size:16px}
+.big-value{font-family:var(--mono);font-size:28px;line-height:1.3;color:var(--blue)}
+.pixel-layout{display:grid;grid-template-columns:1fr .9fr 1fr;align-items:center;gap:30px}
+.pixel-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;width:100%;max-width:300px;aspect-ratio:1;margin:auto}
+.pixel{min-width:0;min-height:0;padding:0;border:0;border-radius:2px;position:relative;font-family:var(--mono);font-size:12px;font-weight:400}
+.pixel[aria-pressed=true]{outline:3px solid var(--amber);outline-offset:1px;z-index:1}
+.pixel-swatch{height:96px;border-radius:9px;margin-bottom:14px;border:1px solid #0002;transition:background .3s}
+.channel-controls label{display:grid;grid-template-columns:55px 1fr 35px;gap:8px;align-items:center;font-size:14px;margin:9px 0}
+.channel-controls input{width:100%;min-width:0}
+.channel-controls output{font-family:var(--mono);font-size:14px}
+.mini-grid{display:grid;gap:3px;grid-template-columns:repeat(var(--cols,3),1fr);max-width:200px;margin:auto}
+.mini-grid span{display:grid;place-items:center;aspect-ratio:1;border-radius:3px;font:14px var(--mono);background:#e5ebf5}
+.channel-planes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.channel-planes .mini-grid span{font-size:11px}
+.stat-line{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule)}
+.stat-line:last-child{border:0}
+.stat-line strong{font-family:var(--mono);font-size:21px;color:var(--blue)}
+.viz-svg{width:100%;height:auto;display:block}
+.diagram-text{font-family:var(--sans);fill:var(--ink)}
+.scan-layout{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:28px;align-items:start}
+.board{position:relative;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:3px;width:100%;max-width:310px;aspect-ratio:1;margin:auto;padding:3px;background:#dce3ed;border-radius:6px;isolation:isolate}
+.cell{display:flex;align-items:center;justify-content:center;border-radius:2px;font-family:var(--mono);font-size:clamp(11px,1.6vw,18px);transition:background .25s,color .25s;background:#fff}
+.cell.padding{background:repeating-linear-gradient(45deg,#eef0f5,#eef0f5 4px,#fff 4px,#fff 8px);color:#68758c}
+.cell.result{animation:appear .3s ease-out}
+.cell.current{box-shadow:inset 0 0 0 3px var(--amber);animation:appear .3s ease-out}
+.scan-window{position:absolute;border:3px solid #a77130;background:#c48a3f18;border-radius:5px;pointer-events:none;z-index:2;transition:transform .45s cubic-bezier(.22,.7,.2,1),width .25s,height .25s}
+.board .cell.in-window{font-weight:700}
+.equation{font-family:var(--mono);font-size:15px;line-height:1.8;overflow-wrap:anywhere}
+.scan-math{padding:14px 0}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin:10px auto;max-width:245px}
+.product-grid span{background:var(--panel);text-align:center;padding:9px 2px;border-radius:4px;font:13px var(--mono)}
+.kernel-edit{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;max-width:190px;margin:10px auto}
+.kernel-edit input{width:100%;min-width:0;text-align:center;padding:7px 2px}
+.scan-summary{text-align:center;font-family:var(--mono);font-size:16px;margin:15px 0 0;min-height:26px}
+.scan-step{font-size:13px;color:var(--muted);margin-left:auto}
+.legend{display:flex;justify-content:center;gap:15px;font-size:12px;color:var(--muted);margin-top:10px}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;background:var(--blue)}
+.legend span.neg:before{background:var(--plum)}
+.canvas-image{width:100%;max-width:240px;aspect-ratio:1;border-radius:6px;image-rendering:pixelated;background:#101929}
+.image-strip{margin:25px 0}
+.pair-note{display:grid;grid-template-columns:1fr 1fr;gap:20px;border-top:1px solid var(--rule);padding-top:20px}
+.pair-note b{display:block;margin-bottom:4px}
+.pair-note p{font-size:14px;color:var(--muted);margin:0}
+.channel-flow{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;min-height:180px}
+.channel-stack{position:relative;width:110px;height:138px;margin:10px 20px}
+.plane{position:absolute;left:0;top:0;width:76px;height:76px;display:grid;place-items:center;background:#dae4f5;border:1px solid #6782b1;border-radius:4px;transform:translate(calc(var(--i)*7px),calc(var(--i)*7px));font:13px var(--mono);transition:transform .4s}
+.flow-arrow{color:var(--muted);font-size:26px}
+.channel-label{font-size:13px;text-align:center;max-width:160px}
+.relu-bars{display:flex;gap:10px;justify-content:center;align-items:center;padding:10px 0 20px;min-height:150px}
+.bar-slot{width:52px;height:110px;position:relative;background:linear-gradient(to bottom,transparent 49.4%,#c9d2df 49.4%,#c9d2df 50.6%,transparent 50.6%)}
+.bar{position:absolute;left:10%;width:80%;background:var(--blue);border-radius:3px;transition:height .6s,top .6s}
+.bar-value{position:absolute;bottom:-26px;width:100%;text-align:center;font:14px var(--mono)}
+.relu-equation{text-align:center;font-family:var(--mono);margin:15px 0 0}
+.formula{padding:20px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);border-radius:10px;font:19px/1.7 var(--serif);text-align:center;margin:24px 0}
+.formula small{display:block;font:13px/1.5 var(--sans);color:var(--muted);margin-top:8px}
+.geometry{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:35px}
+.geo-tiles{max-width:315px;margin:auto}
+.worked,.practice{padding:22px;border:1px solid var(--rule);border-radius:10px;background:var(--paper)}
+.practice{background:var(--cream);border-color:#eadfc8}
+.worked .eyebrow{color:var(--green)}
+.practice .eyebrow{color:var(--blue)}
+.answer-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:17px 0 9px}
+.feedback{min-height:25px;font-size:14px;margin:10px 0 0}
+.feedback.correct{color:var(--green)}
+.feedback.incorrect{color:#a33638}
+.hint{font-size:14px;color:var(--muted);margin-top:12px}
+details{margin-top:12px}
+summary{cursor:pointer;color:var(--blue);font-size:14px;width:fit-content}
+details p{font-size:14px;margin-top:10px}
+.pool-layout{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:start;max-width:750px;margin:auto}
+.pool-result{font-size:20px;font-family:var(--mono);margin-top:20px;text-align:center}
+.arch-flow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;margin:28px 0}
+.arch-node{padding:13px 4px;border:1px solid var(--rule);border-radius:6px;text-align:center;position:relative;min-width:0;transition:background .25s,border .25s}
+.arch-node.active{background:#e8eef8;border-color:var(--blue)}
+.arch-node:not(:last-child):after{content:"→";position:absolute;right:-12px;top:45%;z-index:1;color:var(--blue)}
+.arch-node b{font-size:13px;display:block}
+.arch-node span{font:11px var(--mono);display:block;margin-top:6px}
+.arch-stack{height:80px;display:flex;justify-content:center;align-items:center;margin-bottom:10px}
+.arch-block{background:#dce6f7;border:1px solid #7d99c5;box-shadow:4px -4px 0 #f0f4fb,5px -5px 0 #9ab0d3,9px -9px 0 #f0f4fb,10px -10px 0 #9ab0d3;border-radius:2px}
+.arch-note{min-height:50px;text-align:center;color:var(--muted);font-size:14px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:650px}
+th,td{text-align:left;border-bottom:1px solid var(--rule);padding:12px 10px}
+thead th{font-size:12px;letter-spacing:.04em;color:var(--muted);background:var(--panel)}
+tbody th{font-weight:600}
+td.mono{font-size:13px}
+.count-input{width:110px!important;padding:6px!important}
+tr.highlight{background:#f0f5fc}
+tfoot{font-weight:700}
+tfoot td{border-top:2px solid var(--ink)}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.rule{padding:17px;background:var(--panel);border-radius:7px;font-size:14px}
+.rule b{display:block;margin-bottom:6px}
+.recap{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.recap div{border-top:3px solid var(--blue);padding-top:12px}
+.recap b{display:block;font-family:var(--serif);font-size:21px}
+.recap span{font-size:14px;color:var(--muted)}
+footer{padding:30px 0 50px;font-size:13px;color:var(--muted)}
+footer .row{justify-content:space-between}
+noscript{display:block;background:var(--cream);padding:20px}
+body.present .wrap{max-width:1140px}
+body.present{font-size:21px}
+@keyframes appear{from{transform:scale(.86);opacity:.4}
+to{transform:scale(1);opacity:1}
+}
+[hidden]{display:none!important}
+
+@media(max-width:800px){.mast{grid-template-columns:1fr .65fr}
+.pixel-layout{grid-template-columns:1fr 1fr}
+.pixel-layout>div:last-child{grid-column:1/-1}
+.channel-planes{max-width:370px;margin:auto}
+.scan-layout{grid-template-columns:1fr 1fr}
+.scan-layout .scan-middle{grid-column:1/-1;grid-row:2}
+.scan-middle .product-grid{max-width:300px}
+.arch-flow{grid-template-columns:repeat(4,1fr);gap:18px}
+.arch-node:nth-child(4):after{display:none}
+.recap{grid-template-columns:repeat(3,1fr)}
+}
+
+@media(max-width:560px){.wrap{padding:0 18px}
+.top-inner{padding:9px 18px;gap:10px}
+.top-title{font-size:13px}
+.top-inner a{font-size:12px}
+.top-inner button{font-size:12px}
+.mast{grid-template-columns:1fr;padding-top:36px}
+.hero-visual{max-width:260px}
+.mast p{font-size:16px}
+.schedule{gap:6px}
+.schedule a{font-size:12px;padding:5px 7px}
+section{padding:32px 0}
+.stage{padding:17px}
+.two,.three,.geometry,.rules,.pair-note{grid-template-columns:1fr}
+.pixel-layout{grid-template-columns:1fr;gap:24px}
+.pixel-layout>div:last-child{grid-column:auto}
+.pixel-grid{max-width:290px}
+.scan-layout{gap:15px}
+.scan-layout .cell{font-size:12px}
+.scan-layout .caption{font-size:12px}
+.controls{gap:8px}
+.controls label{flex-wrap:wrap}
+.scan-step{width:100%;margin-left:0}
+.pool-layout{gap:20px}
+.product-grid span{padding:8px 1px}
+.formula{text-align:left;font-size:16px}
+.channel-flow{gap:12px}
+.arch-flow{grid-template-columns:repeat(2,1fr)}
+.arch-node:nth-child(even):after{display:none}
+.arch-node:nth-child(odd):after{display:block}
+.recap{grid-template-columns:1fr 1fr}
+.worked,.practice{padding:17px}
+.section-head .time{font-size:12px}
+.stat-line strong{font-size:19px}
+.canvas-image{max-width:220px}
+.image-strip .three{grid-template-columns:repeat(3,1fr);gap:8px}
+.image-strip .caption{font-size:11px}
+.cell{font-size:14px}
+}
+
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}
+*,*:before,*:after{animation:none!important;transition:none!important}
+}
+
+@media print{.topbar,.schedule,.controls,button,.answer-row,footer a,.kernel-edit{display:none!important}
+body{font-size:11px}
+.wrap{max-width:none;padding:0}
+.mast{padding:15px 0;grid-template-columns:1fr .5fr}
+h1{font-size:34px}
+h2{font-size:25px}
+section{padding:18px 0;break-inside:avoid}
+.stage{padding:12px;margin:12px 0;break-inside:avoid}
+.two{grid-template-columns:1fr 1fr}
+.three{grid-template-columns:repeat(3,1fr)}
+.pixel-layout{grid-template-columns:1fr 1fr 1fr}
+.scan-layout{grid-template-columns:1fr 1fr 1fr}
+.scan-layout .scan-middle{grid-column:auto;grid-row:auto}
+input{border:1px solid #888!important}
+.hero-visual{max-width:200px}
+.arch-flow{grid-template-columns:repeat(7,1fr)}
+.arch-node span{font-size:9px}
+.arch-node b{font-size:11px}
+.table-wrap{overflow:visible}
+table{min-width:0}
+.recap{grid-template-columns:repeat(5,1fr)}
+.small,.caption{font-size:10px}
+.formula{font-size:15px}
+.stage,.formula,.cell{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+
+/* Explanatory figures follow the regularisation worksheet's quiet paper panels. */
+.subhead{margin:28px 0 10px;font-size:23px}.subhead .n{font:16px var(--sans);color:var(--muted);margin-right:10px}
+.mechanism{margin:17px 0 22px;padding:0;list-style:none;counter-reset:mechanism}
+.mechanism li{counter-increment:mechanism;display:grid;grid-template-columns:28px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--rule);font-size:16px}
+.mechanism li:before{content:counter(mechanism);font:13px/26px var(--sans);text-align:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper)}
+.mechanism strong{font-weight:600}.mechanism p{margin:0}
+.figure-title{font:600 14px var(--sans);margin:0 0 17px;color:var(--ink)}
+.shift-layout{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:25px;align-items:start}
+.shift-board{--columns:7;position:relative;display:grid;grid-template-columns:repeat(var(--columns),1fr);gap:3px;padding:3px;background:var(--rule);border-radius:5px;isolation:isolate}
+.shift-cell{aspect-ratio:1;background:#faf8f4;display:grid;place-items:center;font:12px var(--mono);border-radius:2px;transition:background .55s,color .55s}
+.shift-cell.weight{background:#f0dcde;color:#773c44}.shift-cell.overlap{box-shadow:inset 0 0 0 2px var(--plum)}
+.moving-edge{position:absolute;left:3px;top:3px;border:2px solid var(--blue);border-radius:3px;background:#4e6fa344;pointer-events:none;transition:transform .65s cubic-bezier(.2,.7,.2,1);z-index:2}
+.shift-readout{font:14px/1.6 var(--mono);margin:15px 0 0;text-align:center}.shift-status{font-size:15px;margin:18px 0 0;min-height:48px;color:var(--muted)}
+.shift-layout .caption{min-height:43px;font-size:13px}.shift-layout .shift-board{max-width:260px;margin:auto}
+.calc-controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--rule);padding-top:18px;margin-top:22px}
+.calc-tally{font:15px/1.65 var(--mono);min-height:54px;text-align:center;margin:16px 0 0}
+.calc-note{font:14px/1.6 var(--sans);text-align:center;color:var(--muted);margin-top:8px}
+.cell.term-active,#conv-kernel span.term-active,.product-grid span.term-active{box-shadow:inset 0 0 0 2px var(--amber);background:#f1e3cb!important;color:var(--ink)!important}
+.product-grid span.term-done{background:#eef2f8}.product-grid .product-value{display:block;color:var(--blue);margin-top:6px;font-weight:600}
+.scan-middle .mini-grid{max-width:174px}.product-grid{gap:4px}.product-grid span{font-size:12px}
+.two>.stage{margin-left:0;margin-right:0}.two>.stage .controls{align-items:start}
+.parameter-compare{display:flex;gap:22px;justify-content:space-between;padding:15px 0 0;border-top:1px solid var(--rule);font-size:14px;flex-wrap:wrap}
+.parameter-compare b{font:600 17px var(--mono);color:var(--blue)}
+@media(max-width:960px){.stage{margin-left:0;margin-right:0}}
+@media(max-width:800px){.scan-layout{grid-template-columns:1fr 1fr}.pixel-layout{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){body{font-size:17px}.mast{padding-top:36px}h1{font-size:34px}h2{font-size:28px}.mast p{font-size:20px}.shift-layout{grid-template-columns:1fr;gap:10px}.shift-layout .caption{min-height:0}.shift-board{max-width:230px}.shift-readout{margin-top:8px}.pixel-layout{grid-template-columns:1fr}.small{font-size:14px}.formula{font-size:17px}.shift-status{min-height:0}.product-grid span{font-size:11px}.calc-controls{justify-content:start}.calc-tally{text-align:left;font-size:13px}.schedule a{font-size:12px}.two{grid-template-columns:1fr}.parameter-compare{gap:14px}}
+@media print{.schedule,.calc-controls{display:none!important}.stage{margin-left:0;margin-right:0}.shift-layout{grid-template-columns:repeat(3,1fr)}}
+
+
+/* Light, colourful teaching theme. Accents follow concepts, not decorative charts. */
+section{--accent:#3866cc;--tint:#edf3ff}
+#pixels{--accent:#057f94;--tint:#e9f8fb}#bridge{--accent:#7951bc;--tint:#f3edff}
+#convolution{--accent:#3866cc;--tint:#edf3ff}#features{--accent:#b44473;--tint:#fceef5}
+#size{--accent:#a56513;--tint:#fff5e4}#pooling{--accent:#13816d;--tint:#eaf8f3}
+#fully-connected{--accent:#7551bb;--tint:#f2edfc}#lenet{--accent:#b2543f;--tint:#fff0eb}
+h1{font-size:clamp(36px,4.8vw,57px);font-weight:750;letter-spacing:-.045em;line-height:1.1}
+h2{font-size:32px;font-weight:720;letter-spacing:-.025em}h3{font-size:23px;font-weight:650;letter-spacing:-.015em}
+.mast{padding:48px 0 28px;border-color:var(--rule)}.mast p{font:21px/1.6 var(--sans);max-width:760px}
+.mast .eyebrow{color:var(--blue);margin-bottom:14px}.top-title{font:600 14px var(--sans)}
+.section-head .eyebrow{color:var(--accent);margin-bottom:10px}.section-head{margin-bottom:16px}
+.hook{font-size:21px;line-height:1.5;font-weight:600;color:var(--accent);margin:0 0 20px;padding-left:16px;border-left:3px solid var(--accent)}
+.term{font-weight:700;text-decoration:underline;text-decoration-color:var(--accent,var(--blue));text-decoration-thickness:2px;text-underline-offset:5px;color:var(--ink)}
+.intro{font-size:19px}.small,.pair-note p{font-size:17px;line-height:1.7}.caption,.calc-note,.channel-label{font-size:14px}
+.stage{margin:24px 0;background:#fff;border:1px solid var(--rule);box-shadow:0 3px 16px #24395e05;border-radius:16px;padding:24px}
+.stage .controls{padding-bottom:16px;border-bottom:1px solid var(--rule)}
+button{font-size:15px;border-radius:9px;font-weight:600;min-height:42px}
+button.primary,button[aria-pressed=true]{background:var(--accent,var(--blue));border-color:var(--accent,var(--blue))}
+.schedule a.active{border-color:#d2def7;color:var(--blue);background:#edf3ff}
+.takeaway{background:var(--tint);border:0;border-left:3px solid var(--accent);font-size:17px;border-radius:0 10px 10px 0;padding:15px 18px}
+.formula{font:18px/1.7 var(--mono);border-color:#e9d7b3;background:#fffcf6}.formula small{font-size:14px}
+.worked{background:#fff}.practice{background:var(--tint)}.big-value{color:var(--accent,var(--blue))}
+.recap div{border-color:var(--accent)}.recap div:nth-child(2){border-color:#b44473}.recap div:nth-child(3){border-color:#13816d}.recap div:nth-child(4){border-color:#a56513}.recap div:nth-child(5){border-color:#7551bb}
+.recap b{font-size:20px}.recap span{font-size:16px}.subhead .n{color:var(--accent)}
+.pool-types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+.pool-type{padding:16px;border-radius:12px;background:var(--tint);font-size:16px;line-height:1.6}.pool-type:nth-child(2){background:#edf3ff}.pool-type:nth-child(3){background:#f3edff}.pool-type b{display:block;color:var(--ink);margin-bottom:7px}
+.quick-check{margin-top:25px;border:1px solid var(--rule);border-top:3px solid var(--accent);border-radius:12px;background:#fff;padding:20px}
+.quick-head{display:flex;gap:10px;align-items:center;margin-bottom:15px;font-size:13px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.quiz-columns{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:24px}
+.quiz-columns fieldset{border:0;padding:0;margin:0;min-width:0}.quiz-columns legend,.quiz-number label{font-size:17px;font-weight:600;line-height:1.5;margin-bottom:12px;display:block}
+.quiz-options{display:flex;flex-wrap:wrap;gap:7px}.quiz-option{display:flex;align-items:center;gap:7px;font-size:15px;padding:6px 9px;border:1px solid var(--rule);border-radius:7px;cursor:pointer;min-height:40px}
+.quiz-option:has(input:checked){background:var(--tint);border-color:var(--accent)}.quiz-option input{accent-color:var(--accent);margin:0}
+.quiz-number .row{gap:8px}.quiz-number input{width:105px}.quiz-result{font-size:15px;margin:12px 0 0;min-height:23px}.quiz-result.correct{color:#13715c}.quiz-result.incorrect{color:#b03c4c}
+.quiz-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:17px}.quiz-actions summary{font-size:14px}.quiz-actions details{margin:0}.quiz-actions details[open]{flex-basis:100%}.quiz-actions details p{font-size:15px;background:var(--tint);padding:12px;border-radius:7px;margin:10px 0 0}
+.worked.compact{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}.worked.compact p{margin:4px 0}.worked.compact h3{font-size:21px;margin:8px 0}
+.dense-demo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;align-items:start}
+.fc-values{position:relative;height:160px;max-width:390px;margin:auto}.fc-value{position:absolute;top:0;left:0;display:grid;place-items:center;border-radius:7px;background:#e3edf9;color:#234c92;font:17px var(--mono);transition:transform .65s cubic-bezier(.2,.7,.2,1),background .5s}
+.fc-value:nth-child(n+5){background:#ede3fb;color:#674399}.fc-description{font:14px var(--mono);text-align:center;margin:12px 0 0}.fc-network{display:block;width:100%;height:auto}.fc-line{transition:stroke .5s,opacity .5s;stroke:#dce3ee;stroke-width:1}.fc-line.active{stroke:#7551bb;stroke-width:2;opacity:.8}.fc-pulse{stroke-dasharray:7 6;animation:flow 1.3s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-26}}
+.fc-scores{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.fc-scores button{font:14px var(--mono);padding:5px 9px;min-height:36px}.fc-readout{font-size:15px;text-align:center;margin:17px 0 0;min-height:26px}
+.lenet-history{font-size:17px;line-height:1.7}.lenet-image{margin:23px 0}.architecture-scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:14px;background:#fff}.architecture-scroll img{display:block;width:100%;min-width:820px;height:auto}.lenet-image figcaption{font-size:14px;color:var(--muted);margin-top:10px}
+.trace-heading{margin:28px 0 14px;color:var(--accent)}.stage.white{background:#fff}.arch-node.active{background:#fff0eb;border-color:#c77b69}
+@media(max-width:800px){.dense-demo{grid-template-columns:1fr 1fr}.stage{padding:20px}.pool-types{grid-template-columns:1fr}.pool-type b{display:inline;margin-right:6px}}
+@media(max-width:560px){body{font-size:18px}.intro{font-size:18px}.small,.pair-note p{font-size:17px}.hook{font-size:19px}h2{font-size:28px}.stage{padding:17px}.quiz-columns,.dense-demo,.worked.compact{grid-template-columns:1fr}.quick-check{padding:17px}.quiz-columns{gap:20px}.mast p{font-size:20px}.caption{font-size:13px}.pool-type{font-size:16px}.recap{grid-template-columns:1fr 1fr}.fc-values{max-width:320px}.formula{font-size:16px}.top-title{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.fc-pulse{animation:none}.fc-value{transition:none}}
+@media print{.quick-check{break-inside:avoid}.architecture-scroll{overflow:visible}.architecture-scroll img{min-width:0}.quiz-actions button,.fc-scores button{display:none}.quiz-columns{grid-template-columns:1fr 1fr}.fc-values,.fc-network{max-width:300px}.intro,.small{font-size:11px}.hook{font-size:13px}}
+
+</style>
+</head>
+<body>
+<noscript>Enable JavaScript to use the visual demonstrations and check answers. The explanations, worked examples and architecture remain readable below.</noscript>
+<header class="topbar"><div class="top-inner"><a href="index.html">← Worksheets</a><span class="top-title">CNN / Convolutional networks</span><button id="present" aria-pressed="false">Lecture view</button><button id="print">Print</button></div><div class="scroll-track"><div id="reading-progress"></div></div></header>
+<main class="wrap">
+<div class="mast"><div class="eyebrow">Deep Learning · Visual worksheet · Convolutional networks</div><h1>From Pixels to Patterns</h1><p>From image numbers to a decision: explore each operation, test the idea, then trace a complete CNN.</p><span class="small">Play, pause and step through the figures. Each section ends with two quick checks.</span></div>
+<nav class="schedule" aria-label="Lesson sections"><a href="#pixels">1 Pixels</a><a href="#bridge">2 MLPs</a><a href="#convolution">3 Convolution</a><a href="#features">4 Features</a><a href="#size">5 Shape</a><a href="#pooling">6 Pooling</a><a href="#fully-connected">7 Fully connected</a><a href="#lenet">8 LeNet</a><a href="#recap">9 Recap</a></nav>
+
+<section id="pixels"><div class="section-head"><div><div class="eyebrow">01 / The input</div><h2>How can an image be numbers?</h2></div></div><p class="hook">What does a computer actually receive when it sees a photo?</p><p class="intro">An image is a grid of pixels. A <b class="term">grayscale pixel</b> has one intensity; an <b class="term">RGB pixel</b> has red, green and blue values.</p><p class="small">RGB values describe the <b class="term">same location</b>. Change them to change that pixel’s colour.</p>
+<div class="stage"><div class="controls"><button id="mode-gray" aria-pressed="true">Grayscale · 1 channel</button><button id="mode-rgb" aria-pressed="false">RGB · 3 channels</button><label><input type="checkbox" id="show-values"> <span id="value-label">Show intensity values</span></label></div><div class="pixel-layout"><div><div id="pixel-grid" class="pixel-grid" role="group" aria-label="Select a pixel to inspect its values"></div><p class="caption center">Select a pixel to inspect it.</p></div><div><div class="eyebrow" id="pixel-coordinate">Pixel · row 4, column 4</div><div id="pixel-swatch" class="pixel-swatch"></div><div id="pixel-controls" class="channel-controls"></div><p id="pixel-value" class="mono" aria-live="polite"></p><p class="small">8-bit values: 0–255.<br>Training often rescales them to 0–1.</p></div><div><div id="pixel-planes"></div><p id="pixel-shape" class="caption center"></p><p class="small center">Shape = height × width × channels.<br>A channel is one grid of values.</p></div></div></div><div class="takeaway"><b class="term">Image representation</b> provides a numerical grid: height × width × channels.</div><div class="quick-check" data-quiz="pixels" data-mcq="1" data-number="48"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · One RGB pixel contains…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-pixels" value="0">One value</label><label class="quiz-option"><input type="radio" name="quiz-pixels" value="1">Three values</label><label class="quiz-option"><input type="radio" name="quiz-pixels" value="2">Three locations</label></div></fieldset><div class="quiz-number"><label for="quiz-number-pixels">Numerical · 4 × 4 RGB: total values?</label><div class="row"><input type="number" id="quiz-number-pixels" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Three values. 4 × 4 × 3 = 48; three channels describe each location.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="bridge"><div class="section-head"><div><div class="eyebrow">02 / The bridge</div><h2>What does an MLP miss?</h2></div></div><p class="hook">Would moving an object change what it is?</p><p class="intro">Flattening preserves the values, but a dense layer does not build in spatial neighborhoods or reuse one detector at every location.</p><h3 class="subhead"><span class="n">2.1</span>Every pixel gets a separate weight</h3><div class="stage"><div class="controls"><label>Image <select id="mlp-input"><option value="32,1">32 × 32 · grayscale</option><option value="224,3">224 × 224 · RGB</option></select></label><span class="small">First dense layer: 128 neurons</span></div><div class="two"><div><svg id="mlp-svg" class="viz-svg" viewBox="0 0 430 210" role="img" aria-label="A pixel grid is flattened into a vector and connected densely to neurons"></svg><p class="caption center">Every input connects to every dense neuron.</p></div><div><div class="stat-line"><span>Flattened inputs</span><strong id="mlp-values"></strong></div><div class="stat-line"><span>Weights + 128 biases</span><strong id="mlp-params"></strong></div><p id="mlp-equation" class="equation" style="margin-top:15px"></p><p class="small">Just one layer: more weights mean more memory and more opportunity to overfit limited data.</p></div></div><div class="pair-note"><div><b>Local connectivity</b><p>A dense layer does not privilege neighbouring pixels over distant ones. Convolution begins with a small patch, where local patterns form.</p></div><div><b>Weight sharing</b><p>Slide the same detector everywhere. Its weights stay the same.</p></div></div></div><h3 class="subhead"><span class="n">2.2</span>The same edge, in a different place</h3>
+<p class="small">Dense weights belong to <b class="term">fixed pixel positions</b>. Moving an edge changes which weights it meets. Convolution reuses one local detector everywhere.</p>
+<div class="stage"><div class="controls"><button id="shift-toggle">Move edge right</button><button id="shift-play" class="primary">Animate shift</button><span class="small">One illustrative detector, with bias 0</span></div>
+<div class="shift-layout"><div><p class="caption center">Input · 5 × 7<br>One vertical line of 1s</p><div id="shift-input" class="shift-board"></div><p class="shift-readout">Same pattern, new position</p></div><div><p class="caption center">Dense neuron · fixed weights<br>Three weights = 1; others = 0</p><div id="shift-dense" class="shift-board"></div><p id="shift-dense-score" class="shift-readout"></p></div><div><p class="caption center">Shared 3 × 3 filter<br>Centre column = 1; others = 0</p><div id="shift-map" class="shift-board" style="--columns:5"></div><p id="shift-conv-score" class="shift-readout"></p></div></div>
+<p id="shift-status" class="shift-status" aria-live="polite"></p></div>
+<p class="small">This illustrates one neuron, not a trained classifier. A convolution’s response <b class="term">moves with the pattern</b> (equivariance); the final prediction is not automatically invariant.</p>
+<div class="takeaway"><b>Three limitations:</b> dense layers use many parameters, do not privilege nearby pixels, and do not automatically reuse a detector across locations. CNNs build in locality and sharing.</div><div class="quick-check" data-quiz="bridge" data-mcq="0" data-number="10"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · MLP weights attach to…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-bridge" value="0">Pixel positions</label><label class="quiz-option"><input type="radio" name="quiz-bridge" value="1">Any matching patch</label><label class="quiz-option"><input type="radio" name="quiz-bridge" value="2">Image labels</label></div></fieldset><div class="quiz-number"><label for="quiz-number-bridge">Numerical · 4 inputs → 2 neurons: parameters?</label><div class="row"><input type="number" id="quiz-number-bridge" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Pixel positions. 4 × 2 weights + 2 biases = 10.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="convolution"><div class="section-head"><div><div class="eyebrow">03 / A sliding detector</div><h2>First, a filter designed by hand.</h2></div></div><p class="hook">How can nine numbers detect an edge?</p><p class="intro">Sobel filters detect intensity changes. One responds to vertical edges; the other responds to horizontal edges.</p><p class="small">Sobel x subtracts the left from the right. Uniform patches cancel to zero; a brighter right side gives a positive response. Reverse the contrast, and the sign reverses.</p><div class="image-strip"><div class="three center"><div><canvas id="sobel-source" class="canvas-image" width="96" height="96" role="img" aria-label="Synthetic grayscale scene with a house, sun and ground"></canvas><p class="caption">Input image</p></div><div><canvas id="sobel-x" class="canvas-image" width="94" height="94" role="img" aria-label="Absolute vertical-edge responses of the Sobel x filter"></canvas><p class="caption">Sobel x · vertical edges</p></div><div><canvas id="sobel-y" class="canvas-image" width="94" height="94" role="img" aria-label="Absolute horizontal-edge responses of the Sobel y filter"></canvas><p class="caption">Sobel y · horizontal edges</p></div></div><p class="small center">Edge previews show response magnitude, scaled for display. The calculation below retains the sign.</p></div>
+<h3 class="subhead"><span class="n">3.1</span>One patch becomes one number</h3><ol class="mechanism"><li><p><strong>Multiply matching positions.</strong> Each patch value meets one filter weight. This is elementwise multiplication, not matrix multiplication.</p></li><li><p><strong>Add the products and one bias.</strong> Nine products from a 3 × 3 patch become one output value.</p></li><li><p><strong>Move and repeat.</strong> Write the result at the matching output position. Reuse the same weights and bias.</p></li></ol>
+<div class="stage"><div class="controls"><label>Filter <select id="conv-filter"><option value="x">Sobel x · vertical edges</option><option value="y">Sobel y · horizontal edges</option><option value="custom">Editable CNN filter</option></select></label><button id="conv-play" class="primary">Play scan</button><button id="conv-step">Step</button><button id="conv-reset">Reset</button><span id="conv-step-label" class="scan-step"></span></div><div class="scan-layout"><div><p class="caption center">Input · 6 × 6 · values 0 or 1</p><div id="conv-input" class="board"></div></div><div class="scan-middle"><p class="caption center" id="kernel-caption">Filter · 3 × 3 · fixed Sobel weights</p><div id="conv-kernel" class="mini-grid"></div><div id="kernel-edit" class="kernel-edit" hidden></div><p class="caption center">Patch × filter · multiply each pair</p><div id="conv-products" class="product-grid"></div><p id="conv-sum" class="scan-summary"></p></div><div><p class="caption center">Feature map · 4 × 4</p><div id="conv-output" class="board"></div><div class="legend"><span>Positive</span><span class="neg">Negative</span></div></div></div><div class="calc-controls"><button id="mac-play" class="primary">Explain this output</button><button id="mac-step">Next product</button><button id="mac-reset">Reset calculation</button></div><p id="mac-tally" class="calc-tally" aria-live="polite"></p><p class="calc-note">Amber links one input, its weight and their product. Finish all nine products, then add the bias.</p></div>
+<p class="small">The output of one filter is a <b class="term">feature map</b>: a grid of responses. Each value describes one input neighbourhood. Strong positive responses mark strong matches; the map shows <b class="term">where</b> they occur. These are activations, not image colours.</p><div class="pair-note"><div><b>Classical image processing</b><p>People designed filters such as Sobel. The filter values were fixed.</p></div><div><b>Convolutional neural networks</b><p><b class="term">Weights and biases are trainable.</b> Backpropagation combines gradients from every use of a shared weight. The task determines useful detectors; they need not resemble Sobel.</p></div></div><div class="takeaway"><b class="term">Convolution provides feature maps</b> with shared detectors. One grayscale 3 × 3 filter needs only 9 weights + 1 bias = 10 parameters, regardless of the number of positions.</div><div class="quick-check" data-quiz="convolution" data-mcq="0" data-number="1"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · A feature map records…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-convolution" value="0">Response by location</label><label class="quiz-option"><input type="radio" name="quiz-convolution" value="1">Class labels</label><label class="quiz-option"><input type="radio" name="quiz-convolution" value="2">Filter weights</label></div></fieldset><div class="quiz-number"><label for="quiz-number-convolution">Numerical · Patch [1, 2], weights [2, −1], bias 1: output?</label><div class="row"><input type="number" id="quiz-number-convolution" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Response by location. 1×2 + 2×(−1) + 1 = 1.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="features"><div class="section-head"><div><div class="eyebrow">04 / Building features</div><h2>Across channels. Through a nonlinearity.</h2></div></div><p class="hook">Why not stop after finding edges?</p><p class="intro">Each filter spans <b class="term">all input channels</b>. Sum those responses to form one output feature map.</p><div class="stage"><div class="controls"><label>Number of filters <select id="filter-count"><option>1</option><option selected>4</option><option>8</option></select></label><span class="small">3 × 3 kernels · RGB input · one bias per filter</span></div><div class="channel-flow"><div><div id="input-stack" class="channel-stack"></div><div class="channel-label">3 input channels</div></div><span class="flow-arrow">→</span><div><div id="filter-stack" class="channel-stack"></div><div class="channel-label">Each filter: 3 × 3 × 3<br>27 weights + 1 bias</div></div><span class="flow-arrow">→</span><div><div id="output-stack" class="channel-stack"></div><div class="channel-label" id="output-channel-label"></div></div></div><p id="channel-params" class="scan-summary" aria-live="polite"></p></div>
+<div class="two"><div class="stage" style="margin-top:0"><div class="controls"><button id="relu-toggle" aria-pressed="false" class="primary">Apply ReLU</button><span class="small">0 trainable parameters</span></div><div id="relu-bars" class="relu-bars" role="img" aria-label="Values before ReLU: minus 3, 2, minus 1, 4, 0, 1"></div><p id="relu-equation" class="relu-equation">−3, 2, −1, 4, 0, 1</p></div><div style="padding:16px 0"><h3>Keep positives. Zero negatives.</h3><p class="intro"><b class="term">ReLU</b> keeps positive responses and zeros negatives. It adds nonlinearity; stacking only affine layers still gives an affine transformation.</p><p class="small">ReLU preserves height, width and channels.</p><h3 style="margin-top:22px">Later layers see more.</h3><p class="intro">The <b class="term">receptive field</b> grows with depth: later features combine evidence from larger input regions.</p><p class="mono small">Two 3 × 3 convolutions, stride 1<br>→ 5 × 5 receptive field</p></div></div><div class="takeaway"><b class="term">Nonlinearity</b> lets stacked layers model complex relationships; ReLU changes values, not shape.</div><div class="quick-check" data-quiz="features" data-mcq="2" data-number="3"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · ReLU adds…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-features" value="0">More channels</label><label class="quiz-option"><input type="radio" name="quiz-features" value="1">Trainable weights</label><label class="quiz-option"><input type="radio" name="quiz-features" value="2">Nonlinearity</label></div></fieldset><div class="quiz-number"><label for="quiz-number-features">Numerical · Sum after ReLU(−2, 0, 3)?</label><div class="row"><input type="number" id="quiz-number-features" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Nonlinearity. ReLU gives [0, 0, 3]; sum = 3.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="size"><div class="section-head"><div><div class="eyebrow">05 / Controlling shape</div><h2>Padding, stride and output size.</h2></div></div><p class="hook">How many places can the filter fit?</p><p class="intro"><b class="term">Padding</b> adds a border. <b class="term">Stride</b> is the distance the window moves. Neither introduces trainable weights.</p><div class="stage"><div class="controls"><label>Padding <select id="geo-padding"><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option></select></label><label>Stride <select id="geo-stride"><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select></label><button id="geo-play" class="primary">Play positions</button><button id="geo-step">Step</button><span id="geo-position" class="scan-step"></span></div><div class="geometry"><div><div id="geo-board" class="board geo-tiles"></div><p class="caption center">5 × 5 input · 3 × 3 filter<br>Striped cells are zero padding.</p></div><div><div class="eyebrow">Valid window positions</div><p id="geo-answer" class="big-value"></p><p id="geo-calculation" class="equation"></p><p class="small">Padding 1 and stride 1 preserve size for a 3 × 3 filter. Larger stride usually gives a smaller output.</p></div></div></div>
+<p class="small">Subtract the kernel to find available travel. Divide by stride to count moves. Round down; add 1 for the starting position.</p><div class="formula">Output size = floor((input + 2 × padding − kernel) / stride) + 1<small>Apply separately to height and width. Padding is per side. Floor means round down.<br>Standard windows: no dilation; equal padding on opposite sides.</small></div>
+<div class="worked compact"><div><div class="eyebrow">Solved / Convolution</div><h3>32 × 32 × 3 → 8 filters</h3><p class="small">Kernel 3 · stride 2 · padding 1</p></div><div><p class="equation">floor((32 + 2 − 3) / 2) + 1 = 16</p><p class="big-value">16 × 16 × 8</p></div></div><div class="takeaway"><b class="term">Padding and stride</b> control spatial size. The number of filters controls output channels.</div><div class="quick-check" data-quiz="size" data-mcq="0" data-number="13"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · Larger stride usually gives…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-size" value="0">Smaller spatial output</label><label class="quiz-option"><input type="radio" name="quiz-size" value="1">More channels</label><label class="quiz-option"><input type="radio" name="quiz-size" value="2">More weights</label></div></fieldset><div class="quiz-number"><label for="conv-answer">Numerical · 28 × 28; kernel 5, stride 2, padding 1: side?</label><div class="row"><input type="number" id="conv-answer" step="any" placeholder="Answer"><span class="small">× same × 6</span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Smaller spatial output. floor((28 + 2 − 5)/2) + 1 = 13.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="pooling"><div class="section-head"><div><div class="eyebrow">06 / Local summaries</div><h2>Pooling reduces spatial size.</h2></div></div><p class="hook">Do we need every exact feature location?</p><p class="intro">Pooling applies a <b class="term">fixed summary rule</b> independently to each channel. Standard max and average pooling have <b class="term">no trainable weights or biases</b>.</p><div class="pool-types"><div class="pool-type"><b class="term">Max pooling</b>Keeps the strongest response. Preserves prominent features; discards weaker ones.</div><div class="pool-type"><b class="term">Average pooling</b>Keeps local mean strength. Smooths responses; isolated peaks become weaker.</div><div class="pool-type"><b class="term">Global average pooling</b>Averages each entire feature map into one value. Removes spatial layout; can replace flattening.</div></div><div class="stage"><div class="controls"><label>Operation <select id="pool-mode"><option value="max">Max pooling</option><option value="avg">Average pooling</option><option value="global">Global average pooling</option></select></label><button id="pool-play" class="primary">Play pooling</button><button id="pool-step">Step</button><button id="pool-reset">Reset</button><span id="pool-step-label" class="scan-step"></span></div><div class="pool-layout"><div><p class="caption center">Input · 4 × 4 · one channel</p><div id="pool-input" class="board"></div></div><div><p id="pool-output-label" class="caption center">Output · 2 × 2 · same channel</p><div id="pool-output" class="board"></div></div></div><p id="pool-result" class="pool-result"></p><p id="pool-settings" class="small center">2 × 2 window · stride 2 · padding 0</p></div><div class="takeaway"><b class="term">Pooling provides compact summaries</b> while preserving channels. The same output-size formula applies; use the pooling window as the kernel.</div><p class="small" style="margin:12px 0 22px">Pooling trades spatial detail for a compact representation. It does not guarantee translation invariance.</p><div class="worked compact"><div><div class="eyebrow">Solved / Pooling</div><h3>28 × 28 × 6</h3><p class="small">Window 2 · stride 2 · padding 0</p></div><div><p class="equation">floor((28 − 2) / 2) + 1 = 14</p><p class="big-value">14 × 14 × 6</p></div></div><div class="quick-check" data-quiz="pooling" data-mcq="0" data-number="8"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · Which keeps a local peak?</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-pooling" value="0">Max pooling</label><label class="quiz-option"><input type="radio" name="quiz-pooling" value="1">Average pooling</label><label class="quiz-option"><input type="radio" name="quiz-pooling" value="2">Global average</label></div></fieldset><div class="quiz-number"><label for="pool-answer">Numerical · 15 × 15; window 3, stride 2, padding 1: side?</label><div class="row"><input type="number" id="pool-answer" step="any" placeholder="Answer"><span class="small">× same × 8</span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Max pooling. floor((15 + 2 − 3)/2) + 1 = 8. Channels stay unchanged.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="fully-connected"><div class="section-head"><div><div class="eyebrow">07 / From features to a decision</div><h2>Fully connected: combine the evidence.</h2></div></div><p class="hook">How do detected features become a class?</p><p class="intro"><b class="term">Flatten</b> rearranges feature values into a vector; it learns nothing. In a <b class="term">fully connected (dense) layer</b>, every neuron uses every input, with its own weights and bias.</p>
+<div class="stage"><div class="controls"><button id="fc-flatten">Flatten features</button><button id="fc-play" class="primary">Trace dense layer</button><button id="fc-step">Next neuron</button></div><div class="dense-demo"><div><p class="caption center">Two 2 × 2 feature maps → 8 values</p><div id="fc-values" class="fc-values" role="img" aria-label="Two feature maps with values 1, 0, 2, 1 and 0, 3, 1, 2"></div><p id="fc-description" class="fc-description">Same values. Different arrangement.</p></div><div><svg id="fc-network" class="fc-network" viewBox="0 0 370 250" role="img" aria-label="Eight inputs connect to each of three output neurons"></svg><div id="fc-scores" class="fc-scores"></div></div></div><p id="fc-readout" class="fc-readout" aria-live="polite"></p></div>
+<p class="small">Each neuron computes <b class="term">weighted inputs + bias</b>. Hidden dense layers usually add an activation; a final classifier produces logits. Softmax converts these scores into class probabilities.</p><p class="equation">Parameters = (inputs + 1) × neurons</p><div class="takeaway"><b class="term">Fully connected layers</b> combine extracted evidence into predictions; their weights are learned.</div><div class="quick-check" data-quiz="fully-connected" data-mcq="0" data-number="27"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · Flatten learns new weights?</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-fully-connected" value="0">No</label><label class="quiz-option"><input type="radio" name="quiz-fully-connected" value="1">One per value</label><label class="quiz-option"><input type="radio" name="quiz-fully-connected" value="2">One per channel</label></div></fieldset><div class="quiz-number"><label for="quiz-number-fully-connected">Numerical · 8 inputs → 3 dense neurons: parameters?</label><div class="row"><input type="number" id="quiz-number-fully-connected" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>No. 8 × 3 weights + 3 biases = 27.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="lenet"><div class="section-head"><div><div class="eyebrow">08 / The complete network</div><h2>LeNet: a landmark in recognising digits.</h2></div></div><p class="hook">Can these simple operations recognise handwriting?</p><p class="lenet-history"><b class="term">LeNet-5</b>, described by LeCun and colleagues in 1998, learned handwritten digit recognition. Related convolutional systems read bank cheques—an early practical success for learned visual features. <a href="https://yann.lecun.org/exdb/publis/pdf/lecun-98.pdf">Original paper</a>.</p><figure class="lenet-image"><div class="architecture-scroll" role="region" aria-label="LeNet architecture image; scroll horizontally on small screens" tabindex="0"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgwIiBoZWlnaHQ9IjMyMCIgdmlld0JveD0iMCAwIDEwODAgMzIwIj48cmVjdCB3aWR0aD0iMTA4MCIgaGVpZ2h0PSIzMjAiIHJ4PSIxNCIgZmlsbD0id2hpdGUiLz48dGV4dCB4PSIzMCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMjAyZDQ2Ij5MZU5ldC1zdHlsZSBDTk4gwrcgdGVhY2hpbmcgYWRhcHRhdGlvbjwvdGV4dD48dGV4dCB4PSIzMCIgeT0iNjEiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjNTI2MjdhIj5Mb2NhbCBmZWF0dXJlIGV4dHJhY3Rpb248L3RleHQ+PHRleHQgeD0iNjk5IiB5PSI2MSIgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM1MjYyN2EiPkZ1bGx5IGNvbm5lY3RlZCBjbGFzc2lmaWVyPC90ZXh0PjxwYXRoIGQ9Ik0xMDMgMTU3IEgxMzUgbC02IC01IG02IDUgbC02IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E5YjZjYSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMjQuMCIgeT0iMTIxLjAiIHdpZHRoPSI3MiIgaGVpZ2h0PSI3MiIgcng9IjMiIGZpbGw9IiNlZGYyZjgiIHN0cm9rZT0iIzUwNjQ3ZSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cGF0aCBkPSJNNDEgMTM5IEg4MCBMNTIgMTgwIiBmaWxsPSJub25lIiBzdHJva2U9IiM1MDY0N2UiIHN0cm9rZS13aWR0aD0iNyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGcgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjx0ZXh0IHg9IjYwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiM1MDY0N2UiPklucHV0PC90ZXh0Pjx0ZXh0IHg9IjYwIiB5PSIyNjgiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMyMDJkNDYiPjMyIMOXIDMyIMOXIDE8L3RleHQ+PHRleHQgeD0iNjAiIHk9IjI5MCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzUyNjI3YSI+R3JheXNjYWxlPC90ZXh0PjwvZz48cGF0aCBkPSJNMjIzIDE1NyBIMjU1IGwtNiAtNSBtNiA1IGwtNiA1IiBmaWxsPSJub25lIiBzdHJva2U9IiNhOWI2Y2EiIHN0cm9rZS13aWR0aD0iMiIvPjxyZWN0IHg9IjE1Ny41IiB5PSIxMTQuNSIgd2lkdGg9IjY1IiBoZWlnaHQ9IjY1IiByeD0iMyIgZmlsbD0iI2VhZjBmZiIgc3Ryb2tlPSIjMzg2NmNjIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxyZWN0IHg9IjE1Mi41IiB5PSIxMTkuNSIgd2lkdGg9IjY1IiBoZWlnaHQ9IjY1IiByeD0iMyIgZmlsbD0iI2VhZjBmZiIgc3Ryb2tlPSIjMzg2NmNjIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxyZWN0IHg9IjE0Ny41IiB5PSIxMjQuNSIgd2lkdGg9IjY1IiBoZWlnaHQ9IjY1IiByeD0iMyIgZmlsbD0iI2VhZjBmZiIgc3Ryb2tlPSIjMzg2NmNjIiBzdHJva2Utd2lkdGg9IjEuNSIvPjxnIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48dGV4dCB4PSIxODAiIHk9IjI0MyIgZm9udC1zaXplPSIxNiIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iIzM4NjZjYyI+Q29udjE8L3RleHQ+PHRleHQgeD0iMTgwIiB5PSIyNjgiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMyMDJkNDYiPjI4IMOXIDI4IMOXIDY8L3RleHQ+PHRleHQgeD0iMTgwIiB5PSIyOTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1MjYyN2EiPjUgw5cgNSArIFJlTFU8L3RleHQ+PC9nPjxwYXRoIGQ9Ik0zNDMgMTU3IEgzNzUgbC02IC01IG02IDUgbC02IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E5YjZjYSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iMjg2LjAiIHk9IjEyMy4wIiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIzIiBmaWxsPSIjZThmN2YyIiBzdHJva2U9IiMxMzgxNmQiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMjgxLjAiIHk9IjEyOC4wIiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIzIiBmaWxsPSIjZThmN2YyIiBzdHJva2U9IiMxMzgxNmQiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHJlY3QgeD0iMjc2LjAiIHk9IjEzMy4wIiB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHJ4PSIzIiBmaWxsPSIjZThmN2YyIiBzdHJva2U9IiMxMzgxNmQiIHN0cm9rZS13aWR0aD0iMS41Ii8+PGcgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjx0ZXh0IHg9IjMwMCIgeT0iMjQzIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMTM4MTZkIj5Qb29sMTwvdGV4dD48dGV4dCB4PSIzMDAiIHk9IjI2OCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzIwMmQ0NiI+MTQgw5cgMTQgw5cgNjwvdGV4dD48dGV4dCB4PSIzMDAiIHk9IjI5MCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzUyNjI3YSI+MiDDlyAyIG1heDwvdGV4dD48L2c+PHBhdGggZD0iTTQ2MyAxNTcgSDQ5NSBsLTYgLTUgbTYgNSBsLTYgNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYTliNmNhIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSI0MTAuMCIgeT0iMTI3LjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcng9IjMiIGZpbGw9IiNlYWYwZmYiIHN0cm9rZT0iIzM4NjZjYyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSI0MDUuMCIgeT0iMTMyLjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcng9IjMiIGZpbGw9IiNlYWYwZmYiIHN0cm9rZT0iIzM4NjZjYyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSI0MDAuMCIgeT0iMTM3LjAiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcng9IjMiIGZpbGw9IiNlYWYwZmYiIHN0cm9rZT0iIzM4NjZjYyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48ZyBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+PHRleHQgeD0iNDIwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMzODY2Y2MiPkNvbnYyPC90ZXh0Pjx0ZXh0IHg9IjQyMCIgeT0iMjY4IiBmb250LXNpemU9IjE0IiBmaWxsPSIjMjAyZDQ2Ij4xMCDDlyAxMCDDlyAxNjwvdGV4dD48dGV4dCB4PSI0MjAiIHk9IjI5MCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzUyNjI3YSI+NSDDlyA1ICsgUmVMVTwvdGV4dD48L2c+PHBhdGggZD0iTTU4MyAxNTcgSDYxNSBsLTYgLTUgbTYgNSBsLTYgNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjYTliNmNhIiBzdHJva2Utd2lkdGg9IjIiLz48cmVjdCB4PSI1MzUuMCIgeT0iMTMyLjAiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgcng9IjMiIGZpbGw9IiNlOGY3ZjIiIHN0cm9rZT0iIzEzODE2ZCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSI1MzAuMCIgeT0iMTM3LjAiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgcng9IjMiIGZpbGw9IiNlOGY3ZjIiIHN0cm9rZT0iIzEzODE2ZCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48cmVjdCB4PSI1MjUuMCIgeT0iMTQyLjAiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgcng9IjMiIGZpbGw9IiNlOGY3ZjIiIHN0cm9rZT0iIzEzODE2ZCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48ZyBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+PHRleHQgeD0iNTQwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxMzgxNmQiPlBvb2wyPC90ZXh0Pjx0ZXh0IHg9IjU0MCIgeT0iMjY4IiBmb250LXNpemU9IjE0IiBmaWxsPSIjMjAyZDQ2Ij41IMOXIDUgw5cgMTY8L3RleHQ+PHRleHQgeD0iNTQwIiB5PSIyOTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1MjYyN2EiPjIgw5cgMiBtYXg8L3RleHQ+PC9nPjxwYXRoIGQ9Ik03MDMgMTU3IEg3MzUgbC02IC01IG02IDUgbC02IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E5YjZjYSIgc3Ryb2tlLXdpZHRoPSIyIi8+PHJlY3QgeD0iNjUwIiB5PSIxMDMiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxMTUiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxMjciIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxMzkiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxNTEiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxNjMiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxNzUiIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PHJlY3QgeD0iNjUwIiB5PSIxODciIHdpZHRoPSIyMCIgaGVpZ2h0PSI5IiByeD0iMiIgZmlsbD0iI2ZmZWRjZiIgc3Ryb2tlPSIjYWE2NDBlIiBzdHJva2Utd2lkdGg9Ii44Ii8+PGcgZm9udC1mYW1pbHk9IkFyaWFsLHNhbnMtc2VyaWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjx0ZXh0IHg9IjY2MCIgeT0iMjQzIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjYWE2NDBlIj5GbGF0dGVuPC90ZXh0Pjx0ZXh0IHg9IjY2MCIgeT0iMjY4IiBmb250LXNpemU9IjE0IiBmaWxsPSIjMjAyZDQ2Ij40MDA8L3RleHQ+PHRleHQgeD0iNjYwIiB5PSIyOTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1MjYyN2EiPlJlc2hhcGU8L3RleHQ+PC9nPjxwYXRoIGQ9Ik04MjMgMTU3IEg4NTUgbC02IC01IG02IDUgbC02IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E5YjZjYSIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iNzgwIiBjeT0iMTA5IiByPSI4IiBmaWxsPSIjNzk1MWJjIiBvcGFjaXR5PSIwLjQiLz48Y2lyY2xlIGN4PSI3ODAiIGN5PSIxMzMiIHI9IjgiIGZpbGw9IiM3OTUxYmMiIG9wYWNpdHk9IjAuNCIvPjxjaXJjbGUgY3g9Ijc4MCIgY3k9IjE1NyIgcj0iOCIgZmlsbD0iIzc5NTFiYyIgb3BhY2l0eT0iMSIvPjxjaXJjbGUgY3g9Ijc4MCIgY3k9IjE4MSIgcj0iOCIgZmlsbD0iIzc5NTFiYyIgb3BhY2l0eT0iMC40Ii8+PGNpcmNsZSBjeD0iNzgwIiBjeT0iMjA1IiByPSI4IiBmaWxsPSIjNzk1MWJjIiBvcGFjaXR5PSIwLjQiLz48ZyBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+PHRleHQgeD0iNzgwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiM3OTUxYmMiPkRlbnNlMTwvdGV4dD48dGV4dCB4PSI3ODAiIHk9IjI2OCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzIwMmQ0NiI+MTIwPC90ZXh0Pjx0ZXh0IHg9Ijc4MCIgeT0iMjkwIiBmb250LXNpemU9IjEyIiBmaWxsPSIjNTI2MjdhIj4rIFJlTFU8L3RleHQ+PC9nPjxwYXRoIGQ9Ik05NDMgMTU3IEg5NzUgbC02IC01IG02IDUgbC02IDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2E5YjZjYSIgc3Ryb2tlLXdpZHRoPSIyIi8+PGNpcmNsZSBjeD0iOTAwIiBjeT0iMTA5IiByPSI4IiBmaWxsPSIjNzk1MWJjIiBvcGFjaXR5PSIwLjQiLz48Y2lyY2xlIGN4PSI5MDAiIGN5PSIxMzMiIHI9IjgiIGZpbGw9IiM3OTUxYmMiIG9wYWNpdHk9IjAuNCIvPjxjaXJjbGUgY3g9IjkwMCIgY3k9IjE1NyIgcj0iOCIgZmlsbD0iIzc5NTFiYyIgb3BhY2l0eT0iMSIvPjxjaXJjbGUgY3g9IjkwMCIgY3k9IjE4MSIgcj0iOCIgZmlsbD0iIzc5NTFiYyIgb3BhY2l0eT0iMC40Ii8+PGNpcmNsZSBjeD0iOTAwIiBjeT0iMjA1IiByPSI4IiBmaWxsPSIjNzk1MWJjIiBvcGFjaXR5PSIwLjQiLz48ZyBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+PHRleHQgeD0iOTAwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiM3OTUxYmMiPkRlbnNlMjwvdGV4dD48dGV4dCB4PSI5MDAiIHk9IjI2OCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzIwMmQ0NiI+ODQ8L3RleHQ+PHRleHQgeD0iOTAwIiB5PSIyOTAiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM1MjYyN2EiPisgUmVMVTwvdGV4dD48L2c+PGNpcmNsZSBjeD0iMTAyMCIgY3k9IjEwOSIgcj0iOCIgZmlsbD0iI2IyNTQzZiIgb3BhY2l0eT0iMC40Ii8+PGNpcmNsZSBjeD0iMTAyMCIgY3k9IjEzMyIgcj0iOCIgZmlsbD0iI2IyNTQzZiIgb3BhY2l0eT0iMC40Ii8+PGNpcmNsZSBjeD0iMTAyMCIgY3k9IjE1NyIgcj0iOCIgZmlsbD0iI2IyNTQzZiIgb3BhY2l0eT0iMSIvPjxjaXJjbGUgY3g9IjEwMjAiIGN5PSIxODEiIHI9IjgiIGZpbGw9IiNiMjU0M2YiIG9wYWNpdHk9IjAuNCIvPjxjaXJjbGUgY3g9IjEwMjAiIGN5PSIyMDUiIHI9IjgiIGZpbGw9IiNiMjU0M2YiIG9wYWNpdHk9IjAuNCIvPjxnIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj48dGV4dCB4PSIxMDIwIiB5PSIyNDMiIGZvbnQtc2l6ZT0iMTYiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNiMjU0M2YiPk91dHB1dDwvdGV4dD48dGV4dCB4PSIxMDIwIiB5PSIyNjgiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiMyMDJkNDYiPjEwPC90ZXh0Pjx0ZXh0IHg9IjEwMjAiIHk9IjI5MCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzUyNjI3YSI+Q2xhc3MgbG9naXRzPC90ZXh0PjwvZz48L3N2Zz4=" alt="LeNet teaching adaptation: 32 by 32 grayscale input, six 5 by 5 convolution filters, max pooling, sixteen convolution filters, max pooling, flatten 400, dense 120, dense 84, ten logits."></div><figcaption>Read left to right: extract local features, reduce spatial size, then combine features into class scores.</figcaption></figure><p class="small">We trace a <b class="term">teaching adaptation</b>: ReLU, max pooling, full channel connectivity and a dense classifier differ from historical LeNet-5. Conv: kernel 5, stride 1, padding 0. Pool: window 2, stride 2. Biases included.</p><h3 class="trace-heading">Now trace the shapes, then count the weights.</h3><div class="stage white"><div class="controls"><button id="arch-play" class="primary">Trace the network</button><button id="arch-step">Next layer</button><button id="arch-reset">Reset trace</button></div><div id="arch-flow" class="arch-flow"></div><p id="arch-note" class="arch-note" aria-live="polite"></p></div>
+<div class="rules"><div class="rule"><b>Convolution parameters</b><span class="mono">(kernel height × kernel width × input channels + 1) × filters</span></div><div class="rule"><b>Dense parameters</b><span class="mono">(inputs + 1) × outputs</span></div></div><p class="small" style="margin-top:10px">“+ 1” includes one bias per filter or neuron. ReLU, standard pooling and flatten add zero parameters.</p><div class="table-wrap"><table><thead><tr><th scope="col">Layer</th><th scope="col">Output shape</th><th scope="col">Parameter calculation</th><th scope="col">Parameters</th></tr></thead><tbody><tr data-arch="1"><th scope="row">Conv1 + ReLU</th><td class="mono">28 × 28 × 6</td><td class="mono">(5 × 5 × 1 + 1) × 6</td><td class="mono">156</td></tr><tr data-arch="2"><th scope="row">Pool1</th><td class="mono">14 × 14 × 6</td><td>No learned weights</td><td class="mono">0</td></tr><tr data-arch="3"><th scope="row">Conv2 + ReLU</th><td class="mono">10 × 10 × 16</td><td class="mono">(5 × 5 × 6 + 1) × 16</td><td><input id="lenet-conv" class="count-input" type="number" min="0" placeholder="Your turn" aria-label="Conv2 parameter count"></td></tr><tr data-arch="4"><th scope="row">Pool2</th><td class="mono">5 × 5 × 16</td><td>No learned weights</td><td class="mono">0</td></tr><tr data-arch="5"><th scope="row">Flatten</th><td><input id="lenet-flat" class="count-input" type="number" min="1" placeholder="Your turn" aria-label="Flattened vector length"></td><td>5 × 5 × 16 values; reshape only</td><td class="mono">0</td></tr><tr data-arch="5"><th scope="row">Dense1 + ReLU</th><td class="mono">120</td><td class="mono">(flattened length + 1) × 120</td><td><input id="lenet-dense" class="count-input" type="number" min="0" placeholder="Your turn" aria-label="Dense1 parameter count"></td></tr><tr data-arch="5"><th scope="row">Dense2 + ReLU</th><td class="mono">84</td><td class="mono">(120 + 1) × 84</td><td class="mono">10,164</td></tr><tr data-arch="6"><th scope="row">Output logits</th><td class="mono">10</td><td class="mono">(84 + 1) × 10</td><td class="mono">850</td></tr></tbody><tfoot><tr><th colspan="3" scope="row">Total trainable parameters</th><td><input id="lenet-total" class="count-input" type="number" min="0" placeholder="Total" aria-label="Total network parameter count"></td></tr></tfoot></table></div><div class="answer-row"><button id="lenet-check" class="primary">Check table</button><button id="lenet-reveal">Reveal counts</button><button id="lenet-clear">Clear answers</button></div><p id="lenet-feedback" class="feedback" aria-live="polite"></p><div class="takeaway"><b>Activations ≠ parameters.</b> Conv1 produces 4,704 values per image using just 156 shared parameters. Larger input images increase computation, not the weights of a fixed convolution.</div><details><summary>Why do the dense layers contain most of the weights?</summary><p>Dense1 connects all 400 features to all 120 neurons: 48,000 weights plus 120 biases. It alone contains about 78% of this network’s parameters.</p></details><div class="takeaway"><b class="term">LeNet combines the operations</b> into a trainable image classifier.</div><div class="quick-check" data-quiz="lenet" data-mcq="0" data-number="400"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · Convolution before dense learns…</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-lenet" value="0">Spatial features</label><label class="quiz-option"><input type="radio" name="quiz-lenet" value="1">Class names directly</label><label class="quiz-option"><input type="radio" name="quiz-lenet" value="2">Only image size</label></div></fieldset><div class="quiz-number"><label for="quiz-number-lenet">Numerical · Flatten 5 × 5 × 16: vector length?</label><div class="row"><input type="number" id="quiz-number-lenet" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Spatial features. 5 × 5 × 16 = 400 values, with no new parameters.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+
+<section id="recap"><div class="section-head"><div><div class="eyebrow">09 / Take it with you</div><h2>Five operations. One classifier.</h2></div></div><p class="hook">Which operation does each job?</p><div class="recap"><div><b>Convolution</b><span>Learn local, shared filters.</span></div><div><b>ReLU</b><span>Add nonlinearity.</span></div><div><b>Pooling</b><span>Summarize neighborhoods.</span></div><div><b>Flatten</b><span>Rearrange feature values.</span></div><div><b>Dense</b><span>Combine features into scores.</span></div></div><div class="quick-check" data-quiz="recap" data-mcq="2" data-number="0"><div class="quick-head">Quick check · understanding + calculation</div><div class="quiz-columns"><fieldset><legend>MCQ · Which has trainable weights?</legend><div class="quiz-options"><label class="quiz-option"><input type="radio" name="quiz-recap" value="0">ReLU</label><label class="quiz-option"><input type="radio" name="quiz-recap" value="1">Max pooling</label><label class="quiz-option"><input type="radio" name="quiz-recap" value="2">Dense</label></div></fieldset><div class="quiz-number"><label for="quiz-number-recap">Numerical · Parameters in ReLU + standard max pooling?</label><div class="row"><input type="number" id="quiz-number-recap" step="any" placeholder="Answer"><span class="small"></span></div></div></div><div class="quiz-actions"><button class="quiz-check primary">Check both</button><details><summary>Show reasoning</summary><p>Dense. Both operations are fixed: 0 trainable parameters.</p></details></div><p class="quiz-result" aria-live="polite"></p></div></section>
+<footer><div class="row"><span>Deep Learning · First CNN worksheet · Explore at your own pace</span><span>All demonstrations run locally. No data is sent.</span></div><details><summary>References and conventions</summary><p><a href="https://docs.opencv.org/4.5.2/d2/d2c/tutorial_sobel_derivatives.html">OpenCV: Sobel derivatives</a> · <a href="https://d2l.ai/chapter_convolutional-neural-networks/padding-and-strides.html">Dive into Deep Learning: padding and stride</a> · <a href="https://classic.d2l.ai/chapter_convolutional-neural-networks/lenet.html">LeNet teaching architecture</a></p><p>Shapes use height × width × channels and omit the batch dimension. All convolutions use ordinary full channel connectivity and no dilation. All pooling uses floor-based output sizing. Editable filter values illustrate the effect of weights; this page does not simulate training.</p></details></footer>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id), fmt=n=>n.toLocaleString('en-US');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+const controllers=[];
+function player(button,advance,reset,last,label,delay=1000){
+ let timer=null;
+ const stop=()=>{clearInterval(timer);timer=null;button.textContent=label;button.setAttribute('aria-pressed','false');};
+ const api={stop,get playing(){return timer!==null;}};
+ button.setAttribute('aria-pressed','false');
+ button.addEventListener('click',()=>{if(timer){stop();return;}controllers.forEach(c=>c.stop());if(last())reset();if(reduced.matches){advance();return;}button.textContent='Pause';button.setAttribute('aria-pressed','true');timer=setInterval(()=>{advance();if(last())stop();},delay);});
+ controllers.push(api);return api;
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)controllers.forEach(c=>c.stop());});
+new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)e.target.querySelectorAll('button[aria-pressed="true"]').forEach(b=>{if(b.textContent==='Pause')b.click();});});},{threshold:0}).observe($('convolution'));
+['bridge','size','pooling','fully-connected','lenet'].forEach(id=>new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)e.target.querySelectorAll('button').forEach(b=>{if(b.textContent==='Pause')b.click();});});}).observe($(id)));
+$('present').onclick=()=>{const on=document.body.classList.toggle('present');$('present').setAttribute('aria-pressed',on);};$('print').onclick=()=>{controllers.forEach(c=>c.stop());window.print();};
+function progress(){const length=document.documentElement.scrollHeight-innerHeight;$('reading-progress').style.width=(length>0?scrollY/length*100:0)+'%';}window.addEventListener('scroll',progress,{passive:true});window.addEventListener('resize',progress);progress();
+function makeBoard(el,values,n,{padding=0,base=n}={}){el.style.setProperty('--n',n);el.innerHTML='';values.forEach((v,i)=>{const cell=document.createElement('div');cell.className='cell';cell.textContent=v??'·';if(padding&&(Math.floor(i/n)<padding||Math.floor(i/n)>=padding+base||i%n<padding||i%n>=padding+base))cell.classList.add('padding');el.append(cell);});}
+function windowAt(el,n,k,r,c){let win=el.querySelector('.scan-window');if(!win){win=document.createElement('div');win.className='scan-window';el.append(win);}const gap=3,step=(el.clientWidth-6-gap*(n-1))/n+gap;win.style.left='3px';win.style.top='3px';win.style.width=(step*k-gap)+'px';win.style.height=(step*k-gap)+'px';win.style.transform=`translate(${c*step}px,${r*step}px)`;}
+function colorCell(cell,v,max=4){if(v===null){cell.style.background='#fff';cell.style.color='#8793a6';return;}const t=Math.min(1,Math.abs(v)/max);cell.style.background=v<0?`rgb(${246-116*t},${234-175*t},${240-153*t})`:`rgb(${237-179*t},${242-149*t},${250-89*t})`;cell.style.color=t>.52?'#fff':'#2a2e3a';}
+function outputCell(cell,value,current,max=4){cell.textContent=value===null?'·':Number(value.toFixed(2));cell.classList.toggle('current',current);colorCell(cell,value,max);}
+// 01: Inspectable pixel arrays, with true per-pixel RGB values.
+const gray=[],rgb=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++){const inside=(r>=2&&r<=6&&c>=2&&c<=5);const value=inside?(r===4||c===2||c===5?220:50):25+5*r;gray.push(value);rgb.push(inside?[220,110+r*10,45+c*6]:[25+c*9,55+r*9,110+r*8]);}
+let pixelMode='gray',selected=27;
+function renderPixels(){const grid=$('pixel-grid');grid.innerHTML='';const show=$('show-values').checked;for(let i=0;i<64;i++){const b=document.createElement('button'),v=pixelMode==='gray'?[gray[i],gray[i],gray[i]]:rgb[i];b.className='pixel';b.style.background=`rgb(${v.join(',')})`;b.style.color=(v[0]*.299+v[1]*.587+v[2]*.114)>145?'#17213a':'#fff';b.textContent=show?v[0]:'';b.setAttribute('aria-label',`Row ${Math.floor(i/8)+1}, column ${i%8+1}: ${pixelMode==='gray'?v[0]:v.join(', ')}`);b.setAttribute('aria-pressed',i===selected);b.onclick=()=>{selected=i;renderPixels();renderPixelControls();};grid.append(b);}renderPixelInfo();}
+function renderPixelInfo(){$('value-label').textContent=pixelMode==='gray'?'Show intensity values':'Show red-channel values';const v=pixelMode==='gray'?[gray[selected],gray[selected],gray[selected]]:rgb[selected];$('pixel-swatch').style.background=`rgb(${v.join(',')})`;$('pixel-coordinate').textContent=`Pixel · row ${Math.floor(selected/8)+1}, column ${selected%8+1}`;$('pixel-value').textContent=pixelMode==='gray'?`Intensity = ${v[0]}`:`RGB = (${v.join(', ')})`;$('pixel-shape').textContent=pixelMode==='gray'?'8 × 8 × 1 = 64 values':'8 × 8 × 3 = 192 values';const channels=pixelMode==='gray'?['Intensity']:['Red','Green','Blue'];$('pixel-planes').innerHTML='<div class="channel-planes" style="grid-template-columns:repeat('+channels.length+',1fr)">'+channels.map((name,ch)=>'<div><div class="mini-grid" style="--cols:3">'+Array.from({length:9},(_,j)=>{const idx=(2+Math.floor(j/3))*8+2+j%3,n=pixelMode==='gray'?gray[idx]:rgb[idx][ch],color=pixelMode==='gray'?[n,n,n]:[ch===0?n:20,ch===1?n:20,ch===2?n:20];return `<span style="background:rgb(${color});color:${pixelMode==='gray'&&n>150?'#2a2e3a':'#fff'}">${n}</span>`;}).join('')+`</div><p class="caption center">${name}</p></div>`).join('')+'</div><p class="small center">A 3 × 3 crop, split into channels</p>';}
+function renderPixelControls(){const channels=pixelMode==='gray'?['Gray']:['Red','Green','Blue'];$('pixel-controls').innerHTML='';channels.forEach((name,ch)=>{const label=document.createElement('label'),range=document.createElement('input'),value=document.createElement('output');range.type='range';range.min=0;range.max=255;range.value=pixelMode==='gray'?gray[selected]:rgb[selected][ch];range.setAttribute('aria-label',name+' intensity');value.textContent=range.value;label.append(document.createTextNode(name),range,value);range.oninput=()=>{if(pixelMode==='gray')gray[selected]=+range.value;else rgb[selected][ch]=+range.value;value.textContent=range.value;renderPixels();};$('pixel-controls').append(label);});}
+['gray','rgb'].forEach(mode=>$('mode-'+mode).onclick=()=>{pixelMode=mode;['gray','rgb'].forEach(m=>$('mode-'+m).setAttribute('aria-pressed',m===mode));renderPixels();renderPixelControls();});$('show-values').onchange=renderPixels;renderPixels();renderPixelControls();
+// 02: Same image choices, exact dense-layer parameter counts.
+function renderMLP(){const [side,ch]=$('mlp-input').value.split(',').map(Number),n=side*side*ch;$('mlp-values').textContent=fmt(n);$('mlp-params').textContent=fmt((n+1)*128);$('mlp-equation').textContent=`(${fmt(n)} × 128) + 128 = ${fmt((n+1)*128)}`;let svg='';for(let r=0;r<6;r++)for(let c=0;c<6;c++)svg+=`<rect x="${10+c*15}" y="${40+r*15}" width="13" height="13" rx="2" fill="${r===2||c===2?'#4e6fa3':'#ced9eb'}"/>`;svg+='<path d="M114 87H149" stroke="#9aabc7" stroke-width="2"/>';for(let i=0;i<10;i++){svg+=`<rect x="160" y="${12+i*16}" width="16" height="13" rx="2" fill="${i%3===0?'#4e6fa3':'#ced9eb'}"/>`;for(let j=0;j<5;j++)svg+=`<line x1="176" y1="${18+i*16}" x2="325" y2="${28+j*32}" stroke="#b3c2d9" stroke-width=".8"/>`;}for(let j=0;j<5;j++)svg+=`<circle cx="337" cy="${28+j*32}" r="10" fill="#4e6fa3"/>`;svg+=`<g class="diagram-text" font-size="12" text-anchor="middle"><text x="53" y="195">${side} × ${side} × ${ch}</text><text x="168" y="195">Flatten</text><text x="337" y="195">128 neurons</text></g>`;$('mlp-svg').innerHTML=svg;}$('mlp-input').onchange=renderMLP;renderMLP();
+// 03: Real Sobel responses, both at image scale and as a step-through calculation.
+const sx=[-1,0,1,-2,0,2,-1,0,1],sy=[-1,-2,-1,0,0,0,1,2,1];
+function sobelImages(){const n=96,a=[];for(let y=0;y<n;y++)for(let x=0;x<n;x++){let v=35+y*.45;if(y>74)v=110;if((x-72)**2+(y-20)**2<100)v=220;if(x>22&&x<65&&y>43&&y<77)v=180;if(y>=24&&y<=46&&Math.abs(x-43)<(y-24)*1.05)v=225;if(x>40&&x<50&&y>58&&y<77)v=48;if(x>27&&x<37&&y>50&&y<61)v=65;a.push(v);}function paint(id,arr,size){const ctx=$(id).getContext('2d'),image=ctx.createImageData(size,size);arr.forEach((v,i)=>{image.data[i*4]=v;image.data[i*4+1]=v;image.data[i*4+2]=v;image.data[i*4+3]=255;});ctx.putImageData(image,0,0);}paint('sobel-source',a,n);[sx,sy].forEach((k,ki)=>{let out=[];for(let r=0;r<n-2;r++)for(let c=0;c<n-2;c++){let sum=0;for(let j=0;j<9;j++)sum+=a[(r+Math.floor(j/3))*n+c+j%3]*k[j];out.push(Math.abs(sum));}const max=Math.max(...out);paint(ki?'sobel-y':'sobel-x',out.map(v=>v/max*255),n-2);});}sobelImages();
+let macIndex=-1,macPlayer=null;
+const convInput=[0,0,0,0,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0];let kernel=sx.slice(),custom=[.2,-.1,.3,-.4,.5,.1,.2,-.2,.4],convIndex=0;
+makeBoard($('conv-input'),convInput,6);Array.from($('conv-input').children).forEach((c,i)=>{c.style.background=convInput[i]?'#e8edf5':'#263650';c.style.color=convInput[i]?'#2a2e3a':'#fff';});makeBoard($('conv-output'),Array(16).fill(null),4);
+function convAt(idx){const r=Math.floor(idx/4),c=idx%4;return kernel.map((w,j)=>convInput[(r+Math.floor(j/3))*6+c+j%3]*w);}
+function renderConv(){const r=Math.floor(convIndex/4),c=convIndex%4;windowAt($('conv-input'),6,3,r,c);$('conv-step-label').textContent=`Position ${convIndex+1} / 16 · shared weights`;$('conv-kernel').innerHTML=kernel.map(v=>`<span>${v}</span>`).join('');const terms=kernel.map((w,j)=>{const x=convInput[(r+Math.floor(j/3))*6+c+j%3];return `<span>${x} × ${w}<span class="product-value">= ${Number((x*w).toFixed(2))}</span></span>`;});$('conv-products').innerHTML=terms.join('');const sum=convAt(convIndex).reduce((a,b)=>a+b,0);$('conv-sum').textContent=`Sum + 0 = ${Number(sum.toFixed(2))}`;Array.from($('conv-output').children).forEach((el,i)=>outputCell(el,i<=convIndex?convAt(i).reduce((a,b)=>a+b,0):null,i===convIndex));renderMAC();}
+function convNext(){if(macPlayer)macPlayer.stop();macIndex=-1;convIndex=Math.min(15,convIndex+1);renderConv();}function convReset(){if(macPlayer)macPlayer.stop();macIndex=-1;convIndex=0;renderConv();}const convPlayer=player($('conv-play'),convNext,convReset,()=>convIndex===15,'Play scan',1100);$('conv-step').onclick=()=>{convPlayer.stop();if(convIndex===15)convReset();else convNext();};$('conv-reset').onclick=()=>{convPlayer.stop();convReset();};
+function filterChange(){convPlayer.stop();if(macPlayer)macPlayer.stop();macIndex=-1;const mode=$('conv-filter').value;kernel=(mode==='x'?sx:mode==='y'?sy:custom).slice();$('kernel-edit').hidden=mode!=='custom';$('conv-kernel').hidden=mode==='custom';$('kernel-caption').textContent=mode==='custom'?'Illustrative trainable weights · edit a value':'Filter · 3 × 3 · fixed Sobel weights';if(mode==='custom'){$('kernel-edit').innerHTML='';custom.forEach((v,i)=>{const input=document.createElement('input');input.type='number';input.step='.1';input.min=-5;input.max=5;input.value=v;input.setAttribute('aria-label',`Filter weight row ${Math.floor(i/3)+1}, column ${i%3+1}`);input.oninput=()=>{convPlayer.stop();if(macPlayer)macPlayer.stop();macIndex=-1;const value=Number(input.value);if(!Number.isFinite(value)||input.value==='')return;custom[i]=Math.max(-5,Math.min(5,value));kernel=custom.slice();renderConv();};input.onchange=()=>{input.value=custom[i];};$('kernel-edit').append(input);});}convReset();}$('conv-filter').onchange=filterChange;renderConv();
+// Trace every term of the currently selected convolution output.
+function renderMAC(){
+ const products=convAt(convIndex),count=Math.min(9,macIndex+1),sum=products.slice(0,count).reduce((a,b)=>a+b,0);
+ const r=Math.floor(convIndex/4),c=convIndex%4;
+ $('conv-input').querySelectorAll('.cell').forEach(el=>el.classList.remove('term-active'));
+ $('conv-kernel').querySelectorAll('span').forEach((el,i)=>el.classList.toggle('term-active',i===macIndex));
+ $('kernel-edit').querySelectorAll('input').forEach((el,i)=>el.style.outline=i===macIndex?'2px solid var(--amber)':'');
+ $('conv-products').querySelectorAll(':scope > span').forEach((el,i)=>{el.classList.toggle('term-active',i===macIndex);el.classList.toggle('term-done',i<macIndex);});
+ if(macIndex>=0&&macIndex<9){
+  const ix=(r+Math.floor(macIndex/3))*6+c+macIndex%3;
+  $('conv-input').children[ix].classList.add('term-active');
+  const previous=Number((sum-products[macIndex]).toFixed(2));
+  $('mac-tally').textContent=`Product ${macIndex+1} of 9: ${convInput[ix]} × ${kernel[macIndex]} = ${Number(products[macIndex].toFixed(2))} · Running sum: ${previous} + (${Number(products[macIndex].toFixed(2))}) = ${Number(sum.toFixed(2))}`;
+ }else if(macIndex===9){$('mac-tally').textContent=`All 9 products: ${Number(sum.toFixed(2))} + bias 0 = ${Number(sum.toFixed(2))}. Write this one value to row ${r+1}, column ${c+1} of the feature map.`;
+ }else{$('mac-tally').textContent='Inspect this output: begin with a running sum of 0.';}
+}
+function macNext(){macIndex=Math.min(9,macIndex+1);renderMAC();}
+function macReset(){macIndex=-1;renderMAC();}
+macPlayer=player($('mac-play'),macNext,macReset,()=>macIndex===9,'Explain this output',850);
+$('mac-step').onclick=()=>{convPlayer.stop();macPlayer.stop();if(macIndex===9)macReset();else macNext();};
+$('mac-reset').onclick=()=>{convPlayer.stop();macPlayer.stop();macReset();};
+renderMAC();
+
+// A fixed dense detector versus one shared local detector under translation.
+let shiftIndex=0;
+function shiftBuild(){
+ ['shift-input','shift-dense','shift-map'].forEach(id=>{
+  const n=id==='shift-map'?15:35;
+  $(id).innerHTML=Array.from({length:n},(_,i)=>`<div class="shift-cell${id==='shift-dense'&&Math.floor(i/7)>=1&&Math.floor(i/7)<=3&&i%7===2?' weight':''}">${id==='shift-dense'?(Math.floor(i/7)>=1&&Math.floor(i/7)<=3&&i%7===2?1:0):0}</div>`).join('');
+  if(id!=='shift-map'){const edge=document.createElement('div');edge.className='moving-edge';$(id).append(edge);}
+ });
+ shiftRender();
+}
+function shiftRender(){
+ const col=shiftIndex%2?4:2,input=Array.from({length:35},(_,i)=>Math.floor(i/7)>=1&&Math.floor(i/7)<=3&&i%7===col?1:0);
+ ['shift-input','shift-dense'].forEach(id=>{
+  const el=$(id),step=(el.clientWidth-6-18)/7+3,edge=el.querySelector('.moving-edge');
+  edge.style.width=(step-3)+'px';edge.style.height=(step*3-3)+'px';edge.style.transform=`translate(${col*step}px,${step}px)`;
+  el.querySelectorAll('.shift-cell').forEach((cell,i)=>{
+   if(id==='shift-input'){cell.textContent=input[i];cell.style.background=input[i]?'#d9e2f0':'#faf8f4';}
+   else cell.classList.toggle('overlap',!!input[i]&&i%7===2);
+  });
+ });
+ const response=[];for(let r=0;r<3;r++)for(let c=0;c<5;c++)response.push(input[r*7+c+1]+input[(r+1)*7+c+1]+input[(r+2)*7+c+1]);
+ $('shift-map').querySelectorAll('.shift-cell').forEach((el,i)=>{el.textContent=response[i];el.style.background=response[i]===3?'#4e6fa3':response[i]?'#d9e2f0':'#faf8f4';el.style.color=response[i]===3?'#fff':'#2a2e3a';});
+ const dense=input.reduce((sum,v,i)=>sum+(i%7===2&&Math.floor(i/7)>=1&&Math.floor(i/7)<=3?v:0),0);
+ $('shift-dense-score').textContent=`Weighted sum = ${dense}`;
+ $('shift-conv-score').textContent=`Maximum response = ${Math.max(...response)}`;
+ $('shift-toggle').textContent=col===2?'Move edge right':'Move edge left';
+ $('shift-status').textContent=col===2?'Both respond with 3. Blue: input edge. Rose: fixed dense weights.':'Shifted edge: dense response 0; convolution peak 3, now two columns right.';
+}
+function shiftNext(){shiftIndex=Math.min(3,shiftIndex+1);shiftRender();}
+const shiftPlayer=player($('shift-play'),shiftNext,()=>{shiftIndex=0;shiftRender();},()=>shiftIndex===3,'Animate shift',1400);
+$('shift-toggle').onclick=()=>{shiftPlayer.stop();shiftIndex=shiftIndex%2?0:1;shiftRender();};
+shiftBuild();new ResizeObserver(shiftRender).observe($('shift-input'));
+// Keep the section navigation quietly aligned with the reader's position.
+const navLinks=[...document.querySelectorAll('.schedule a')];
+function activeSection(){let active=navLinks[0];navLinks.forEach(link=>{if(document.querySelector(link.hash).getBoundingClientRect().top<180)active=link;});navLinks.forEach(link=>{link.classList.toggle('active',link===active);if(link===active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current');});}
+window.addEventListener('scroll',activeSection,{passive:true});activeSection();
+
+// 04: Filters span all input channels; ReLU acts independently at each position.
+function stack(id,n,labels){$(id).innerHTML='';for(let i=n-1;i>=0;i--){const el=document.createElement('div');el.className='plane';el.style.setProperty('--i',i);el.textContent=labels?labels[i]:`${i+1}`;if(labels)el.style.background=['#fae0e1','#dceee2','#dce5fa'][i];$(id).append(el);}}
+function channels(){const n=+$('filter-count').value;stack('input-stack',3,['R','G','B']);stack('filter-stack',3,['3 × 3','3 × 3','3 × 3']);stack('output-stack',n);$('output-channel-label').textContent=`${n} filter${n>1?'s':''} → ${n} output channel${n>1?'s':''}`;$('channel-params').textContent=`(3 × 3 × 3 + 1) × ${n} = ${28*n} trainable parameters`;}$('filter-count').onchange=channels;channels();
+const reluValues=[-3,2,-1,4,0,1];let reluOn=false;$('relu-bars').innerHTML=reluValues.map(()=>'<div class="bar-slot"><div class="bar"></div><span class="bar-value"></span></div>').join('');function relu(){const values=reluValues.map(v=>reluOn?Math.max(0,v):v);Array.from($('relu-bars').children).forEach((slot,i)=>{const v=values[i],bar=slot.firstElementChild;bar.style.height=Math.abs(v)*12+'px';bar.style.top=(v>0?55-v*12:55)+'px';bar.style.background=v<0?'var(--plum)':'var(--blue)';slot.lastElementChild.textContent=v;});$('relu-equation').textContent=values.join(', ');$('relu-bars').setAttribute('aria-label',(reluOn?'After':'Before')+' ReLU: '+values.join(', '));$('relu-toggle').textContent=reluOn?'Show original values':'Apply ReLU';$('relu-toggle').setAttribute('aria-pressed',reluOn);}$('relu-toggle').onclick=()=>{reluOn=!reluOn;relu();};relu();
+// 05: Enumerate precisely the starts counted by the standard formula.
+let geoIndex=0;function geoConfig(){const p=+$('geo-padding').value,s=+$('geo-stride').value;return {p,s,n:5+2*p,out:Math.floor((5+2*p-3)/s)+1};}
+function geoBuild(){const {p,n}=geoConfig();makeBoard($('geo-board'),Array.from({length:n*n},(_,i)=>{const r=Math.floor(i/n),c=i%n;return r>=p&&r<p+5&&c>=p&&c<p+5?1:0;}),n,{padding:p,base:5});geoIndex=0;geoRender();}
+function geoRender(){const {p,s,n,out}=geoConfig();windowAt($('geo-board'),n,3,Math.floor(geoIndex/out)*s,(geoIndex%out)*s);$('geo-answer').textContent=`${out} × ${out} spatial output`;$('geo-calculation').textContent=`floor((5 + 2×${p} − 3) / ${s}) + 1 = ${out}`;$('geo-position').textContent=`Position ${geoIndex+1} / ${out*out}`;}
+function geoNext(){const {out}=geoConfig();geoIndex=Math.min(out*out-1,geoIndex+1);geoRender();}const geoPlayer=player($('geo-play'),geoNext,()=>{geoIndex=0;geoRender();},()=>geoIndex===geoConfig().out**2-1,'Play positions',850);['geo-padding','geo-stride'].forEach(id=>$(id).onchange=()=>{geoPlayer.stop();geoBuild();});$('geo-step').onclick=()=>{geoPlayer.stop();if(geoIndex===geoConfig().out**2-1)geoIndex=-1;geoNext();};geoBuild();
+// 06: Identical spatial-window mechanics, with a fixed aggregation rule.
+const poolInput=[1,3,2,4,5,6,1,8,9,2,0,1,3,4,5,2];let poolIndex=0;makeBoard($('pool-input'),poolInput,4);makeBoard($('pool-output'),Array(4).fill(null),2);Array.from($('pool-input').children).forEach((c,i)=>colorCell(c,poolInput[i],10));
+function poolPatch(i){const r=Math.floor(i/2)*2,c=i%2*2;return [poolInput[r*4+c],poolInput[r*4+c+1],poolInput[(r+1)*4+c],poolInput[(r+1)*4+c+1]];}
+function poolValue(i){if($('pool-mode').value==='global')return poolInput.reduce((a,b)=>a+b,0)/poolInput.length;const vals=poolPatch(i);return $('pool-mode').value==='max'?Math.max(...vals):vals.reduce((a,b)=>a+b,0)/4;}
+function poolRender(){const global=$('pool-mode').value==='global';windowAt($('pool-input'),4,global?4:2,global?0:Math.floor(poolIndex/2)*2,global?0:poolIndex%2*2);Array.from($('pool-output').children).forEach((el,i)=>outputCell(el,i<=poolIndex?poolValue(i):null,i===poolIndex,10));$('pool-step-label').textContent=global?'Entire feature map · one summary':`Window ${poolIndex+1} / 4`;$('pool-result').textContent=global?`Global mean = 56 / 16 = ${poolValue(0)}`:`${$('pool-mode').value==='max'?'max':'mean'}(${poolPatch(poolIndex).join(', ')}) = ${poolValue(poolIndex)}`;$('pool-output-label').textContent=global?'Output · 1 × 1 · same channel':'Output · 2 × 2 · same channel';$('pool-settings').textContent=global?'Whole map → one value per channel · spatial layout removed':'2 × 2 window · stride 2 · padding 0';$('pool-play').disabled=global;$('pool-step').disabled=global;}
+function poolNext(){poolIndex=Math.min($('pool-mode').value==='global'?0:3,poolIndex+1);poolRender();}
+function poolReset(){poolIndex=0;makeBoard($('pool-output'),Array($('pool-mode').value==='global'?1:4).fill(null),$('pool-mode').value==='global'?1:2);poolRender();}
+const poolPlayer=player($('pool-play'),poolNext,poolReset,()=>poolIndex===3,'Play pooling',1300);$('pool-step').onclick=()=>{poolPlayer.stop();if(poolIndex===3)poolReset();else poolNext();};$('pool-reset').onclick=()=>{poolPlayer.stop();poolReset();};$('pool-mode').onchange=()=>{poolPlayer.stop();poolReset();};poolRender();
+// Fully connected operation: explicit example, same values before and after flattening.
+const fcValues=[1,0,2,1,0,3,1,2];
+const fcWeights=[[1,0,.5,0,0,-1,1,0],[0,1,0,1,1,1,0,.5],[-1,0,1,0,0,0,1,1]],fcBias=[0,1,-1];
+const fcScores=fcWeights.map((weights,j)=>weights.reduce((sum,w,i)=>sum+w*fcValues[i],fcBias[j]));
+let fcFlat=false,fcIndex=0;
+$('fc-values').innerHTML=fcValues.map(v=>`<div class="fc-value">${v}</div>`).join('');
+function fcArrange(){const width=$('fc-values').clientWidth,gap=5,cell=Math.min(40,(width-7*gap)/8);$('fc-values').querySelectorAll('.fc-value').forEach((el,i)=>{el.style.width=cell+'px';el.style.height=cell+'px';const group=Math.floor(i/4),local=i%4;const x=fcFlat?i*(cell+gap):group*(width/2)+(local%2)*(cell+gap)+20;const y=fcFlat?60:30+Math.floor(local/2)*(cell+gap);el.style.transform=`translate(${x}px,${y}px)`;});$('fc-flatten').textContent=fcFlat?'Restore feature maps':'Flatten features';$('fc-flatten').setAttribute('aria-pressed',fcFlat);$('fc-description').textContent=fcFlat?'8 values in a vector · 0 learned parameters':'Two feature maps · the same 8 values';}
+function fcRender(){let svg='';for(let i=0;i<8;i++)for(let j=0;j<3;j++)svg+=`<line class="fc-line ${j===fcIndex?'active':''}" x1="62" y1="${20+i*29}" x2="289" y2="${51+j*74}"/>`;for(let i=0;i<8;i++)svg+=`<circle cx="50" cy="${20+i*29}" r="12" fill="#edf3ff" stroke="#90aadd"/><text x="50" y="${25+i*29}" text-anchor="middle" fill="#202d46" font-size="14" font-family="Consolas,monospace">${fcValues[i]}</text>`;for(let j=0;j<3;j++)svg+=`<circle cx="307" cy="${51+j*74}" r="20" fill="${j===fcIndex?'#7551bb':'#f2edfc'}" stroke="#9679c5"/><text x="307" y="${57+j*74}" text-anchor="middle" fill="${j===fcIndex?'white':'#674399'}" font-size="16" font-family="Consolas,monospace">${fcScores[j]}</text>`;$('fc-network').innerHTML=svg;$('fc-scores').innerHTML=fcScores.map((v,i)=>`<button aria-pressed="${i===fcIndex}" data-neuron="${i}">Neuron ${i+1}: ${v}</button>`).join('');$('fc-scores').querySelectorAll('button').forEach(button=>button.onclick=()=>{fcPlayer.stop();fcIndex=+button.dataset.neuron;fcRender();});$('fc-readout').textContent=`Neuron ${fcIndex+1}: ${fcValues.map((v,i)=>`${v}×${fcWeights[fcIndex][i]<0?'('+fcWeights[fcIndex][i]+')':fcWeights[fcIndex][i]}`).join(' + ')} + bias ${fcBias[fcIndex]} = ${fcScores[fcIndex]}`;}
+const fcPlayer=player($('fc-play'),()=>{fcIndex=Math.min(2,fcIndex+1);fcRender();},()=>{fcIndex=0;fcRender();},()=>fcIndex===2,'Trace dense layer',1400);
+$('fc-flatten').onclick=()=>{fcFlat=!fcFlat;fcArrange();};$('fc-step').onclick=()=>{fcPlayer.stop();fcIndex=(fcIndex+1)%3;fcRender();};fcArrange();fcRender();new ResizeObserver(fcArrange).observe($('fc-values'));
+
+// Every section: independent MCQ and numerical feedback; no answer is revealed until requested.
+document.querySelectorAll('[data-quiz]').forEach(quiz=>{
+ const input=quiz.querySelector('input[type=number]'),result=quiz.querySelector('.quiz-result');
+ const check=()=>{const choice=quiz.querySelector('input[type=radio]:checked');if(!choice||input.value.trim()===''){result.textContent='Choose an option and enter a number.';result.className='quiz-result incorrect';return;}const mcq=+choice.value===+quiz.dataset.mcq,num=Number.isFinite(+input.value)&&Math.abs(+input.value-(+quiz.dataset.number))<1e-9;input.setAttribute('aria-invalid',!num);result.className='quiz-result '+(mcq&&num?'correct':'incorrect');result.textContent=mcq&&num?'Both correct.':`${mcq?'MCQ correct.':'Reconsider the MCQ.'} ${num?'Numerical correct.':'Recheck the numerical.'}`;};quiz.querySelector('.quiz-check').onclick=check;input.addEventListener('keydown',e=>{if(e.key==='Enter')check();});
+});
+
+// 08: A modernized, explicitly specified LeNet-style network.
+const arch=[['Input','32 × 32 × 1',62,'One grayscale image: 32 × 32 × 1.'],['Conv1','28 × 28 × 6',54,'Six 5 × 5 filters → six feature maps. ReLU preserves the shape.'],['Pool1','14 × 14 × 6',43,'2 × 2 pooling halves each spatial dimension. Six channels remain.'],['Conv2','10 × 10 × 16',33,'Each of the sixteen filters spans all six input channels.'],['Pool2','5 × 5 × 16',25,'Pooling produces 5 × 5 values in each of sixteen channels.'],['Classifier','400 → 120 → 84',18,'Flatten: 5 × 5 × 16 = 400 values. Dense layers learn 120, then 84 features.'],['Output','10 logits',12,'Ten class scores. Softmax converts them to class probabilities.']];let archIndex=0;
+$('arch-flow').innerHTML=arch.map((a,i)=>`<div class="arch-node" id="arch-${i}"><div class="arch-stack"><div class="arch-block" style="width:${a[2]}px;height:${a[2]}px"></div></div><b>${a[0]}</b><span>${a[1]}</span></div>`).join('');function archRender(){arch.forEach((_,i)=>$('arch-'+i).classList.toggle('active',i===archIndex));document.querySelectorAll('[data-arch]').forEach(row=>row.classList.toggle('highlight',+row.dataset.arch===archIndex));$('arch-note').textContent=arch[archIndex][3];}function archNext(){archIndex=Math.min(6,archIndex+1);archRender();}function archReset(){archIndex=0;archRender();}const archPlayer=player($('arch-play'),archNext,archReset,()=>archIndex===6,'Trace the network',1800);$('arch-step').onclick=()=>{archPlayer.stop();if(archIndex===6)archReset();else archNext();};$('arch-reset').onclick=()=>{archPlayer.stop();archReset();};archRender();
+const answers={'lenet-conv':2416,'lenet-flat':400,'lenet-dense':48120,'lenet-total':61706};$('lenet-check').onclick=()=>{let right=0;for(const [id,val]of Object.entries(answers)){const ok=$(id).value!==''&&+$(id).value===val;$(id).setAttribute('aria-invalid',!ok);$(id).style.borderColor=ok?'var(--green)':'#b44345';if(ok)right++;}$('lenet-feedback').className='feedback '+(right===4?'correct':'incorrect');$('lenet-feedback').textContent=right===4?'All four entries are correct. Total: 61,706 trainable parameters.':`${right} of 4 correct. Recheck the marked entries: count all input channels, include biases, and separate activations from parameters.`;};$('lenet-reveal').onclick=()=>{for(const[id,val]of Object.entries(answers)){$(id).value=val;$(id).removeAttribute('aria-invalid');$(id).style.borderColor='';}$('lenet-feedback').className='feedback';$('lenet-feedback').textContent='Conv2: 2,416 · Flatten: 400 values · Dense1: 48,120 · Total: 61,706';};$('lenet-clear').onclick=()=>{Object.keys(answers).forEach(id=>{$(id).value='';$(id).removeAttribute('aria-invalid');$(id).style.borderColor='';});$('lenet-feedback').textContent='';};
+const resize=new ResizeObserver(()=>{renderConv();geoRender();poolRender();});['conv-input','geo-board','pool-input'].forEach(id=>resize.observe($(id)));
+})();
+</script>
+</body>
+</html>
