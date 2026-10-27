@@ -340,7 +340,7 @@ button:focus-visible,.lab:focus-visible,.handle:focus-visible{outline:3px solid 
 .frame .fw{font:700 20px var(--sans)}
 .frame svg{display:block;max-width:100%;height:auto}
 .frame p{margin:4px 0 0;font:600 18px var(--sans);color:var(--ink-2)}
-.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1000px;margin:14px 0}
+.split{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:1000px;margin:14px 0}
 .sp{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
 .sp-h{font-size:19px;margin-bottom:8px}
 .sp-bar{display:flex;height:28px;border-radius:6px;overflow:hidden;border:1px solid var(--line-2)}
@@ -349,6 +349,56 @@ button:focus-visible,.lab:focus-visible,.handle:focus-visible{outline:3px solid 
 .sp-l{display:flex;justify-content:space-between;gap:12px;margin-top:6px;font-size:17px;color:var(--ink-2)}
 @media (max-width:1000px){.story{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
+/* worked by hand, think first */
+.byhand{background:var(--panel);border:1px solid var(--line-2);border-left:5px solid var(--ink-2);border-radius:var(--radius);padding:12px 18px 12px;margin:14px 0;max-width:1000px}
+.bh-h{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+.bh-rule{margin:0 0 6px;color:var(--ink-2)}
+.byhand ol{list-style:none;margin:0;padding:0}
+.byhand li{display:grid;grid-template-columns:190px minmax(0,1fr);gap:4px 14px;align-items:baseline;padding:6px 0;border-top:1px dashed var(--line)}
+.bh-w{font:700 18px var(--sans)}
+.bh-p{display:flex;flex-wrap:wrap;gap:4px 22px;align-items:baseline;font-size:19px}
+.bh-t{font:600 17px var(--sans);color:var(--ink-2)}
+.bh-n{margin:8px 0 0;font-weight:600;color:var(--ink-2)}
+.think{margin:12px 0;max-width:1000px;background:var(--i-tint);border-radius:var(--radius);padding:10px 18px}
+.think summary{cursor:pointer;font-size:19px;list-style:none}
+.think summary::-webkit-details-marker{display:none}
+.think .reveal{display:inline-block;margin-left:8px;font:600 16px var(--sans);color:var(--i);text-decoration:underline}
+.think[open] .reveal{display:none}
+.think .ans{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);font-size:19px}
+.path{margin:0;padding-left:26px;font-size:19px;max-width:900px}
+.path li{margin:4px 0}
+.xstrip th.oth{font-weight:600;color:var(--muted);line-height:1.2}
+.xstrip th.oth small{font-size:16px;font-weight:400}
+/* gate section */
+.pf .tag.move{color:var(--i)}
+.gmult{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;max-width:1000px;margin:14px 0}
+.gm{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
+.gm-g{font:700 20px var(--mono)}
+.gm-e{font-size:20px;margin:4px 0 8px}
+.gm-bar{height:24px;background:var(--panel-2);border-radius:6px;overflow:hidden}
+.gm-bar i{display:block;height:100%;background:var(--neg);border-radius:6px}
+.gm-w{font:600 18px var(--sans);color:var(--ink-2);margin-top:6px}
+.anchors{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 0}
+.anc{display:flex;flex-direction:column;align-items:center;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;padding:8px 18px;font-size:20px}
+.anc span:last-child{font:600 16px var(--sans);color:var(--muted)}
+.gx{width:auto}
+.gx th,.gx td{text-align:left;padding:6px 14px 6px 0;font:400 18px var(--sans)}
+.gx thead th{font:700 16px var(--sans);color:var(--muted)}
+.gx tbody th{font-weight:700}
+.gx td.arr{color:var(--muted)}
+.gx td.gv{font:600 19px var(--mono)}
+.gates3,.trace{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin:12px 0;max-width:1160px}
+.gates3 th,.gates3 td{text-align:left;padding:8px 12px;font:400 17px/1.35 var(--sans);vertical-align:top}
+.gates3 thead th{font:700 16px var(--sans);color:var(--muted)}
+.gates3 tbody th{font:700 18px var(--sans);white-space:nowrap}
+.gates3 td.sc{font:500 16px var(--mono);white-space:nowrap}
+.trace th,.trace td{text-align:center;padding:5px 10px;font:500 17px var(--mono)}
+.trace thead th{font:700 16px var(--sans);color:var(--ink-2);vertical-align:bottom}
+.trace tbody th{text-align:left;font:700 17px var(--sans)}
+.trace td.nb{text-align:left;white-space:nowrap}
+.trace tr.neutral th,.trace tr.neutral td{color:var(--muted);font-weight:400}
+.trace tr.neutral b{font-weight:500}
+.trace .st{font-family:var(--sans)}
 footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);font-size:17px}
 
 @media (max-width:1179px){
@@ -404,6 +454,13 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
       <q>The movie was <span class="hl-neg">long</span> and <span class="hl-neg">slow</span>, <span class="hl-turn">but</span> the ending was <span class="hl-pos">brilliant</span>.</q>
       <p class="note">The opinion flips at “but”, so memory must be erased and rewritten.</p></div>
   </div>
+  <h3>Today’s path</h3>
+  <ol class="path">
+    <li><b>See the RNN forget.</b> Its memory fades a little at every word.</li>
+    <li><b>Give it a notebook.</b> A memory that only adds, so nothing fades.</li>
+    <li><b>Add three switches to the notebook:</b> an eraser, a pen and a voice. That is the LSTM.</li>
+    <li><b>A lighter version with two switches:</b> the GRU.</li>
+  </ol>
   <p class="key"><b>Key idea</b><span>The RNN mixes the new word and the old memory into a new memory.</span></p>
 </section>
 
@@ -411,12 +468,18 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s1">
   <div class="sec-head"><span class="sec-num">1</span><h2>Why the RNN forgets</h2><span class="sec-chip">Review A</span></div>
   <div class="prose">
-    <p class="bridge">Give the RNN Review A and watch its memory <span class="m">h_t</span>, word by word.</p>
+    <p class="bridge">Give the RNN Review A and follow its memory <span class="m">h_t</span>, word by word.</p>
     <p class="pf"><span class="tag problem">Problem</span><span id="s1-problem"></span></p>
   </div>
-  <div class="xwords"><p class="xw-h">Each word enters the network as 4 numbers.</p><div id="strip-A"></div></div>
+  <h3>Step 1 · Each word becomes 4 numbers</h3>
+  <div class="prose"><p>The network cannot read letters, so each word becomes 4 numbers. Most words carry no feeling, so all their numbers are 0. Only 5 words in our reviews have a number that is not 0.</p></div>
+  <div class="xwords"><div id="strip-A"></div></div>
+  <h3>Step 2 · Work the first words by hand</h3>
+  <div id="s1-hand"></div>
+  <div id="s1-think"></div>
+  <h3>Step 3 · Watch all 16 words</h3>
   <div class="lab" data-lab="rnn"></div>
-  <p class="key"><b>Key idea</b><span>By the last word, <span class="m">h_t</span> mostly reflects “Sunday evening”, not “brilliant”.</span></p>
+  <p class="key"><b>Key idea</b><span>Every neutral word halves <span class="m">h_t</span>. By the last word, “brilliant” has faded to almost 0.</span></p>
   <div class="mcq" data-mcq="1"></div>
 </section>
 
@@ -424,12 +487,13 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s2">
   <div class="sec-head"><span class="sec-num">2</span><h2>A memory lane: the notebook</h2><span class="sec-chip">Review A</span></div>
   <div class="prose">
-    <p class="bridge">The RNN rewrites its only memory at every word. Give the reader a notebook that is never rewritten.</p>
+    <p class="bridge">The RNN rewrites its only memory at every word. A careful reader keeps a notebook instead.</p>
     <p class="pf"><span class="tag problem">Problem</span><span>The RNN has no safe place to keep “brilliant”.</span></p>
-    <p class="pf"><span class="tag fix">Fix</span><span>Add a notebook <span class="m">C_t</span>. Each word adds its proposal <span class="m">\Cn</span>: + for good, − for bad. The proposal uses tanh, so it is between −1 and 1.</span></p>
+    <p class="pf"><span class="tag fix">Fix</span><span>Add a notebook <span class="m">C_t</span>. Each word only <b>adds</b> its proposal <span class="m">\Cn</span> to it: + for a good word, − for a bad word, 0 for a neutral word. Nothing is rewritten.</span></p>
   </div>
+  <div id="s2-hand"></div>
   <div class="lab" data-lab="lane"></div>
-  <p class="key"><b>Key idea</b><span>Nothing in the notebook is rewritten, only added. “brilliant” survives the long gap.</span></p>
+  <p class="key"><b>Key idea</b><span>Adding 0 changes nothing, so “brilliant” survives the long gap.</span></p>
   <div id="sym-lane"></div>
 </section>
 
@@ -439,30 +503,42 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   <div class="prose">
     <p class="bridge">The notebook kept “brilliant”. Now read Review B, where the opinion flips at “but”.</p>
     <p class="pf"><span class="tag problem">Problem</span><span>“long” and “slow” make the notebook negative. At “but” nothing can erase it.</span></p>
-    <p class="pf"><span class="tag problem">Problem</span><span>Small words keep adding too. <span class="note-inline" id="s3-note"></span></span></p>
   </div>
+  <div id="s3-hand"></div>
+  <div id="s3-think"></div>
   <div class="lab" data-lab="laneB"></div>
-  <p class="key"><b>Key idea</b><span>The notebook needs 3 controls: an eraser (what to erase), a pen (how firmly to write) and a voice (what to say).</span></p>
+  <p class="key"><b>Key idea</b><span>The notebook needs 3 switches: an eraser (what to erase), a pen (how firmly to write) and a voice (when to speak).</span></p>
 </section>
 
 <!-- 4 -->
 <section class="sec" id="s4">
-  <div class="sec-head"><span class="sec-num">4</span><h2>The gate</h2></div>
+  <div class="sec-head"><span class="sec-num">4</span><h2>The gate: a switch that multiplies</h2></div>
   <div class="prose">
-    <p class="bridge">Each control is a gate. A gate is a neuron you already know.</p>
-    <p class="pf"><span class="tag problem">Problem</span><span>A control must be able to be partly on, not only on or off.</span></p>
-    <p class="pf"><span class="tag fix">Fix</span><span>A gate is the same Σ neuron with <span class="m">\sigma</span> (sigmoid) in place of tanh. It gives a number from 0 to 1 and multiplies a signal by it.</span></p>
+    <p class="bridge">The eraser, the pen and the voice are all built the same way. Each one is called a <b>gate</b>. Learn one gate and you know all three.</p>
   </div>
+  <h3>Step 1 · A gate is just a number you multiply by</h3>
+  <div class="prose"><p>A gate is a number from 0 to 1. Something passes through it by being multiplied by it. Here the notebook holds <span id="gm-v"></span>, the value after “long” and “slow”.</p></div>
+  <div class="gmult" id="gate-mult"></div>
+  <p class="key"><b>Key idea</b><span>Gate 1 keeps everything. Gate 0 removes everything. Gate 0.5 keeps half.</span></p>
+  <h3>Step 2 · The word decides the gate</h3>
+  <div class="prose"><p>The eraser must be <b>1</b> for normal words (keep the notebook) and <b>0</b> for “but” (erase it). So the gate has to look at the word, and it does it in two moves.</p>
+    <p class="pf"><span class="tag move">Move 1</span><span><b>Score.</b> Add up the word’s 4 numbers, each times a weight, into one score Σ. This is the same Σ box as the RNN neuron.</span></p>
+    <p class="pf"><span class="tag move">Move 2</span><span><b>Squeeze.</b> The sigmoid <span class="m">\sigma</span> turns any score into a number from 0 to 1.</span></p></div>
+  <div class="anchors" id="anchors"></div>
   <div class="gate" id="gate">
     <div class="sig-wrap"><svg class="sig" aria-label="Sigmoid curve with a draggable point"></svg></div>
     <div>
       <div class="bars3" id="bars3"></div>
       <div class="gate-eq"><span id="gate-eq"></span></div>
-      <p class="hint">Drag the point, or focus it and press the arrow keys.</p>
+      <p class="hint">Drag the point, or focus it and press the arrow keys. A big negative score closes the gate, a big positive score opens it.</p>
     </div>
   </div>
-  <p class="gate-ex" id="gate-ex"></p>
-  <p class="key"><b>Key idea</b><span>A gate near 0 blocks the signal. A gate near 1 lets it all pass.</span></p>
+  <h3>Step 3 · The eraser’s score, by hand</h3>
+  <div id="gate-ex"></div>
+  <h3>The three gates at a glance</h3>
+  <div class="prose"><p>Each gate has its own score, learned in training. Read each row as: “this gate is 1 on these words and 0 on those”.</p></div>
+  <div class="xs-scroll"><table class="gates3" id="gates3"></table></div>
+  <p class="key"><b>Key idea</b><span>A gate is a score squeezed to 0 to 1, then multiplied in. 0 blocks, 1 lets everything through.</span></p>
   <div id="sym-gate"></div>
   <div class="mcq" data-mcq="2"></div>
 </section>
@@ -471,10 +547,11 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s5">
   <div class="sec-head"><span class="sec-num">5</span><h2>Building the LSTM</h2><span class="sec-chip">Review B</span></div>
   <div class="prose">
-    <p class="bridge">Add the three controls to the notebook, one at a time, and read Review B again.</p>
+    <p class="bridge">Add the three gates to the notebook, one at a time, and read Review B again.</p>
   </div>
   <div class="step-sel"><span class="lb2">Step</span><div class="seg big" id="step-seg" role="group" aria-label="Building step"></div></div>
   <div id="step-text" class="prose" style="margin-top:14px"></div>
+  <div id="step-hand"></div>
   <div id="step-f"></div>
   <div class="lab" data-lab="build"></div>
   <p class="key"><b>Key idea</b><span>Forget gate = eraser. Input gate = pen. Output gate = voice.</span></p>
@@ -484,9 +561,12 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s6">
   <div class="sec-head"><span class="sec-num">6</span><h2>The complete LSTM</h2><span class="sec-chip">Review B</span></div>
   <div class="prose">
-    <p class="bridge">All three controls together make the complete LSTM. Here is Review B in four moments.</p>
+    <p class="bridge">All three gates together make the complete LSTM. First, Review B in four moments.</p>
   </div>
   <div class="story" id="story"></div>
+  <h3>Every word, every number</h3>
+  <div class="prose"><p>The whole review in one table. Grey rows are neutral words: the eraser keeps (1), the pen is lifted (0), so nothing changes.</p></div>
+  <div class="xs-scroll"><table class="trace" id="trace"></table></div>
   <div id="f-lstm"></div>
   <div class="lab" data-lab="lstm"></div>
   <p class="key"><b>Key idea</b><span>The notebook carries the memory. The eraser, pen and voice decide what to erase, write and say.</span></p>
@@ -503,7 +583,7 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   </div>
   <div class="chain" id="s7-chain"></div>
   <div class="lab" data-lab="signal"></div>
-  <p class="key"><b>Key idea</b><span>In the notebook the signal is multiplied by <span class="m">\Fg \approx 1</span>, so it stays strong.</span></p>
+  <p class="key"><b>Key idea</b><span>In the notebook the signal is multiplied by the eraser, <span class="m">\Fg \approx 1</span>, so it stays strong.</span></p>
   <div class="mcq" data-mcq="5"></div>
 </section>
 
@@ -513,13 +593,15 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   <div class="prose">
     <p class="bridge">The GRU uses the same idea with fewer parts. The notebook and what you say become one memory <span class="m">h_t</span>.</p>
   </div>
-  <h3>Update gate: keep or write</h3>
-  <div class="prose"><p>One gate <span class="m">\Zg</span> splits the work: keep <span class="m">1-\Zg</span> of the old memory, write <span class="m">\Zg</span> of the proposal <span class="m">\Hn</span>, just like <span class="m">\Cn</span> in the LSTM.</p></div>
+  <h3>Update gate: one slider for keep and write</h3>
+  <div class="prose"><p>The LSTM has an eraser and a pen. The GRU joins them into one gate <span class="m">\Zg</span>: keep <span class="m">1-\Zg</span> of the old memory, write <span class="m">\Zg</span> of the proposal <span class="m">\Hn</span>. The two shares always add up to 1.</p></div>
   <div class="split" id="split"></div>
   <div id="sym-update"></div>
   <h3>Reset gate: a fresh proposal at “but”</h3>
   <div class="prose"><p id="reset-why"></p></div>
   <div class="cmp2" id="at-but"></div>
+  <h3>The two GRU gates at a glance</h3>
+  <div class="xs-scroll"><table class="gates3" id="gates-gru"></table></div>
   <div id="f-gru"></div>
   <div class="lab" data-lab="gru"></div>
   <h3>Summary: from LSTM to GRU</h3>
@@ -577,26 +659,27 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <script>
 /* MODEL:BEGIN */
 // Pure model maths. Every number on the page is computed from these functions.
+// Words that carry no feeling are all zeros, so only the key words move anything.
+const Z = [0, 0, 0, 0];
 const VOCAB = {
-  'the': [0.05, 0, 0, 0], 'movie': [0.10, 0, 0, 0], 'was': [0, 0.05, 0, 0], 'brilliant': [0.95, 0, 0, 0],
-  'and': [0.05, 0, 0, 0], 'i': [0, 0, 0, 0], 'watched': [0.10, 0, 0, 0], 'it': [0, 0, 0, 0],
-  'with': [0, 0, 0, 0], 'my': [0, 0, 0, 0], 'friends': [0.15, 0, 0, 0], 'on': [0, 0, 0, 0],
-  'a': [0, 0, 0, 0], 'sunday': [0.10, 0, 0, 0], 'evening': [0.05, 0, 0, 0], 'long': [0, 0.50, 0, 0],
-  'slow': [0, 0.90, 0, 0], 'but': [0, 0, 1, 0], 'ending': [0.10, 0, 0, 0], '.': [0, 0, 0, 1]
+  'the': Z, 'movie': Z, 'was': Z, 'and': Z, 'i': Z, 'watched': Z, 'it': Z, 'with': Z, 'my': Z,
+  'friends': Z, 'on': Z, 'a': Z, 'sunday': Z, 'evening': Z, 'ending': Z,
+  'brilliant': [1, 0, 0, 0], 'long': [0, 0.5, 0, 0], 'slow': [0, 1, 0, 0], 'but': [0, 0, 1, 0], '.': [0, 0, 0, 1]
 };
 const REVIEW_TEXT = {
   A: 'The movie was brilliant, and I watched it with my friends on a Sunday evening.',
   B: 'The movie was long and slow, but the ending was brilliant.'
 };
+// Gate sums are +9 (open, σ ≈ 1.00), 0 (half, 0.50) or −9 (closed, σ ≈ 0.00).
 const WEIGHTS = {
-  rnn: { w: [2.5, -2.5, 0, 0], wh: 0.5, b: 0 },
-  f:   { w: [0, 0, -10, 0],    wh: 0,   b: 5 },
-  i:   { w: [10, 10, 0, 0],    wh: 0,   b: -5 },
-  C:   { w: [3, -3, 0, 0],     wh: 0,   b: 0 },
-  o:   { w: [0, 0, 0, 8],      wh: 0,   b: -4 },
-  z:   { w: [10, 10, 10, 0],   wh: 0,   b: -5 },
-  r:   { w: [0, 0, -10, 0],    wh: 0,   b: 5 },
-  hc:  { w: [3, -3, 0, 0],     wh: 1,   b: 0 }
+  rnn: { w: [2, -2, 0, 0],     wh: 0.5, b: 0 },
+  f:   { w: [0, 0, -18, 0],    wh: 0,   b: 9 },    // erase only on a turn word
+  i:   { w: [18, 18, 0, 0],    wh: 0,   b: -9 },   // write on feeling words
+  C:   { w: [4, -4, 0, 0],     wh: 0,   b: 0 },    // + for good, − for bad
+  o:   { w: [0, 0, 0, 18],     wh: 0,   b: -9 },   // speak only at the end
+  z:   { w: [18, 18, 18, 0],   wh: 0,   b: -9 },   // rewrite on feeling and turn words
+  r:   { w: [0, 0, -18, 0],    wh: 0,   b: 9 },    // hide the old memory on a turn word
+  hc:  { w: [4, -4, 0, 0],     wh: 1,   b: 0 }
 };
 
 function tokenize(text) {
@@ -681,6 +764,7 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function pct(v, compact) {
   const x = v * 100;
+  if (x >= 99.5 && x < 100) return x.toFixed(1) + '%';
   if (x >= 10) return x.toFixed(0) + '%';
   if (x >= 1) return x.toFixed(1) + '%';
   if (compact) return x >= 0.1 ? x.toFixed(1) + '%' : '<0.1%';
@@ -1071,24 +1155,28 @@ class Lab {
 }
 
 /* ---------- narration: one sentence per word, from the computed values ---------- */
+const isNeutral = x => x.every(q => q === 0);
 function kind(x) {
   const [pos, neg, turn, end] = x;
   if (end) return 'the end of the review';
   if (turn) return 'a turn word';
   if (pos >= 0.5) return 'a strong positive word';
   if (neg >= 0.8) return 'a strong negative word';
-  if (neg >= 0.3) return 'a negative word';
-  if (pos >= 0.1) return 'a slightly positive word';
-  return 'a neutral word';
+  if (neg > 0) return 'a mild negative word';
+  if (pos > 0) return 'a mild positive word';
+  return 'a neutral word, all zeros';
 }
 const Wd = st => `<b>“${esc(st.word)}”</b>`;
 const moved = (a, b) => Math.abs(a - b) >= 0.005;
 
 function narrRNN(st, lab) {
-  const bi = lab.steps.findIndex(s => s.tok === 'brilliant');
-  let s = `${Wd(st)}: ${kind(st.x)}. The RNN rewrites h from ${fmt(st.hPrev)} to ${fmt(st.h)}.`;
-  if (lab.idx > bi && st.h < st.hPrev) s += ' “brilliant” fades.';
-  return s;
+  if (!st.wx && !moved(st.hPrev, 0)) return `${Wd(st)}: ${kind(st.x)}. Nothing comes in, so h stays at 0.`;
+  if (!st.wx) {
+    let s = `${Wd(st)}: ${kind(st.x)}. Nothing new comes in, so the old memory is halved: h goes from ${fmt(st.hPrev)} to ${fmt(st.h)}.`;
+    if (lab.idx > lab.steps.findIndex(q => q.tok === 'brilliant')) s += ' “brilliant” fades.';
+    return s;
+  }
+  return `${Wd(st)}: ${kind(st.x)}. The RNN rewrites h from ${fmt(st.hPrev)} to ${fmt(st.h)}.`;
 }
 function narrLane(st) {
   let s = `${Wd(st)}: ${kind(st.x)}. `;
@@ -1101,22 +1189,25 @@ function narrLane(st) {
 function narrLSTM(st, lab) {
   const v = lab.variant, out = [`${Wd(st)}: ${kind(st.x)}.`];
   if (st.f < 0.5) out.push(`The eraser wipes the notebook (f = ${fmt(st.f)}).`);
+  else if (isNeutral(st.x)) out.push(`The eraser keeps (f = ${fmt(st.f)})${v.input ? `, the pen is lifted (i = ${fmt(st.i)})` : ''}.`);
   if (!v.input) { if (moved(st.Cc, 0)) out.push(`The full proposal ${fmt(st.Cc)} is written.`); }
   else if (st.i >= 0.9) out.push(`The pen writes firmly (i = ${fmt(st.i)}).`);
-  else if (st.i >= 0.3) out.push(`The pen writes half-firmly (i = ${fmt(st.i)}).`);
-  else if (st.x[0] || st.x[1]) out.push(`The pen barely writes (i = ${fmt(st.i)}).`);
+  else if (st.i >= 0.3) out.push(`The pen writes half (i = ${fmt(st.i)}).`);
   out.push(moved(st.C, st.CPrev) ? `Notebook goes to ${fmt(st.C)}.` : `The notebook stays at ${fmt(st.C)}.`);
   if (v.input && !v.output && st.tok === 'slow') out.push(`Compare “long”: i = ${fmt(at(lab.steps, 'long').i)}.`);
   if (v.output) {
-    if (st.o > 0.5) out.push(`The voice speaks: h = ${fmt(st.h)}.`);
-    else if (Math.abs(st.tC) > 0.3) out.push(`The voice stays quiet (o = ${fmt(st.o)}): h = ${fmt(st.h)}, not ${fmt(st.tC)}.`);
+    if (st.o > 0.5) out.push(`The voice speaks (o = ${fmt(st.o)}): h = ${fmt(st.h)}.`);
+    else if (Math.abs(st.tC) > 0.3) out.push(`The voice is quiet (o = ${fmt(st.o)}): h = ${fmt(st.h)}, not ${fmt(st.tC)}.`);
   } else if (Math.abs(st.h) > 0.3) out.push(`It already says h = ${fmt(st.h)}.`);
   return out.join(' ');
 }
 function narrGRU(st) {
-  let s = `${Wd(st)}: ${kind(st.x)}. Keep ${fmt(1 - st.z)} of the old memory, write ${fmt(st.z)} of the proposal ${fmt(st.hc)}.`;
+  let s = `${Wd(st)}: ${kind(st.x)}. `;
+  if (st.z < 0.1) s += `The update gate is ${fmt(st.z)}: keep the old memory.`;
+  else if (st.z > 0.9) s += `The update gate is ${fmt(st.z)}: replace the memory with the proposal ${fmt(st.hc)}.`;
+  else s += `The update gate is ${fmt(st.z)}: keep ${fmt(1 - st.z)} of the old memory, write ${fmt(st.z)} of the proposal ${fmt(st.hc)}.`;
   if (st.r < 0.5) s += ` The reset gate hides the old memory (r = ${fmt(st.r)}), so the proposal starts fresh.`;
-  return s + ` Memory goes to ${fmt(st.h)}.`;
+  return s + ` Memory: ${fmt(st.h)}.`;
 }
 
 // Info panel: current word, worked numbers, verdict at the last word.
@@ -1301,6 +1392,130 @@ function formulaBlock(id, head, list) {
   document.getElementById(id).innerHTML = `<div class="insym"><div class="insym-h">${head}</div><div class="fblock">${list.map(f => `<div class="frow"><span class="fl">${f[0]}</span><span class="m">${f[1]}</span></div>`).join('')}</div></div>`;
 }
 
+/* ---------- worked-by-hand boxes ---------- */
+const nS = v => Math.abs(v - Math.round(v)) < 0.005 ? n(v, 0) : n(v);
+const pS = v => { const s = nS(v); return s[0] === '-' ? `(${s})` : s; };
+const fmtP = v => v < -0.005 ? `(${fmt(v)})` : fmt(v);
+const Q = w => `“${esc(w)}”`;
+// rows: [label, part, part, ...]; a part starting with @ is plain HTML, the rest is TeX.
+function byHand(id, rule, rows, note, head = 'Work it by hand') {
+  document.getElementById(id).innerHTML = `<div class="byhand"><div class="bh-h">${head}</div>${rule ? `<p class="bh-rule">${rich(rule)}</p>` : ''}
+    <ol>${rows.map(r => `<li><span class="bh-w">${r[0]}</span><span class="bh-p">${r.slice(1).map(q => q[0] === '@' ? `<span class="bh-t">${q.slice(1)}</span>` : `<span class="m">${q}</span>`).join('')}</span></li>`).join('')}</ol>
+    ${note ? `<p class="bh-n">${rich(note)}</p>` : ''}</div>`;
+}
+function think(id, q, a) {
+  document.getElementById(id).innerHTML = `<details class="think"><summary><b>Think first.</b> ${rich(q)} <span class="reveal">Show the answer</span></summary><div class="ans">${rich(a)}</div></details>`;
+}
+
+function s1Hand() {
+  const A = REVIEWS.A, R = rnn(A), k = A.findIndex(t => t.tok === 'brilliant'), wh = WEIGHTS.rnn.wh, w = WEIGHTS.rnn.w;
+  const row = st => [Q(st.word), st.wx ? T`w\cdot x_t = ${w[0]} \times ${nS(st.x[0])} = ${nS(st.wx)}` : T`w\cdot x_t = 0`,
+    T`h_t = \tanh(${nS(st.wx)} + ${wh} \times ${pS(st.hPrev)}) = \tanh(${nS(st.wx + wh * st.hPrev)}) = ${n(st.h)}`];
+  byHand('s1-hand', `This RNN uses $w\\cdot x_t = ${w[0]} \\times \\text{positive} - ${-w[1]} \\times \\text{negative}$, with $w_h = ${wh}$ and $b = 0$.`,
+    [['“The”, “movie”, “was”', T`w\cdot x_t = 0`, T`h_t = \tanh(0 + ${wh} \times 0) = 0`], row(R[k]), row(R[k + 1]), row(R[k + 2])],
+    `tanh only squeezes big numbers. For small numbers $\\tanh(x) \\approx x$, so each neutral word simply halves $h_t$.`);
+  const chain = R.slice(k, k + 6).map(s => fmt(s.h)).join(' → ');
+  think('s1-think', `12 neutral words follow “brilliant”, and each one halves $h_t$. What is left at “.”?`,
+    `${chain} → … → ${fmt(last(R).h)}. At the last word $\\hat{y} = ${n(last(R).h)}$, so the verdict is ${verdict(last(R).h)}. “brilliant” has faded away.`);
+}
+
+function s2Hand() {
+  const L = laneOnly(REVIEWS.A), k = L.findIndex(s => s.tok === 'brilliant'), wC = WEIGHTS.C.w[0], b = L[k], e = last(L);
+  byHand('s2-hand', `The proposal is $\\Cn = \\tanh(${wC} \\times \\text{positive} - ${wC} \\times \\text{negative})$. For “brilliant” it is $\\tanh(${wC}) = ${n(b.Cc)}$. For a neutral word it is $\\tanh(0) = 0$.`,
+    [['“The”, “movie”, “was”', T`C_t = 0 + 0 = 0`],
+     [Q(b.word), T`C_t = ${p(b.CPrev)} + ${p(b.Cc)} = ${n(b.C)}`],
+     [Q(L[k + 1].word), T`C_t = ${n(L[k + 1].CPrev)} + 0 = ${n(L[k + 1].C)}`],
+     ['every later word', T`C_t = ${n(L[k + 1].C)} + 0 = ${n(e.C)}`],
+     ['“.” the verdict', T`h_t = \tanh(C_t) = \tanh(${n(e.C)}) = ${n(e.h)}`, `@${verdict(e.h)} ✓`]],
+    '$C$ is the notebook. $h = \\tanh(C)$ is what the cell says out loud, to the next word and to the verdict.');
+}
+
+function s3Hand() {
+  const L = laneOnly(REVIEWS.B), g = tok => at(L, tok), e = last(L);
+  const row = tok => [Q(g(tok).word), T`C_t = ${p(g(tok).CPrev)} + ${p(g(tok).Cc)} = ${n(g(tok).C)}`];
+  byHand('s3-hand', 'Same notebook, Review B. Neutral words add 0, so only the key words are shown.',
+    [row('long'), row('slow'), [Q('but'), T`C_t = ${p(g('but').CPrev)} + 0 = ${n(g('but').C)}`, '@“but” proposes nothing, and nothing can erase'],
+     row('brilliant'), ['“.” the verdict', T`h_t = \tanh(${n(e.C)}) = ${n(e.h)}`, `@${verdict(e.h)} ✗`]],
+    'One good word cannot cancel two bad ones.');
+  const F = lstm(REVIEWS.B, { input: false, output: false }), fb = at(F, 'brilliant');
+  think('s3-think', 'What should happen at “but” to get the right answer?',
+    `Wipe the notebook clean, so $C_t = 0$. Then “brilliant” gives $0 + ${n(fb.Cc)} = ${n(fb.C)}$, and the verdict is ${verdict(last(F).h)}.`);
+}
+
+// Gate step 1: one notebook value through gates 1, 0.5 and 0.
+function drawGateMult() {
+  const v = at(laneOnly(REVIEWS.B), 'slow').C;
+  document.getElementById('gm-v').textContent = fmt(v);
+  document.getElementById('gate-mult').innerHTML = [[1, 'keep all'], [0.5, 'keep half'], [0, 'erase']].map(([g, word]) => {
+    const out = v * g;
+    return `<div class="gm"><div class="gm-g">gate = ${g}</div><div class="gm-e"><span class="m">${pS(v)} \\times ${g} = ${n(out)}</span></div>
+      <div class="gm-bar"><i style="width:${(Math.abs(out) / Math.abs(v) * 100).toFixed(1)}%"></i></div><div class="gm-w">${word}</div></div>`;
+  }).join('');
+  document.getElementById('anchors').innerHTML = [[-9, 'closed'], [0, 'half'], [9, 'open']].map(([s, word]) =>
+    `<div class="anc"><span class="m">\\sigma(${s}) = ${n(sigmoid(s))}</span><span>${word}</span></div>`).join('');
+}
+
+// Step 3 of the gate section: the eraser's score for two words.
+function drawEraserScore() {
+  const fW = WEIGHTS.f, B = lstm(REVIEWS.B);
+  const row = (tok, mean) => {
+    const st = at(B, tok), t = st.x[2];
+    return `<tr><th>${Q(st.word)}</th><td>${t}</td><td>${fW.b} − ${-fW.w[2]} × ${t} = <b>${fmtS(st.sF)}</b></td><td class="arr">→ σ →</td><td class="gv f">${fmt(st.f)}</td><td>${mean}</td></tr>`;
+  };
+  document.getElementById('gate-ex').innerHTML = `<div class="byhand"><div class="bh-h">The eraser’s score</div>
+    <p class="bh-rule">${rich(`$\\Sigma_f = ${fW.b} - ${-fW.w[2]} \\times \\text{turn}$. Only the turn number matters to the eraser.`)}</p>
+    <table class="gx"><thead><tr><th>word</th><th>turn</th><th>score Σ</th><th></th><th>gate</th><th>meaning</th></tr></thead>
+    <tbody>${row('movie', 'keep the notebook')}${row('but', 'erase the notebook')}</tbody></table></div>`;
+}
+
+// Which words open, half-open or close each gate, from the computed values.
+const FEAT = ['positive', 'negative', 'turn', 'end'];
+const scoreText = p => {
+  const terms = p.w.map((w, k) => [w, k]).filter(([w]) => w);
+  // A positive bias goes first (9 − 18 × turn), a negative one last (18 × end − 9).
+  const lead = p.b > 0 ? String(p.b) : '';
+  let s = lead + terms.map(([w, k], j) => `${w < 0 ? (j || lead ? ' − ' : '−') : j || lead ? ' + ' : ''}${Math.abs(w)} × ${FEAT[k]}`).join('');
+  if (p.b < 0) s += ` − ${-p.b}`;
+  return s;
+};
+function gatesTable(id, steps, specs) {
+  const group = get => {
+    const o = { open: [], half: [], closed: [] }, seen = new Set();
+    steps.forEach(s => {
+      const v = get(s), key = v > 0.9 ? 'open' : v < 0.1 ? 'closed' : 'half', name = isNeutral(s.x) ? 'neutral words' : Q(s.word);
+      if (!seen.has(key + name)) { seen.add(key + name); o[key].push(name); }
+    });
+    return o;
+  };
+  document.getElementById(id).innerHTML = `<thead><tr><th>gate</th><th>multiplies</th><th>score Σ</th><th>1 (open) on</th><th>0.5 (half) on</th><th>0 (closed) on</th></tr></thead><tbody>` +
+    specs.map(sp => {
+      const g = group(sp.get), cell = l => l.length ? l.join(', ') : '<span class="muted">none</span>';
+      return `<tr><th class="k-${sp.cls}">${sp.name} <span class="m">${sp.sym}</span></th><td>${sp.mult}</td><td class="sc">${scoreText(sp.p)}</td><td>${cell(g.open)}</td><td>${cell(g.half)}</td><td>${cell(g.closed)}</td></tr>`;
+    }).join('') + '</tbody>';
+}
+
+// Section 6: every word of Review B through the complete LSTM.
+function drawTrace() {
+  const L = lstm(REVIEWS.B);
+  const head = `<thead><tr><th>word</th><th class="k-f">eraser <span class="m">\\Fg</span></th><th class="k-i">pen <span class="m">\\Ig</span></th><th class="k-c">proposal <span class="m">\\Cn</span></th>
+    <th>notebook <span class="m">C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn</span></th><th class="k-o">voice <span class="m">\\Og</span></th><th>says <span class="m">h_t</span></th></tr></thead>`;
+  const rows = L.map(s => {
+    const neutral = isNeutral(s.x);
+    const Ccell = neutral ? `<span class="st">stays</span> <b>${fmt(s.C)}</b>` : `${fmt(s.f)} × ${fmtP(s.CPrev)} + ${fmt(s.i)} × ${fmtP(s.Cc)} = <b>${fmt(s.C)}</b>`;
+    return `<tr${neutral ? ' class="neutral"' : ''}><th>${Q(s.word)}</th><td>${fmt(s.f)}</td><td>${fmt(s.i)}</td><td>${fmt(s.Cc)}</td><td class="nb">${Ccell}</td><td>${fmt(s.o)}</td><td><b>${fmt(s.h)}</b></td></tr>`;
+  }).join('');
+  document.getElementById('trace').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+
+// The only words with numbers that are not 0, plus one column for all the rest.
+function drawKeyWords(id) {
+  const keys = ['brilliant', 'long', 'slow', 'but', '.'], rows = [['positive', 'pos-t'], ['negative', 'neg-t'], ['turn', 'turn-t'], ['end', '']];
+  const cell = v => v === 0 ? '<td class="z0">0</td>' : `<td><b>${v}</b></td>`;
+  document.getElementById(id).innerHTML = `<div class="xs-scroll"><table class="xstrip"><thead><tr><th></th>${keys.map(k => `<th>${Q(k)}</th>`).join('')}<th class="oth">every other word<br><small>the, movie, was, and, …</small></th></tr></thead>
+    <tbody>${rows.map(([name, cls], k) => `<tr><th class="${cls}">${name}</th>${keys.map(t => cell(VOCAB[t][k])).join('')}${cell(0)}</tr>`).join('')}</tbody></table></div>
+    <ul class="xlegend"><li><b class="pos-t">positive</b> / <b class="neg-t">negative</b>: how good or bad the word is (“long” is only half bad)</li><li><b class="turn-t">turn</b>: a word that flips the opinion, like “but”</li><li><b>end</b>: the review is over</li></ul>`;
+}
+
 /* ---------- static visuals ---------- */
 function drawRecap() {
   const d = new Draw(760, 252), Y = 135, X0 = 300, X1 = 520, SP = 410, SC = 355;
@@ -1391,14 +1606,12 @@ function gateWidget() {
   });
   new ResizeObserver(draw).observe(wrap);
   draw();
-  // Two real gates from the model, so the curve connects to the review.
-  const B = lstm(REVIEWS.B), mv = at(B, 'movie'), bt = at(B, 'but');
-  document.getElementById('gate-ex').innerHTML = `<b>From Review B.</b> The eraser (forget gate) at “movie”: Σ = ${fmtS(mv.sF)} → σ → ${fmt(mv.f)}, keep. At “but”: Σ = ${fmtS(bt.sF)} → σ → ${fmt(bt.f)}, erase.`;
+
 }
 
 function drawSplit() {
   const G = gru(REVIEWS.B);
-  document.getElementById('split').innerHTML = ['the', 'slow'].map(tok => {
+  document.getElementById('split').innerHTML = ['the', 'long', 'slow'].map(tok => {
     const st = at(G, tok);
     return `<div class="sp"><div class="sp-h"><b>“${st.word}”</b> <span class="m">\\Zg = ${n(st.z)}</span></div>
       <div class="sp-bar"><i class="keep" style="flex:${(1 - st.z).toFixed(3)}"></i><i class="write" style="flex:${st.z.toFixed(3)}"></i></div>
@@ -1454,21 +1667,35 @@ function drawBi() {
 
 /* ---------- section 5: building steps ---------- */
 function setupBuild(lab) {
-  const B = REVIEWS.B, fiB = lstm(B, VARIANTS[1]);
-  const sumOf = (g, gate) => [[T`${g}`, gate], '=', ['\\sigma', '0 to 1'], '(', [T`\Sigma_${g[1].toLowerCase()}`, `${gate}’s weighted sum of the word and old h`], ')'];
+  const B = REVIEWS.B, F = lstm(B, VARIANTS[0]), FI = lstm(B, VARIANTS[1]), L = lstm(B, VARIANTS[2]), lane = laneOnly(B);
+  const sumOf = (g, gate) => [[T`${g}`, gate], '=', ['\\sigma', '0 to 1'], '(', [T`\Sigma_${g[1].toLowerCase()}`, `${gate}’s score for this word`], ')'];
+  const cRow = (S, tok, withF, withI) => {
+    const s = at(S, tok);
+    return [Q(s.word), T`C_t = ${withF ? `${p(s.f)} \\times ` : ''}${p(s.CPrev)} + ${withI ? `${p(s.i)} \\times ` : ''}${p(s.Cc)} = ${n(s.C)}`];
+  };
   const STEPS = [
     { name: 'Forget gate', key: 'forget', at: 'but',
-      problem: 'The notebook cannot erase. The mood from “slow” never leaves.',
-      fix: 'Add an eraser, the forget gate $\\Fg$. It keeps a share $\\Fg$ of the old notebook.',
+      problem: `Nothing can erase “long” and “slow”. At “but” the notebook still holds ${fmt(at(lane, 'but').C)}.`,
+      fix: 'Multiply the old notebook by an eraser $\\Fg$. It is 1 (keep) on normal words and 0 (erase) on “but”.',
+      hand: [cRow(F, 'slow', true), cRow(F, 'but', true), cRow(F, 'brilliant', true),
+        ['“.” the verdict', T`h_t = \tanh(${n(last(F).C)}) = ${n(last(F).h)}`, `@${verdict(last(F).h)} ✓`]],
+      note: 'The verdict is already right. The next two gates make the reading more careful.',
       f: [[['C_t', 'notebook now'], '=', ['\\Fg', 'eraser'], '\\cdot', ['C_{t-1}', 'old notebook'], '+', ['\\Cn', 'proposal']], sumOf('\\Fg', 'eraser')] },
     { name: 'Input gate', key: 'input', at: 'slow',
-      problem: 'Every word writes its full proposal, even “the”.',
-      fix: 'Add a pen, the input gate $\\Ig$. It decides how firmly to write the proposal.',
+      problem: `“long” writes ${fmt(at(F, 'long').Cc)}, almost as much as “slow” (${fmt(at(F, 'slow').Cc)}). But a long film is only a little bad.`,
+      fix: 'Multiply the proposal by a pen $\\Ig$. It is 1 for strong words, 0.5 for mild words and 0 for neutral words.',
+      hand: [[Q('long'), T`\Ig\cdot\Cn = ${p(at(FI, 'long').i)} \times ${p(at(FI, 'long').Cc)} = ${n(at(FI, 'long').i * at(FI, 'long').Cc)}`, '@written half'],
+        [Q('slow'), T`\Ig\cdot\Cn = ${p(at(FI, 'slow').i)} \times ${p(at(FI, 'slow').Cc)} = ${n(at(FI, 'slow').i * at(FI, 'slow').Cc)}`, '@written in full'],
+        cRow(FI, 'slow', true, true)],
+      note: 'The proposal says which way (good or bad). The pen says how firmly.',
       f: [[['C_t', 'notebook now'], '=', ['\\Fg', 'eraser'], '\\cdot', ['C_{t-1}', 'old notebook'], '+', ['\\Ig', 'pen'], '\\cdot', ['\\Cn', 'proposal']], sumOf('\\Ig', 'pen')] },
     { name: 'Output gate', key: 'output', at: 'slow',
-      problem: `$h_t$ already says “negative” at “slow” ($h_t = ${n(at(fiB, 'slow').h)}$), before the review is over.`,
-      fix: 'Add a voice, the output gate $\\Og$. Read the whole review before giving your opinion.',
-      f: [[['h_t', 'what it says'], '=', ['\\Og', 'voice'], '\\cdot', ['\\tanh(C_t)', 'notebook, squeezed'], ], sumOf('\\Og', 'voice')] }
+      problem: `At “slow” the cell already says “negative” ($h_t = ${n(at(FI, 'slow').h)}$), before it has read the rest.`,
+      fix: 'Multiply what it says by a voice $\\Og$. It is 0 until the last word and 1 at “.”.',
+      hand: [[Q('slow'), T`h_t = \Og\cdot\tanh(C_t) = ${p(at(L, 'slow').o)} \times ${p(at(L, 'slow').tC)} = ${n(at(L, 'slow').h)}`, '@quiet'],
+        [Q('.'), T`h_t = ${p(last(L).o)} \times \tanh(${n(last(L).C)}) = ${p(last(L).o)} \times ${p(last(L).tC)} = ${n(last(L).h)}`, `@speaks: ${verdict(last(L).h)} ✓`]],
+      note: 'Read the whole review before giving your opinion.',
+      f: [[['h_t', 'what it says'], '=', ['\\Og', 'voice'], '\\cdot', ['\\tanh(C_t)', 'notebook, squeezed']], sumOf('\\Og', 'voice')] }
   ];
   const seg = document.getElementById('step-seg');
   seg.innerHTML = STEPS.map((s, k) => `<button data-step="${k}">${k + 1}. ${s.name}</button>`).join('');
@@ -1477,6 +1704,7 @@ function setupBuild(lab) {
     seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.step === k));
     setRich(document.getElementById('step-text'), `<p class="pf"><span class="tag problem">Problem</span><span>${s.problem}</span></p>
       <p class="pf"><span class="tag fix">Fix</span><span>${s.fix}</span></p>`);
+    byHand('step-hand', '', s.hand, s.note);
     inSymbols('step-f', s.f, '', 'In symbols');
     renderMath(document.getElementById('s5'));
     if (fromClick) lab.setVariant(VARIANTS[k], new Set([s.key]), startAt(s.at)(lab.cfg.run('B', VARIANTS[k])));
@@ -1515,7 +1743,7 @@ function mcqs() {
       e: 'The eraser $\\Fg$ decides how much of the old notebook to keep. The pen $\\Ig$ decides how firmly to write the proposal.' },
     e2: { q: 'Why does the LSTM keep “brilliant” until the end of Review A?',
       o: ['The voice $\\Og$ is 1 at every word.', '“brilliant” is the last word.', `The eraser keeps it ($\\Fg \\approx ${n(lA[1].f)}$), and small words write little because $\\Ig \\approx 0$.`, 'The notebook is cleared at every word.'], a: 2,
-      e: `Each step keeps about 99% of the notebook and adds almost nothing. At “.”, $C_t = ${n(last(lA).C)}$.` },
+      e: `At every neutral word the eraser keeps ($\\Fg = ${n(lA[5].f)}$) and the pen is lifted ($\\Ig = ${n(lA[5].i)}$). At “.”, $C_t = ${n(last(lA).C)}$.` },
     e3: { q: 'What does a GRU have?',
       o: ['A notebook $C_t$ and three gates.', 'One memory and no gates.', 'One memory $h_t$ and two gates, $\\Zg$ and $\\Rg$.', 'Two memories and four gates.'], a: 2,
       e: 'The GRU merges the notebook and what it says into one $h_t$. $\\Zg$ keeps and writes, $\\Rg$ resets.' },
@@ -1545,18 +1773,25 @@ function setupMCQ(el, m, label) {
 /* ---------- init ---------- */
 function init() {
   drawRecap();
-  const A = REVIEWS.A, bi = A.findIndex(t => t.tok === 'brilliant'), lA = laneOnly(A);
+  const A = REVIEWS.A, B = REVIEWS.B, bi = A.findIndex(t => t.tok === 'brilliant');
   document.getElementById('s1-problem').textContent = `“brilliant” is word ${bi + 1}. ${A.length - 1 - bi} more words follow before the verdict.`;
-  drawStrip('strip-A', A);
+  drawKeyWords('strip-A');
+  s1Hand(); s2Hand(); s3Hand();
   inSymbols('sym-lane', [
-    [['\\Cn', 'proposal'], '=', ['\\tanh', '−1 to 1'], '(', ['\\Sigma_C', 'weighted sum of the word and old h'], ')'],
+    [['\\Cn', 'proposal'], '=', ['\\tanh', '−1 to 1'], '(', ['\\Sigma_C', 'score of the word'], ')'],
     [['C_t', 'notebook now'], '=', ['C_{t-1}', 'old notebook'], '+', ['\\Cn', 'proposal']],
     [['h_t', 'what it says'], '=', ['\\tanh', '−1 to 1'], '(', ['C_t', 'notebook'], ')']
-  ], 'C is the notebook. h is what the cell says to the next word and to the verdict.');
-  document.getElementById('s3-note').textContent = `In Review A the notebook grew from ${fmt(at(lA, 'brilliant').C)} at “brilliant” to ${fmt(last(lA).C)} at “.”.`;
-  inSymbols('sym-gate', [[['\\text{gate}', '0 to 1'], '=', ['\\sigma', 'squeeze to 0 to 1'], '(', ['\\Sigma', 'weighted sum of the word and old h'], ')']],
+  ]);
+  drawGateMult(); drawEraserScore();
+  const LB = lstm(B), GB = gru(B);
+  gatesTable('gates3', LB, [
+    { name: 'eraser', sym: '\\Fg', cls: 'f', mult: 'the old notebook', p: WEIGHTS.f, get: s => s.f },
+    { name: 'pen', sym: '\\Ig', cls: 'i', mult: 'the proposal', p: WEIGHTS.i, get: s => s.i },
+    { name: 'voice', sym: '\\Og', cls: 'o', mult: 'what it says', p: WEIGHTS.o, get: s => s.o }
+  ]);
+  inSymbols('sym-gate', [[['\\text{gate}', '0 to 1'], '=', ['\\sigma', 'squeeze to 0 to 1'], '(', ['\\Sigma', 'score of the word'], ')']],
     'Every Σ box has its own $w$, $w_h$ and $b$, learned in training.');
-  drawStory();
+  drawStory(); drawTrace();
   formulaBlock('f-lstm', 'The complete LSTM in symbols', [
     ['eraser (forget)', T`\Fg = \sigma(w_f\cdot x_t + w_{hf}\cdot h_{t-1} + b_f)`],
     ['pen (input)', T`\Ig = \sigma(w_i\cdot x_t + w_{hi}\cdot h_{t-1} + b_i)`],
@@ -1568,12 +1803,17 @@ function init() {
   const sg = SIG, r = last(sg.sr), l = last(sg.sl), steps = sg.sr.length - 1;
   document.getElementById('s7-problem').textContent = `The signal must travel back ${steps} words, from “.” to “brilliant”.`;
   const chain = list => list.slice(0, 3).map(s => n(s.factor)).join(' \\times ') + ' \\times \\cdots';
+  const halves = [1, 0.5, 0.25, 0.125, 0.0625].map(v => String(v)).join(' → ');
   document.getElementById('s7-chain').innerHTML = `
-    <div class="chain-row"><span class="tag neg-t">RNN</span><span>multiplies by about 0.5 at each step back (<span class="m">w_h</span> and the tanh slope)</span><span class="m">${chain(sg.sr)}\\ \\text{(${steps} steps)} \\approx ${r.signal.toPrecision(1)}</span></div>
-    <div class="chain-row"><span class="tag pos-t">Notebook</span><span>multiplies only by the eraser, <span class="m">\\Fg \\approx ${n(sg.sl[0].factor)}</span>, at each step back</span><span class="m">${chain(sg.sl)}\\ \\text{(${steps} steps)} \\approx ${n(l.signal)}</span></div>`;
+    <div class="chain-row"><span class="tag neg-t">RNN</span><span>multiplies by about 0.5 at each step back (<span class="m">w_h = ${WEIGHTS.rnn.wh}</span>): ${halves} → …</span><span class="m">${chain(sg.sr)}\\ \\text{(${steps} steps)} \\approx ${r.signal.toPrecision(1)}</span></div>
+    <div class="chain-row"><span class="tag pos-t">Notebook</span><span>multiplies only by the eraser, <span class="m">\\Fg = ${n(sg.sl[0].factor)}</span>, at each step back</span><span class="m">${chain(sg.sl)}\\ \\text{(${steps} steps)} \\approx ${n(l.signal)}</span></div>`;
   drawSplit();
   inSymbols('sym-update', [[['h_t', 'new memory'], '=', '(', ['1-\\Zg', 'keep'], ')', '\\cdot', ['h_{t-1}', 'old memory'], '+', ['\\Zg', 'write'], '\\cdot', ['\\Hn', 'proposal']]]);
   drawAtBut();
+  gatesTable('gates-gru', GB, [
+    { name: 'update', sym: '\\Zg', cls: 'z', mult: 'keep 1 − z of the old memory, write z of the proposal', p: WEIGHTS.z, get: s => s.z },
+    { name: 'reset', sym: '\\Rg', cls: 'r', mult: 'the old memory, before the proposal sees it', p: WEIGHTS.r, get: s => s.r }
+  ]);
   formulaBlock('f-gru', 'The complete GRU in symbols', [
     ['update', T`\Zg = \sigma(w_z\cdot x_t + w_{hz}\cdot h_{t-1} + b_z)`],
     ['reset', T`\Rg = \sigma(w_r\cdot x_t + w_{hr}\cdot h_{t-1} + b_r)`],
