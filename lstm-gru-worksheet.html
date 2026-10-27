@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LSTM and GRU</title>
+<meta name="description" content="Interactive worksheet: why the RNN forgets, how the LSTM and GRU keep, erase and reveal memory.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Spline+Sans+Mono:wght@500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+:root{
+  --bg:#FAF8F4; --panel:#FFFFFF; --panel-2:#F3F0E9; --ink:#1E222C; --ink-2:#434A59; --muted:#636A79;
+  --line:#E2DDD2; --line-2:#C9C2B4; --wire:#878D9A; --on-strong:#FFFFFF;
+  --pos:#1D7745; --pos-tint:#E1F1E7; --neg:#B7312A; --neg-tint:#FBE3E0;
+  --f:#A56200; --f-tint:#FCEED8;
+  --i:#2B5EAF; --i-tint:#E3ECFA;
+  --o:#7839B3; --o-tint:#EFE6FA;
+  --c:#0B776D; --c-tint:#DAF1EE;
+  --z:#3936AD; --z-tint:#E5E4F9;
+  --r:#AE2D72; --r-tint:#FAE2EE;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Source Sans 3","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:"Spline Sans Mono",Consolas,Menlo,monospace;
+  --math:"KaTeX_Math","Cambria Math","Times New Roman",serif;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14161B; --panel:#1C1F26; --panel-2:#242832; --ink:#EDEEF2; --ink-2:#C6C9D3; --muted:#9BA1AF;
+    --line:#2F333D; --line-2:#444955; --wire:#7F8593; --on-strong:#14161B;
+    --pos:#5DC48B; --pos-tint:#173525; --neg:#F07B71; --neg-tint:#3E201D;
+    --f:#EAA94A; --f-tint:#3A2B13; --i:#80A9F1; --i-tint:#1A2943; --o:#BA92EF; --o-tint:#2E2240;
+    --c:#4DC8BA; --c-tint:#11332F; --z:#9C9AF3; --z-tint:#24234A; --r:#EF86BD; --r-tint:#3D1C2E;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.55 var(--sans)}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+.prose{max-width:820px}
+p{margin:0 0 12px}
+h1,h2,h3{font-family:var(--serif);letter-spacing:-.015em;margin:0}
+h1{font-size:clamp(44px,6vw,72px);line-height:1.05;margin:8px 0 14px}
+h2{font-size:clamp(30px,3.4vw,40px);line-height:1.15}
+h3{font-size:24px;line-height:1.2;margin:28px 0 10px}
+b,strong{font-weight:700}
+.muted{color:var(--muted)}
+.pos-t{color:var(--pos);font-weight:700}.neg-t{color:var(--neg);font-weight:700}
+.k-f{color:var(--f)}.k-i{color:var(--i)}.k-o{color:var(--o)}.k-c{color:var(--c)}.k-z{color:var(--z)}.k-r{color:var(--r)}
+
+/* hero */
+.hero{padding:56px 0 36px}
+.kicker{font:700 16px var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:22px;color:var(--ink-2);max-width:760px}
+.task{display:flex;gap:16px;align-items:center;margin-top:24px;padding:16px 20px;border-radius:var(--radius);background:var(--panel);border:1px solid var(--line-2);max-width:900px}
+.task-tag{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--bg);background:var(--ink);padding:4px 12px;border-radius:999px;white-space:nowrap}
+.task p{margin:0;font-size:20px;font-weight:600}
+
+/* sections */
+.sec{padding:52px 0 36px;border-top:1px solid var(--line)}
+.sec-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.sec-num{flex:none;font:500 19px var(--mono);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg)}
+.sec-chip{font:600 16px var(--sans);padding:3px 12px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2)}
+.bridge{font-style:italic;color:var(--ink-2);font-size:19px}
+.pf{display:flex;gap:12px;align-items:baseline;margin:0 0 8px}
+.pf .tag{flex:none;width:84px;font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.pf .tag.problem{color:var(--neg)}.pf .tag.fix{color:var(--pos)}.pf .tag.watch{color:var(--i)}
+.key{display:flex;gap:16px;align-items:baseline;margin:26px 0 8px;padding:4px 0 4px 18px;border-left:5px solid var(--ink)}
+.key b{flex:none;font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.key span{font:600 22px/1.35 var(--serif)}
+
+/* symbol cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px;margin:16px 0 18px}
+.card-sym{background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent,var(--ink-2));border-radius:var(--radius);padding:10px 16px 12px;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;align-items:center}
+.card-sym .ns{grid-column:1/-1;font:700 16px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.card-sym .sym{grid-row:span 2;font-size:24px;color:var(--accent,var(--ink));min-width:44px}
+.card-sym .mean{font-size:18px;line-height:1.35}
+.card-sym .range{font:500 16px var(--mono);color:var(--ink-2)}
+.card-sym.small .sym{font-size:18px}
+.ac-f{--accent:var(--f)}.ac-i{--accent:var(--i)}.ac-o{--accent:var(--o)}.ac-c{--accent:var(--c)}.ac-z{--accent:var(--z)}.ac-r{--accent:var(--r)}.ac-pos{--accent:var(--pos)}
+
+/* formulas */
+.fblock{margin:14px 0 18px;display:grid;gap:6px;font-size:19px}
+.frow{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;align-items:baseline}
+.frow .fl{font:600 17px var(--sans);color:var(--muted)}
+.frow.new .fl{color:var(--ink)}
+.frow.new .m{background:var(--panel-2);border-radius:6px;padding:0 6px}
+.m{max-width:100%}
+.boxed{display:inline-block;border:2px solid var(--ink);border-radius:10px;padding:10px 18px;background:var(--panel)}
+.mfb{font-family:var(--math)}
+.mfb i{font-style:italic}
+
+/* annotated recap formula */
+.anno{display:flex;flex-wrap:wrap;align-items:flex-start;gap:6px 14px;font-size:22px}
+.anno .t{display:flex;flex-direction:column;align-items:center}
+.anno .t small{font:600 16px/1.2 var(--sans);color:var(--muted);text-align:center;max-width:120px;margin-top:2px}
+.anno .op{padding-top:2px}
+
+/* tables */
+.vocab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px;max-width:900px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:5px 8px;text-align:right;border-bottom:1px solid var(--line)}
+th{font:700 16px var(--sans);color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+td{font:500 17px var(--mono)}
+td:first-child{font:600 18px var(--sans)}
+td.z0{color:var(--line-2)}
+.cmp{max-width:980px;table-layout:fixed;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.cmp th,.cmp td{text-align:left;padding:12px 16px;font:400 18px/1.4 var(--sans);vertical-align:top}
+.cmp thead th{font:700 18px var(--sans);color:var(--ink)}
+.cmp tbody th{font:700 17px var(--sans);color:var(--muted);width:22%}
+.cmp tr:last-child th,.cmp tr:last-child td{border-bottom:0}
+
+/* reviews */
+.reviews{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1000px}
+.review{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px}
+.review h4{margin:0 0 6px;font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.review q{font-size:20px;quotes:"\201C" "\201D";display:block;margin-bottom:8px}
+.review .note{color:var(--ink-2);margin:0}
+.hl-pos{background:var(--pos-tint);color:var(--pos);font-weight:700;border-radius:4px;padding:0 3px}
+.hl-neg{background:var(--neg-tint);color:var(--neg);font-weight:700;border-radius:4px;padding:0 3px}
+.hl-turn{background:var(--f-tint);color:var(--f);font-weight:700;border-radius:4px;padding:0 3px}
+.rule3{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.rule3>span{font:600 17px var(--sans);padding:5px 12px;border-radius:999px}
+.r-pos{background:var(--pos-tint);color:var(--pos)}.r-neg{background:var(--neg-tint);color:var(--neg)}.r-uns{background:var(--panel-2);color:var(--ink-2)}
+
+/* buttons */
+button{font:600 17px var(--sans);min-height:42px;padding:7px 15px;border-radius:10px;border:1.5px solid var(--line-2);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--ink-2)}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+button:focus-visible,.lab:focus-visible,.handle:focus-visible{outline:3px solid var(--i);outline-offset:2px}
+.seg{display:inline-flex;border:1.5px solid var(--line-2);border-radius:10px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;border-radius:0;min-height:40px}
+.seg button+button{border-left:1.5px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg.big button{font-size:18px;min-height:46px;padding:8px 20px}
+
+/* lab */
+.lab{background:var(--panel);border:1px solid var(--line-2);border-radius:14px;padding:10px 15px 14px;margin:20px 0}
+.lab:focus{outline:none}
+.lab-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin-bottom:6px}
+.lab-title{font:700 18px var(--sans)}
+.lab-title span{font-weight:400;color:var(--muted)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tl-scroll{overflow-x:auto;overscroll-behavior-x:contain}
+.tl-inner{display:flex;width:max-content}
+.tl-gutter{position:sticky;left:0;z-index:2;background:var(--panel);width:96px;flex:none}
+.g-row{display:flex;flex-wrap:wrap;align-content:center;align-items:baseline;gap:0 5px;padding-right:6px;font:600 16px/1.15 var(--sans);color:var(--ink-2)}
+.g-row .m{font-size:16px}
+.tl-svg{display:block}
+.tl-svg text{font-family:var(--sans)}
+.tl-word{font-size:16px;font-weight:600;fill:var(--ink);text-anchor:middle;cursor:pointer}
+.tl-word.cur{font-weight:700}
+.tl-word.later{fill:var(--muted);opacity:.55}
+.tl-cur{fill:var(--panel-2);stroke:var(--line-2)}
+.tl-hit{fill:transparent;cursor:pointer}
+.tl-cell{fill:var(--panel);stroke:var(--ink-2);stroke-width:1.5}
+.tl-cell.later{stroke:var(--line-2);stroke-dasharray:3 3}
+.tl-cell.cur{stroke:var(--ink);stroke-width:2.5}
+.tl-h{stroke:var(--wire);stroke-width:2}
+.tl-ah{fill:var(--wire)}
+.tl-lane{stroke-width:5;stroke-linecap:butt}
+.tl-lane.pos{stroke:var(--pos)}.tl-lane.neg{stroke:var(--neg)}.tl-lane.zero{stroke:var(--wire)}
+.tl-zero{stroke:var(--line-2);stroke-width:1}
+.tl-bar.pos{fill:var(--pos)}.tl-bar.neg{fill:var(--neg)}.tl-bar.zero{fill:var(--wire)}
+.tl-num{font:500 16px var(--mono);text-anchor:middle}
+.tl-num.pos{fill:var(--pos)}.tl-num.neg{fill:var(--neg)}.tl-num.zero{fill:var(--muted)}
+.pill-bg{stroke-width:1.5}
+.pill-ghost{fill:none;stroke:var(--line);stroke-dasharray:3 3}
+.pill-t{font:500 16px var(--mono);text-anchor:middle}
+.lab-body{display:grid;grid-template-columns:740px minmax(0,1fr);gap:16px;margin-top:10px;align-items:start;border-top:1px solid var(--line);padding-top:10px}
+.zoom{overflow-x:auto;overscroll-behavior-x:contain}
+.zoom svg{display:block}
+.info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.now{font:600 17px var(--sans);color:var(--muted)}
+.now b{color:var(--ink);font-size:24px;font-weight:700;margin-left:4px}
+.worked{font-size:16px}
+.wl{display:flex;flex-wrap:wrap;column-gap:8px;row-gap:0;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line)}
+.wl:last-child{border-bottom:0}
+.wl .p{max-width:100%}
+.wl .lbl{flex-basis:100%;font:600 16px var(--sans);color:var(--muted)}
+.verdict{font:700 20px var(--sans);padding:9px 14px;border-radius:10px}
+.verdict.ok{background:var(--pos-tint);color:var(--pos)}
+.verdict.bad{background:var(--neg-tint);color:var(--neg)}
+
+/* zoom svg */
+.zs text{font-family:var(--sans)}
+.w{fill:none;stroke:var(--wire);stroke-width:2.5;stroke-linejoin:round}
+.w.f{stroke:var(--f)}.w.i{stroke:var(--i)}.w.o{stroke:var(--o)}.w.c{stroke:var(--c)}.w.z{stroke:var(--z)}.w.r{stroke:var(--r)}
+.lane{fill:none;stroke-width:7}
+.lane.pos{stroke:var(--pos)}.lane.neg{stroke:var(--neg)}.lane.zero{stroke:var(--wire)}
+.bx rect{fill:var(--panel);stroke-width:2.5}
+.bx line{stroke-width:1.5}
+.bx .gl{font-size:20px;font-weight:600;fill:var(--ink);text-anchor:middle}
+.bx .gl.tn{font-size:18px}
+.bx.f rect{stroke:var(--f);fill:var(--f-tint)}.bx.f line{stroke:var(--f)}
+.bx.i rect{stroke:var(--i);fill:var(--i-tint)}.bx.i line{stroke:var(--i)}
+.bx.o rect{stroke:var(--o);fill:var(--o-tint)}.bx.o line{stroke:var(--o)}
+.bx.c rect{stroke:var(--c);fill:var(--c-tint)}.bx.c line{stroke:var(--c)}
+.bx.z rect{stroke:var(--z);fill:var(--z-tint)}.bx.z line{stroke:var(--z)}
+.bx.r rect{stroke:var(--r);fill:var(--r-tint)}.bx.r line{stroke:var(--r)}
+.bx.n rect{stroke:var(--ink-2)}.bx.n line{stroke:var(--ink-2)}
+.op circle,.op rect{fill:var(--panel);stroke:var(--ink-2);stroke-width:2.5}
+.op text{font-size:20px;font-weight:700;fill:var(--ink);text-anchor:middle}
+.op.sm text{font-size:16px}
+.op.f circle{stroke:var(--f)}.op.i circle{stroke:var(--i)}.op.o circle{stroke:var(--o)}.op.z circle{stroke:var(--z)}.op.r circle{stroke:var(--r)}
+.lb{font-size:16px;font-weight:600;fill:var(--ink-2)}
+.ls{font-family:var(--math);font-style:italic;font-weight:400;font-size:20px;fill:var(--ink)}
+.ls .sb{font-size:16px}
+.lb.f,.ls.f{fill:var(--f)}.lb.i,.ls.i{fill:var(--i)}.lb.o,.ls.o{fill:var(--o)}.lb.c,.ls.c{fill:var(--c)}.lb.z,.ls.z{fill:var(--z)}.lb.r,.ls.r{fill:var(--r)}
+.v{font-family:var(--mono);font-size:19px;font-weight:600;fill:var(--ink-2);paint-order:stroke;stroke:var(--panel);stroke-width:6px;stroke-linejoin:round}
+.v.f{fill:var(--f)}.v.i{fill:var(--i)}.v.o{fill:var(--o)}.v.c{fill:var(--c)}.v.z{fill:var(--z)}.v.r{fill:var(--r)}
+.v.pos{fill:var(--pos)}.v.neg{fill:var(--neg)}.v.zero{fill:var(--muted)}
+.ah{fill:var(--wire)}.ah.pos{fill:var(--pos)}.ah.neg{fill:var(--neg)}.ah.zero{fill:var(--wire)}
+.dot{fill:var(--ink);stroke:var(--panel);stroke-width:2}
+.zs.anim [data-stage]{animation:fadein .3s ease both}
+.zs.anim [data-stage="1"]{animation-delay:.3s}
+.zs.anim [data-stage="2"]{animation-delay:.6s}
+.zs.anim [data-stage="3"]{animation-delay:.9s}
+.part.fresh{animation:fadein .7s ease both}
+@keyframes fadein{from{opacity:0}}
+.grow{transform-box:fill-box;transform-origin:50% 100%;animation:grow .45s ease both}
+@keyframes grow{from{transform:scaleY(0)}}
+
+/* building steps */
+.step-panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 28px;margin:16px 0 4px;align-items:start}
+.step-panel .cards{margin:0}
+.step-panel .fblock{margin:0}
+.step-sel{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:6px}
+.step-sel .lb2{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+
+/* gate widget */
+.gate{display:grid;grid-template-columns:minmax(0,520px) minmax(0,1fr);gap:24px;align-items:center;margin:18px 0}
+.sig-wrap{min-width:0}
+.sig{display:block;touch-action:none;user-select:none}
+.sig .axis{stroke:var(--ink-2);stroke-width:1.5}
+.sig .grid{stroke:var(--line);stroke-width:1}
+.sig .curve{fill:none;stroke:var(--ink);stroke-width:3}
+.sig .guide{stroke:var(--ink-2);stroke-width:1.5;stroke-dasharray:4 4}
+.sig .tick{font:500 16px var(--mono);fill:var(--muted)}
+.sig .ax{font:600 16px var(--sans);fill:var(--ink-2)}
+.handle{cursor:grab}
+.handle circle{fill:var(--ink);stroke:var(--panel);stroke-width:3}
+.sig .hv{font:500 19px var(--mono);fill:var(--ink);paint-order:stroke;stroke:var(--panel);stroke-width:6px}
+.bars3{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px 14px;align-items:center}
+.bars3 .bl{font:600 18px var(--sans)}
+.bars3 .track{height:26px;background:var(--panel-2);border-radius:6px;overflow:hidden}
+.bars3 .fill{height:100%;border-radius:6px;transition:width .08s linear}
+.bars3 .bv{font:500 19px var(--mono);text-align:right;min-width:64px}
+.bars3 .op3{grid-column:1/-1;font:700 20px var(--sans);color:var(--muted);text-align:center;margin:-6px 0}
+.gate-eq{margin-top:14px;font-size:20px}
+.hint{color:var(--muted);font-size:17px;margin-top:6px}
+
+/* GRU mapping */
+.map{display:grid;grid-template-columns:minmax(0,1fr) 54px minmax(0,1fr);gap:12px 8px;align-items:center;max-width:900px;margin:18px 0}
+.map .mh{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.map .side{display:flex;flex-wrap:wrap;gap:8px}
+.chipx{display:inline-flex;align-items:baseline;gap:8px;padding:6px 12px;border-radius:10px;border:1.5px solid var(--line-2);background:var(--panel);font:600 18px var(--sans)}
+.chipx.f{border-color:var(--f)}.chipx.i{border-color:var(--i)}.chipx.o{border-color:var(--o)}.chipx.c{border-color:var(--c)}.chipx.z{border-color:var(--z);background:var(--z-tint)}.chipx.r{border-color:var(--r);background:var(--r-tint)}.chipx.gone{border-style:dashed;color:var(--muted)}
+.chipx small{font:400 16px var(--sans);color:var(--ink-2)}
+.map .arr{font:700 26px var(--sans);color:var(--muted);text-align:center}
+.cmp2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1000px;margin:16px 0}
+.cmp2 .pane{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px}
+.cmp2 h4{margin:0 0 6px;font:700 18px var(--sans)}
+.cmp2 .wl{font-size:16px}
+.hbar{position:relative;height:28px;margin:10px 0 4px;background:linear-gradient(var(--line-2),var(--line-2)) center/2px 100% no-repeat}
+.hbar i{position:absolute;top:3px;bottom:3px;border-radius:4px}
+.hbar-l{display:flex;justify-content:space-between;font:500 16px var(--mono);color:var(--muted)}
+
+/* signal lab */
+.sig-info{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px 28px;align-items:center;border-top:1px solid var(--line);padding-top:12px;margin-top:10px}
+.big2{display:flex;gap:28px;flex-wrap:wrap}
+.big2 div{display:flex;flex-direction:column}
+.big2 span{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.big2 b{font:600 46px/1.05 var(--mono)}
+.big2 .neg b{color:var(--neg)}.big2 .pos b{color:var(--pos)}
+
+/* mcq */
+.mcq{background:var(--panel);border:1px solid var(--line-2);border-radius:14px;padding:16px 18px;margin:20px 0;max-width:1000px}
+.mcq .qh{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.mcq .q{font:600 20px/1.4 var(--sans);margin:4px 0 12px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt{display:flex;gap:12px;align-items:baseline;text-align:left;font-weight:400;font-size:18px;line-height:1.35;padding:10px 14px;min-height:52px}
+.opt .k{flex:none;font:500 16px var(--mono);color:var(--muted)}
+.opt.correct{background:var(--pos-tint);border-color:var(--pos)}
+.opt.correct .k{color:var(--pos)}
+.opt.wrong{background:var(--neg-tint);border-color:var(--neg)}
+.opt.wrong .k{color:var(--neg)}
+.opt:disabled{opacity:1;cursor:default}
+.opt.dim{opacity:.55}
+.explain{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--panel-2);font-size:18px}
+.explain b.ok{color:var(--pos)}.explain b.no{color:var(--neg)}
+.exit .mcq{border-color:var(--ink-2)}
+
+/* bidirectional */
+.post-tag{font:700 16px var(--sans);text-transform:uppercase;letter-spacing:.08em;background:var(--f-tint);color:var(--f);padding:4px 12px;border-radius:999px}
+.bi-scroll{overflow-x:auto;margin:10px 0 4px}
+.bi-scroll svg{display:block}
+.bi .bw{font:600 17px var(--sans);fill:var(--ink);text-anchor:middle}
+.bi .bw.key{font-weight:700}
+.bi .bl{font:600 16px var(--sans);fill:var(--ink-2)}
+.bi .dot-on{fill:var(--ink)}.bi .dot-off{fill:var(--panel);stroke:var(--line-2);stroke-width:2}
+.bi .link{stroke:var(--wire);stroke-width:2}
+.bi .linkon{stroke:var(--ink);stroke-width:2.5}
+.bi .keycol{fill:var(--f-tint)}
+.bi-notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1000px}
+.bi-notes div{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px}
+
+footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);font-size:17px}
+
+@media (max-width:1179px){
+  .lab-body{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:860px){
+  .step-panel,.gate,.cmp2,.reviews,.bi-notes,.vocab,.sig-info{grid-template-columns:minmax(0,1fr)}
+  .frow{grid-template-columns:minmax(0,1fr);gap:0}
+}
+@media (max-width:640px){
+  body{font-size:18px}
+  .wrap{padding:0 16px}
+  .opts{grid-template-columns:minmax(0,1fr)}
+  .task{flex-direction:column;align-items:flex-start}
+  .map{grid-template-columns:minmax(0,1fr)}
+  .map .arr{transform:rotate(90deg);text-align:left;width:30px}
+  .big2 b{font-size:38px}
+  .cmp th,.cmp td{padding:10px 8px;overflow-wrap:anywhere}
+  .cmp tbody th{width:28%}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .zs.anim [data-stage],.part.fresh,.grow{animation:none}
+  .bars3 .fill{transition:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Deep Learning · Recurrent networks</div>
+    <h1>LSTM and GRU</h1>
+    <p class="lead">An RNN forgets. Today we give it a memory that can keep, erase and reveal.</p>
+    <div class="task"><span class="task-tag">Task</span><p>Read a movie review word by word. At the last word, decide: positive or negative.</p></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- 0 -->
+<section class="sec" id="s0">
+  <div class="sec-head"><span class="sec-num">0</span><h2>Recap: last class in your notation</h2></div>
+  <div class="prose">
+    <p class="bridge">Last class we built the RNN. Here it is again, in the same notation.</p>
+    <p>Last class: <span class="m">h_t = f(w\cdot x_t + w_h\cdot h_{t-1} + b)</span></p>
+    <p><b>The activation f we used last class is tanh.</b></p>
+  </div>
+  <div class="zoom" id="recap-neuron"></div>
+  <div style="margin:16px 0 8px"><div class="boxed">
+    <div class="anno" id="anno"></div>
+  </div></div>
+  <div class="prose">
+    <p style="margin-top:18px">The output <span class="m">\hat{y}</span> is the verdict. It is read from <span class="m">h_t</span> at the last word.</p>
+    <div class="rule3"><span class="r-pos" id="rule-pos"></span><span class="r-uns" id="rule-uns"></span><span class="r-neg" id="rule-neg"></span></div>
+  </div>
+  <h3>Words as numbers</h3>
+  <p>Each word enters the network as 4 numbers.</p>
+  <p class="muted"><span class="m">x_t</span> = positive, negative, turn, end</p>
+  <div class="vocab" id="vocab"></div>
+  <h3>The two reviews</h3>
+  <div class="reviews">
+    <div class="review"><h4>Review A · correct answer: Positive</h4>
+      <q>The movie was <span class="hl-pos">brilliant</span>, and I watched it with my friends on a Sunday evening.</q>
+      <p class="note">The key word comes early and must survive a long gap.</p></div>
+    <div class="review"><h4>Review B · correct answer: Positive</h4>
+      <q>The movie was <span class="hl-neg">long</span> and <span class="hl-neg">slow</span>, <span class="hl-turn">but</span> the ending was <span class="hl-pos">brilliant</span>.</q>
+      <p class="note">The opinion flips at “but”, so memory must be erased and rewritten.</p></div>
+  </div>
+  <p class="key"><b>Key idea</b><span>The RNN mixes the new word and the old memory into a new memory.</span></p>
+</section>
+
+<!-- 1 -->
+<section class="sec" id="s1">
+  <div class="sec-head"><span class="sec-num">1</span><h2>Why the RNN forgets</h2><span class="sec-chip">Review A</span></div>
+  <div class="prose">
+    <p class="bridge">Give the RNN Review A and watch its memory, word by word.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span id="s1-problem"></span></p>
+  </div>
+  <div class="lab" data-lab="rnn"></div>
+  <p class="key"><b>Key idea</b><span>Every word rewrites the whole memory.</span></p>
+  <div class="mcq" data-mcq="1"></div>
+</section>
+
+<!-- 2 -->
+<section class="sec" id="s2">
+  <div class="sec-head"><span class="sec-num">2</span><h2>A memory lane</h2><span class="sec-chip">Review A</span></div>
+  <div class="prose">
+    <p class="bridge">The RNN rewrites its only memory at every word. Add a second memory that is never rewritten.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span>The RNN has no safe place to keep “brilliant”.</span></p>
+    <p class="pf"><span class="tag fix">Fix</span><span>Add a memory lane. Each word only adds its proposal to the lane.</span></p>
+  </div>
+  <div class="cards" id="cards-lane"></div>
+  <div class="fblock" id="f-lane"></div>
+  <div class="lab" data-lab="lane"></div>
+  <p class="key"><b>Key idea</b><span>Nothing is rewritten, only added. “brilliant” survives the long gap.</span></p>
+</section>
+
+<!-- 3 -->
+<section class="sec" id="s3">
+  <div class="sec-head"><span class="sec-num">3</span><h2>The lane cannot forget</h2><span class="sec-chip">Review B</span></div>
+  <div class="prose">
+    <p class="bridge">The lane kept “brilliant”. Now give it Review B, where the opinion flips at “but”.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span>“long” and “slow” push the lane negative. At “but” the lane cannot erase them.</span></p>
+    <p class="pf"><span class="tag problem">Problem</span><span>Every small word, such as “the”, also adds to the lane.</span></p>
+  </div>
+  <div class="lab" data-lab="laneB"></div>
+  <p class="key"><b>Key idea</b><span>The cell needs 3 controls: what to erase, what to write, what to reveal.</span></p>
+</section>
+
+<!-- 4 -->
+<section class="sec" id="s4">
+  <div class="sec-head"><span class="sec-num">4</span><h2>The gate</h2></div>
+  <div class="prose">
+    <p class="bridge">Each control is a gate. A gate is a neuron you already know.</p>
+    <p class="pf"><span class="tag fix">Fix</span><span>Multiply a signal by a number between 0 and 1.</span></p>
+  </div>
+  <div class="cards" id="cards-gate"></div>
+  <div class="fblock" id="f-gate"></div>
+  <p><span class="m">w</span>, <span class="m">w_h</span> and <span class="m">b</span> are learned in training, exactly like in the RNN.</p>
+  <div class="gate" id="gate">
+    <div class="sig-wrap"><svg class="sig" aria-label="Sigmoid curve with a draggable point"></svg></div>
+    <div>
+      <div class="bars3" id="bars3"></div>
+      <div class="gate-eq"><span id="gate-eq"></span></div>
+      <p class="hint">Drag the point, or focus it and press the arrow keys.</p>
+    </div>
+  </div>
+  <p class="key"><b>Key idea</b><span>A gate near 0 blocks the signal. A gate near 1 lets it all pass.</span></p>
+  <div class="mcq" data-mcq="2"></div>
+</section>
+
+<!-- 5 -->
+<section class="sec" id="s5">
+  <div class="sec-head"><span class="sec-num">5</span><h2>Building the LSTM</h2><span class="sec-chip">Review B</span></div>
+  <div class="prose">
+    <p class="bridge">Add the three gates to the lane, one at a time, and read Review B again.</p>
+  </div>
+  <div class="step-sel"><span class="lb2">Step</span><div class="seg big" id="step-seg" role="group" aria-label="Building step"></div></div>
+  <div id="step-text" class="prose" style="margin-top:16px"></div>
+  <div class="step-panel"><div class="cards" id="step-cards"></div><div class="fblock" id="step-f"></div></div>
+  <div id="step-watch" class="prose"></div>
+  <div class="lab" data-lab="build"></div>
+  <p class="key"><b>Key idea</b><span>Forget erases. Input writes. Output reveals.</span></p>
+</section>
+
+<!-- 6 -->
+<section class="sec" id="s6">
+  <div class="sec-head"><span class="sec-num">6</span><h2>The complete LSTM</h2></div>
+  <div class="prose">
+    <p class="bridge">All three gates on the lane make the complete LSTM.</p>
+  </div>
+  <div class="fblock" id="f-lstm"></div>
+  <div class="lab" data-lab="lstm"></div>
+  <p class="key"><b>Key idea</b><span>The lane carries the memory. Three gates decide what to erase, write and reveal.</span></p>
+  <div class="mcq" data-mcq="3"></div>
+  <div class="mcq" data-mcq="4"></div>
+</section>
+
+<!-- 7 -->
+<section class="sec" id="s7">
+  <div class="sec-head"><span class="sec-num">7</span><h2>Why the LSTM learns long gaps</h2><span class="sec-chip">Review A</span></div>
+  <div class="prose">
+    <p class="bridge">Training sends a learning signal backward, from the verdict to every word.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span id="s7-problem"></span></p>
+  </div>
+  <div class="cards" id="cards-signal"></div>
+  <div class="prose">
+    <p class="pf"><span class="tag">RNN</span><span>Each step multiplies the signal by <span class="m">w_h\cdot\tanh'</span>, about 0.5.</span></p>
+    <p class="pf"><span class="tag">Lane</span><span>Each step multiplies the signal only by <span class="m">\Fg</span>, about 0.99.</span></p>
+  </div>
+  <div class="lab" data-lab="signal"></div>
+  <p class="key"><b>Key idea</b><span>On the lane the signal is multiplied by <span class="m">\Fg \approx 1</span>, so it stays strong.</span></p>
+  <div class="mcq" data-mcq="5"></div>
+</section>
+
+<!-- 8 -->
+<section class="sec" id="s8">
+  <div class="sec-head"><span class="sec-num">8</span><h2>The GRU</h2></div>
+  <div class="prose">
+    <p class="bridge">The GRU uses the same idea with fewer parts.</p>
+  </div>
+  <div class="map" id="map"></div>
+  <div class="cards" id="cards-gru"></div>
+  <div class="fblock" id="f-gru"></div>
+  <h3>At “but”: with and without the reset gate</h3>
+  <div class="cmp2" id="at-but"></div>
+  <div class="lab" data-lab="gru"></div>
+  <p class="key"><b>Key idea</b><span>One gate <span class="m">\Zg</span> keeps <span class="m">1-\Zg</span> of the old memory and writes <span class="m">\Zg</span> of the new.</span></p>
+  <div class="mcq" data-mcq="6"></div>
+</section>
+
+<!-- 9 -->
+<section class="sec" id="s9">
+  <div class="sec-head"><span class="sec-num">9</span><h2>LSTM vs GRU</h2></div>
+  <div class="prose"><p class="bridge">Both cells solve the same problem. Here is how they compare.</p></div>
+  <table class="cmp">
+    <thead><tr><th></th><th>LSTM</th><th>GRU</th></tr></thead>
+    <tbody>
+      <tr><th>Memory</th><td>a lane <span class="m">C_t</span> and <span class="m">h_t</span></td><td>one memory <span class="m">h_t</span></td></tr>
+      <tr><th>Gates</th><td><span class="m">\Fg</span>, <span class="m">\Ig</span>, <span class="m">\Og</span></td><td><span class="m">\Zg</span>, <span class="m">\Rg</span></td></tr>
+      <tr><th>Erase and write</th><td><span class="m">\Fg</span> erases, <span class="m">\Ig</span> writes: two separate gates</td><td>keep <span class="m">1-\Zg</span>, write <span class="m">\Zg</span>: one gate</td></tr>
+      <tr><th>Weight blocks</th><td>4: <span class="m">\Fg</span>, <span class="m">\Ig</span>, <span class="m">\Og</span>, <span class="m">\Cn</span></td><td>3: <span class="m">\Zg</span>, <span class="m">\Rg</span>, <span class="m">\Hn</span></td></tr>
+      <tr><th>Speed</th><td>slower: 4 blocks per word</td><td>faster: 3 blocks per word</td></tr>
+      <tr><th>Long memory</th><td>yes, through the lane <span class="m">\Fg\cdot C_{t-1}</span></td><td>yes, through <span class="m">(1-\Zg)\cdot h_{t-1}</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 10 -->
+<section class="sec exit" id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Exit ticket</h2></div>
+  <div class="prose"><p class="bridge">Three questions. One click each.</p></div>
+  <div class="mcq" data-mcq="e1"></div>
+  <div class="mcq" data-mcq="e2"></div>
+  <div class="mcq" data-mcq="e3"></div>
+</section>
+
+<!-- post-read -->
+<section class="sec" id="post">
+  <div class="sec-head"><span class="post-tag">Post-read · Homework</span><h2>Bidirectional RNN</h2></div>
+  <div class="prose">
+    <p class="bridge">Some words are understood only from the words after them.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span>A forward reader reaches “Teddy” after reading only “He said”. Both sentences look the same.</span></p>
+    <p class="pf"><span class="tag fix">Fix</span><span>Add a backward reader that reads right to left. Join both at every word.</span></p>
+  </div>
+  <div class="bi" id="bi"></div>
+  <div class="bi-notes">
+    <div><b>Forward reader at “Teddy”</b><br>has read “He said Teddy”. It cannot tell toy from person.</div>
+    <div><b>Backward reader at “Teddy”</b><br>has read “bears are on sale” (a toy) or “Roosevelt was a president” (a person).</div>
+  </div>
+  <div class="fblock"><div class="frow"><span class="fl">bidirectional</span><span class="m">h_t = [\,\text{forward } h_t\ ;\ \text{backward } h_t\,]</span></div></div>
+  <div class="mcq" data-mcq="p1"></div>
+</section>
+
+</main>
+<footer><div class="wrap">LSTM and GRU · interactive worksheet. Every number on this page is computed live from the cell formulas.</div></footer>
+
+<script>
+/* MODEL:BEGIN */
+// Pure model maths. Every number on the page is computed from these functions.
+const VOCAB = {
+  'the': [0.05, 0, 0, 0], 'movie': [0.10, 0, 0, 0], 'was': [0, 0.05, 0, 0], 'brilliant': [0.95, 0, 0, 0],
+  'and': [0.05, 0, 0, 0], 'i': [0, 0, 0, 0], 'watched': [0.10, 0, 0, 0], 'it': [0, 0, 0, 0],
+  'with': [0, 0, 0, 0], 'my': [0, 0, 0, 0], 'friends': [0.15, 0, 0, 0], 'on': [0, 0, 0, 0],
+  'a': [0, 0, 0, 0], 'sunday': [0.10, 0, 0, 0], 'evening': [0.05, 0, 0, 0], 'long': [0, 0.50, 0, 0],
+  'slow': [0, 0.90, 0, 0], 'but': [0, 0, 1, 0], 'ending': [0.10, 0, 0, 0], '.': [0, 0, 0, 1]
+};
+const REVIEW_TEXT = {
+  A: 'The movie was brilliant, and I watched it with my friends on a Sunday evening.',
+  B: 'The movie was long and slow, but the ending was brilliant.'
+};
+const WEIGHTS = {
+  rnn: { w: [2.5, -2.5, 0, 0], wh: 0.5, b: 0 },
+  f:   { w: [0, 0, -10, 0],    wh: 0,   b: 5 },
+  i:   { w: [10, 10, 0, 0],    wh: 0,   b: -5 },
+  C:   { w: [3, -3, 0, 0],     wh: 0,   b: 0 },
+  o:   { w: [0, 0, 0, 8],      wh: 0,   b: -4 },
+  z:   { w: [10, 10, 10, 0],   wh: 0,   b: -5 },
+  r:   { w: [0, 0, -10, 0],    wh: 0,   b: 5 },
+  hc:  { w: [3, -3, 0, 0],     wh: 1,   b: 0 }
+};
+
+function tokenize(text) {
+  const words = text.replace(/[.,]/g, ' ').split(/\s+/).filter(Boolean);
+  return words.map(w => ({ word: w, tok: w.toLowerCase() })).concat([{ word: '.', tok: '.' }]);
+}
+const REVIEWS = { A: tokenize(REVIEW_TEXT.A), B: tokenize(REVIEW_TEXT.B) };
+
+const sigmoid = s => 1 / (1 + Math.exp(-s));
+const dot = (w, x) => w.reduce((s, wk, k) => s + wk * x[k], 0);
+const neuron = (p, x, h, act) => act(dot(p.w, x) + p.wh * h + p.b);
+
+function rnn(tokens) {
+  let h = 0;
+  return tokens.map(t => {
+    const x = VOCAB[t.tok], hPrev = h, wx = dot(WEIGHTS.rnn.w, x);
+    h = Math.tanh(wx + WEIGHTS.rnn.wh * hPrev + WEIGHTS.rnn.b);
+    return { ...t, x, wx, hPrev, h };
+  });
+}
+
+// forget/input/output switch each gate on; a switched-off gate is fixed at 1.
+function lstm(tokens, { forget = true, input = true, output = true } = {}) {
+  let C = 0, h = 0;
+  return tokens.map(t => {
+    const x = VOCAB[t.tok], CPrev = C, hPrev = h;
+    const f = forget ? neuron(WEIGHTS.f, x, hPrev, sigmoid) : 1;
+    const i = input ? neuron(WEIGHTS.i, x, hPrev, sigmoid) : 1;
+    const o = output ? neuron(WEIGHTS.o, x, hPrev, sigmoid) : 1;
+    const Cc = neuron(WEIGHTS.C, x, hPrev, Math.tanh);
+    C = f * CPrev + i * Cc;
+    const tC = Math.tanh(C);
+    h = o * tC;
+    return { ...t, x, CPrev, hPrev, f, i, o, Cc, C, tC, h };
+  });
+}
+const laneOnly = tokens => lstm(tokens, { forget: false, input: false, output: false });
+
+function gru(tokens, { reset = true } = {}) {
+  let h = 0;
+  return tokens.map(t => {
+    const x = VOCAB[t.tok], hPrev = h;
+    const z = neuron(WEIGHTS.z, x, hPrev, sigmoid);
+    const r = reset ? neuron(WEIGHTS.r, x, hPrev, sigmoid) : 1;
+    const rh = r * hPrev;
+    const hc = Math.tanh(dot(WEIGHTS.hc.w, x) + WEIGHTS.hc.wh * rh + WEIGHTS.hc.b);
+    h = (1 - z) * hPrev + z * hc;
+    return { ...t, x, hPrev, z, r, rh, hc, h };
+  });
+}
+
+const verdict = y => y > 0.3 ? 'Positive' : y < -0.3 ? 'Negative' : 'Unsure';
+
+// Learning signal travelling back from the last word to word `from`.
+// factor(step) is how much one step multiplies it: w_h·tanh′ for the RNN, f_t on the lane.
+function backSignal(steps, from, factor) {
+  const out = [];
+  let s = 1;
+  for (let t = steps.length - 1; t >= from; t--) {
+    out.push({ t, word: steps[t].word, signal: s, factor: t > from ? factor(steps[t]) : null });
+    if (t > from) s *= factor(steps[t]);
+  }
+  return out;
+}
+const rnnFactor = st => WEIGHTS.rnn.wh * (1 - st.h * st.h);
+const laneFactor = st => st.f;
+/* MODEL:END */
+
+/* ---------- formatting and maths rendering ---------- */
+const T = String.raw;
+const last = a => a[a.length - 1];
+const at = (steps, tok) => steps.find(s => s.tok === tok);
+const clean = s => /^-0\.0+$/.test(s) ? s.slice(1) : s;
+const fmt = (v, d = 2) => clean(v.toFixed(d)).replace('-', '\u2212');   // on-screen text
+const n = (v, d = 2) => clean(v.toFixed(d));                             // inside TeX
+const p = (v, d = 2) => { const s = n(v, d); return s[0] === '-' ? `(${s})` : s; };
+const sgn = v => Math.abs(v) < 0.005 ? 'zero' : v > 0 ? 'pos' : 'neg';
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function pct(v, compact) {
+  const x = v * 100;
+  if (x >= 10) return x.toFixed(0) + '%';
+  if (x >= 1) return x.toFixed(1) + '%';
+  if (compact) return x >= 0.1 ? x.toFixed(1) + '%' : '<0.1%';
+  return x.toPrecision(2) + '%';
+}
+
+// Coloured symbols, one colour per concept.
+const MACROS = {
+  '\\Fg': '\\htmlClass{k-f}{f_t}', '\\Ig': '\\htmlClass{k-i}{i_t}', '\\Og': '\\htmlClass{k-o}{o_t}',
+  '\\Cn': '\\htmlClass{k-c}{\\tilde{C}_t}', '\\Zg': '\\htmlClass{k-z}{z_t}', '\\Rg': '\\htmlClass{k-r}{r_t}',
+  '\\Hn': '\\htmlClass{k-c}{\\tilde{h}_t}'
+};
+
+// Plain HTML rendering of the small TeX subset used here, for when KaTeX cannot load.
+function texToHTML(src) {
+  src = src.replace(/\\(Fg|Ig|Og|Cn|Zg|Rg|Hn)(?![a-zA-Z])/g, m => MACROS[m]);
+  const SYM = { sigma: 'σ', tanh: 'tanh', cdot: '·', times: '×', approx: '≈', quad: '\u2003', ',': '\u2009', ';': '\u2002', ' ': ' ', '%': '%', '{': '{', '}': '}' };
+  let i = 0;
+  const atom = c => /[a-zA-Z]/.test(c) ? `<i>${c}</i>` : c === '-' ? '−' : c === "'" ? '′' : esc(c);
+  const rawArg = () => {
+    while (src[i] === ' ') i++;
+    if (src[i] !== '{') return src[i++];
+    let d = 1, j = i + 1;
+    while (d) { if (src[j] === '{') d++; else if (src[j] === '}') d--; j++; }
+    const r = src.slice(i + 1, j - 1); i = j; return r;
+  };
+  const arg = () => {
+    while (src[i] === ' ') i++;
+    if (src[i] === '{') { i++; const g = seq(); i++; return g; }
+    if (src[i] === '\\') return command();
+    return atom(src[i++]);
+  };
+  function command() {
+    const m = /^\\([a-zA-Z]+|.)/.exec(src.slice(i)); i += m[0].length;
+    const name = m[1];
+    if (name === 'htmlClass') { const cls = rawArg(); return `<span class="${cls}">${arg()}</span>`; }
+    if (name === 'tilde' || name === 'hat') return `<i>${rawArg()}${name === 'tilde' ? '\u0303' : '\u0302'}</i>`;
+    if (name === 'text') return esc(rawArg());
+    return SYM[name] ?? name;
+  }
+  function seq() {
+    let out = '';
+    while (i < src.length && src[i] !== '}') {
+      const c = src[i];
+      if (c === '{') { i++; out += seq(); i++; }
+      else if (c === '\\') out += command();
+      else if (c === '_' || c === '^') { i++; const a = arg(); out += c === '_' ? `<sub>${a}</sub>` : `<sup>${a}</sup>`; }
+      else if (c === ' ') i++;
+      else { i++; out += (c === '=' || c === '+') ? ` ${c} ` : atom(c); }
+    }
+    return out;
+  }
+  return `<span class="mfb">${seq()}</span>`;
+}
+
+function tex(el, s) {
+  if (window.katex) katex.render(s, el, { throwOnError: false, trust: true, strict: 'ignore', macros: MACROS });
+  else el.innerHTML = texToHTML(s);
+}
+// Text with $...$ math segments.
+const rich = s => s.split('$').map((part, k) => k % 2 ? `<span class="m">${esc(part)}</span>` : part).join('');
+function renderMath(root = document) {
+  root.querySelectorAll('.m:not([data-done])').forEach(e => { tex(e, e.textContent); e.dataset.done = 1; });
+}
+function setRich(el, s) { el.innerHTML = rich(s); renderMath(el); }
+
+/* ---------- SVG helpers ---------- */
+const sub = s => s.replace(/-/g, '\u2212');
+// Symbol as SVG tspans: base letter (italic) with subscript.
+const sy = (base, s) => `<tspan>${base}</tspan>${s ? `<tspan class="sb" dy="5">${sub(s)}</tspan><tspan dy="-5"></tspan>` : ''}`;
+const pathD = pts => 'M' + pts.map(q => q.join(' ')).join(' L');
+
+class Draw {
+  constructor(w, h) { this.w = w; this.h = h; this.o = []; this.wires = []; }
+  add(s) { this.o.push(s); }
+  part(name, fresh, fn) { this.add(`<g class="part${fresh && fresh.has(name) ? ' fresh' : ''}">`); fn(); this.add('</g>'); }
+  wire(pts, cls = '', stage = 0) { this.wires.push({ pts, stage }); this.add(`<path class="w ${cls}" d="${pathD(pts)}"/>`); }
+  lane(x1, x2, y, v, stage) { this.wires.push({ pts: [[x1, y], [x2, y]], stage }); this.add(`<path class="lane ${sgn(v)}" d="M${x1} ${y} H${x2}"/>`); }
+  arrow(x, y, dir, cls = '') {
+    const s = 7, pts = { r: [[x, y], [x - s * 1.6, y - s], [x - s * 1.6, y + s]], d: [[x, y], [x - s, y - s * 1.6], [x + s, y - s * 1.6]], u: [[x, y], [x - s, y + s * 1.6], [x + s, y + s * 1.6]] }[dir];
+    this.add(`<polygon class="ah ${cls}" points="${pts.map(q => q.join(',')).join(' ')}"/>`);
+  }
+  box(x, y, act, cls) {
+    const w = act === 'tanh' ? 96 : 76, h = 42, x0 = x - w / 2, y0 = y - h / 2, sp = x0 + 36;
+    this.add(`<g class="bx ${cls}"><rect x="${x0}" y="${y0}" width="${w}" height="${h}" rx="8"/><line x1="${sp}" y1="${y0 + 7}" x2="${sp}" y2="${y0 + h - 7}"/>` +
+      `<text class="gl" x="${x0 + 18}" y="${y + 7}">Σ</text><text class="gl${act === 'tanh' ? ' tn' : ''}" x="${(sp + x0 + w) / 2}" y="${y + 7}">${act}</text></g>`);
+  }
+  op(x, y, sym, cls = '', r = 13) {
+    this.add(`<g class="op ${cls}${r > 14 ? ' sm' : ''}"><circle cx="${x}" cy="${y}" r="${r}"/><text x="${x}" y="${y + 7}">${sym}</text></g>`);
+  }
+  pillOp(x, y, txt) {
+    this.add(`<g class="op sm"><rect x="${x - 28}" y="${y - 13}" width="56" height="26" rx="13"/><text x="${x}" y="${y + 6}">${txt}</text></g>`);
+  }
+  val(x, y, v, cls, anchor = 'middle', stage = 0, prefix = '') {
+    this.add(`<text class="v ${cls}" x="${x}" y="${y}" text-anchor="${anchor}" data-stage="${stage}">${prefix}${fmt(v)}</text>`);
+  }
+  // Word label first, symbol underneath in its own line.
+  label(x, y, word, sym, cls = '', anchor = 'middle') {
+    this.add(`<text class="lb ${cls}" x="${x}" y="${y}" text-anchor="${anchor}">${word}</text><text class="ls ${cls}" x="${x}" y="${y + 23}" text-anchor="${anchor}">${sym}</text>`);
+  }
+  svg(extra = '') {
+    return `<svg class="zs${extra}" width="${this.w}" height="${this.h}" viewBox="0 0 ${this.w} ${this.h}" role="img">${this.o.join('')}</svg>`;
+  }
+}
+
+// Small dots travel along each wire in stage order: inputs, gates, lane update, output.
+function animateDots(svg, wires) {
+  if (reduceMotion || !wires.length) return;
+  const NS = 'http://www.w3.org/2000/svg', g = document.createElementNS(NS, 'g');
+  svg.appendChild(g);
+  const STAGE = 300, items = wires.map(w => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('r', 5); c.setAttribute('class', 'dot'); c.style.opacity = 0; g.appendChild(c);
+    let len = 0; const segs = [];
+    for (let k = 1; k < w.pts.length; k++) { const [a, b] = [w.pts[k - 1], w.pts[k]]; const l = Math.hypot(b[0] - a[0], b[1] - a[1]); segs.push({ a, b, l }); len += l; }
+    return { c, segs, len, stage: w.stage };
+  });
+  const t0 = performance.now();
+  function frame(now) {
+    if (!g.isConnected) return;
+    const t = now - t0;
+    for (const it of items) {
+      const s = (t - it.stage * STAGE) / STAGE;
+      if (s < 0 || s > 1) { it.c.style.opacity = 0; continue; }
+      let d = it.len * (1 - (1 - s) * (1 - s));
+      for (const sg of it.segs) {
+        if (d <= sg.l || sg === last(it.segs)) {
+          const u = sg.l ? Math.min(1, d / sg.l) : 0;
+          it.c.setAttribute('cx', sg.a[0] + (sg.b[0] - sg.a[0]) * u); it.c.setAttribute('cy', sg.a[1] + (sg.b[1] - sg.a[1]) * u);
+          break;
+        }
+        d -= sg.l;
+      }
+      it.c.style.opacity = 1;
+    }
+    if (t < 4 * STAGE) requestAnimationFrame(frame); else g.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- cell zoom diagrams (drawn 1:1) ---------- */
+function zoomRNN(st) {
+  const d = new Draw(740, 226), Y = 132, BX = 360, SX = 330, L0 = 112, L1 = 636, LX = 560;
+  d.label(100, Y - 6, 'word', sy('x', 't'), '', 'end');
+  d.wire([[L0, Y], [BX - 48, Y]], '', 0); d.arrow(BX - 48, Y, 'r');
+  d.val(210, Y - 12, st.wx, sgn(st.wx), 'middle', 0);
+  d.add(`<text class="lb" x="210" y="${Y + 28}" text-anchor="middle">input <tspan class="ls">w·${sy('x', 't')}</tspan></text>`);
+  // loop carrying the old memory
+  d.wire([[LX, Y], [LX, 58], [SX, 58], [SX, Y - 21]], '', 0); d.arrow(SX, Y - 21, 'd');
+  d.add(`<text class="lb" x="${(LX + SX) / 2}" y="26" text-anchor="middle">old memory <tspan class="ls">${sy('h', 't-1')}</tspan></text>`);
+  d.add(`<text class="ls" x="${SX + 12}" y="${Y - 34}">w${'<tspan class="sb" dy="5">h</tspan>'}</text>`);
+  d.val((LX + SX) / 2, 50, st.hPrev, sgn(st.hPrev), 'middle', 0);
+  // bias
+  d.wire([[SX, 212], [SX, Y + 21]], '', 0); d.arrow(SX, Y + 21, 'u');
+  d.add(`<text class="lb" x="${SX + 14}" y="196">bias <tspan class="ls">b</tspan></text>`);
+  d.val(SX + 90, 196, WEIGHTS.rnn.b, 'zero', 'start', 0);
+  d.box(BX, Y, 'tanh', 'n');
+  d.wire([[BX + 48, Y], [L1, Y]], '', 1); d.arrow(L1, Y, 'r', sgn(st.h));
+  d.val(470, Y - 12, st.h, sgn(st.h), 'middle', 1);
+  d.label(646, Y - 6, 'memory', sy('h', 't'), '', 'start');
+  return d;
+}
+
+// LSTM family. v = which gates are present; with none it is the plain lane.
+function zoomLSTM(st, v, fresh) {
+  const d = new Draw(740, 318);
+  const LY = 52, GY = 194, BY = 252, LB = 280, L0 = 112, L1 = 636;
+  const XF = 200, XI = 310, XC = 430, XP = 370, YP = 118, XO = 540, YT = 84, YX = 140;
+  d.label(100, LY - 4, 'memory lane', sy('C', 't-1'), '', 'end');
+  d.label(100, BY - 4, 'inputs', sy('x', 't') + '<tspan>, </tspan>' + sy('h', 't-1'), '', 'end');
+  d.label(646, LY - 4, 'memory lane', sy('C', 't'), '', 'start');
+  d.label(646, YX - 4, 'output', sy('h', 't'), '', 'start');
+  d.wire([[L0, BY], [v.output ? XO : XC, BY]], '', 0);
+  // forget: scale the old lane
+  if (v.forget) {
+    const kept = st.f * st.CPrev;
+    d.lane(L0, XF - 13, LY, st.CPrev, 0); d.val(152, LY - 12, st.CPrev, sgn(st.CPrev), 'middle', 0);
+    d.part('forget', fresh, () => {
+      d.wire([[XF, BY], [XF, GY + 21]], '', 0); d.box(XF, GY, 'σ', 'f');
+      d.wire([[XF, GY - 21], [XF, LY + 13]], 'f', 1); d.val(XF + 9, 130, st.f, 'f', 'start', 1);
+      d.lane(XF + 13, XP - 13, LY, kept, 2); d.op(XF, LY, '×', 'f');
+      d.val(287, LY - 12, kept, sgn(kept), 'middle', 2);
+      d.label(XF, LB, 'forget gate', sy('f', 't'), 'f');
+    });
+  } else {
+    d.lane(L0, XP - 13, LY, st.CPrev, 0); d.val(240, LY - 12, st.CPrev, sgn(st.CPrev), 'middle', 0);
+  }
+  // proposal, scaled by the input gate when it exists
+  d.wire([[XC, BY], [XC, GY + 21]], '', 0); d.box(XC, GY, 'tanh', 'c');
+  d.label(XC, LB, 'proposal', sy('C\u0303', 't'), 'c');
+  if (v.input) {
+    const w = st.i * st.Cc;
+    d.wire([[XC, GY - 21], [XC, YP], [XP + 13, YP]], 'c', 1); d.val(XC + 9, 158, st.Cc, 'c', 'start', 1);
+    d.part('input', fresh, () => {
+      d.wire([[XI, BY], [XI, GY + 21]], '', 0); d.box(XI, GY, 'σ', 'i');
+      d.wire([[XI, GY - 21], [XI, YP], [XP - 13, YP]], 'i', 1); d.val(XI - 9, 158, st.i, 'i', 'end', 1);
+      d.op(XP, YP, '×', 'i');
+      d.label(XI, LB, 'input gate', sy('i', 't'), 'i');
+    });
+    d.wire([[XP, YP - 13], [XP, LY + 13]], '', 2); d.val(XP + 9, 94, w, sgn(w), 'start', 2);
+  } else {
+    d.wire([[XC, GY - 21], [XC, YP], [XP, YP], [XP, LY + 13]], 'c', 1); d.val(XC + 9, 158, st.Cc, 'c', 'start', 1);
+  }
+  d.lane(XP + 13, L1 - 8, LY, st.C, 2); d.arrow(L1, LY, 'r', sgn(st.C)); d.op(XP, LY, '+');
+  d.val(462, LY - 12, st.C, sgn(st.C), 'middle', 2);
+  // output: tanh of the lane, scaled by the output gate when it exists
+  d.wire([[XO, LY + 4], [XO, YT - 13]], '', 3); d.pillOp(XO, YT, 'tanh');
+  if (v.output) {
+    d.wire([[XO, YT + 13], [XO, YX - 13]], '', 3); d.val(XO - 9, 124, st.tC, sgn(st.tC), 'end', 3);
+    d.part('output', fresh, () => {
+      d.wire([[XO, BY], [XO, GY + 21]], '', 0); d.box(XO, GY, 'σ', 'o');
+      d.wire([[XO, GY - 21], [XO, YX + 13]], 'o', 1); d.val(XO + 9, 166, st.o, 'o', 'start', 1);
+      d.op(XO, YX, '×', 'o');
+      d.label(XO, LB, 'output gate', sy('o', 't'), 'o');
+    });
+    d.wire([[XO + 13, YX], [L1 - 8, YX]], '', 3);
+  } else {
+    d.wire([[XO, YT + 13], [XO, YX], [L1 - 8, YX]], '', 3);
+  }
+  d.arrow(L1, YX, 'r', sgn(st.h)); d.val(592, YX - 12, st.h, sgn(st.h), 'middle', 3);
+  return d;
+}
+
+function zoomGRU(st) {
+  const d = new Draw(740, 318);
+  const LY = 52, GY = 194, BY = 252, LB = 280, L0 = 112, L1 = 636;
+  const XZ = 200, XR = 310, XM = 420, XH = 550, YN = 112, YB = 160, YW = 118;
+  const kept = (1 - st.z) * st.hPrev, write = st.z * st.hc;
+  d.label(100, LY - 4, 'old memory', sy('h', 't-1'), '', 'end');
+  d.label(100, BY - 4, 'inputs', sy('x', 't') + '<tspan>, </tspan>' + sy('h', 't-1'), '', 'end');
+  d.label(646, LY - 4, 'memory', sy('h', 't'), '', 'start');
+  d.wire([[L0, BY], [XH, BY]], '', 0);
+  d.lane(L0, XZ - 13, LY, st.hPrev, 0); d.val(152, LY - 12, st.hPrev, sgn(st.hPrev), 'middle', 0);
+  // update gate: keep 1 − z of the old memory, write z of the proposal
+  d.wire([[XZ, BY], [XZ, GY + 21]], '', 0); d.box(XZ, GY, 'σ', 'z');
+  d.wire([[XZ, GY - 21], [XZ, YN + 17]], 'z', 1); d.val(XZ + 9, 152, st.z, 'z', 'start', 1);
+  d.wire([[XZ, YB], [490, YB], [490, YW], [XH - 13, YW]], 'z', 1);
+  d.op(XZ, YN, '1−', 'z', 17);
+  d.wire([[XZ, YN - 17], [XZ, LY + 13]], 'z', 2); d.val(XZ + 9, 88, 1 - st.z, 'z', 'start', 2);
+  d.op(XZ, LY, '×', 'z');
+  d.lane(XZ + 13, XH - 13, LY, kept, 3); d.val(360, LY - 12, kept, sgn(kept), 'middle', 3);
+  d.label(XZ, LB, 'update gate', sy('z', 't'), 'z');
+  // reset gate scales the old memory before the proposal sees it
+  d.wire([[XR, BY], [XR, GY + 21]], '', 0); d.box(XR, GY, 'σ', 'r');
+  d.wire([[XR + 38, GY], [XM - 13, GY]], 'r', 1); d.val(378, GY - 12, st.r, 'r', 'middle', 1);
+  d.wire([[XM, BY], [XM, GY + 13]], '', 0); d.op(XM, GY, '×', 'r');
+  d.wire([[XM + 13, GY], [XH - 48, GY]], '', 2); d.val(467, GY - 12, st.rh, sgn(st.rh), 'middle', 2);
+  d.label(XR, LB, 'reset gate', sy('r', 't'), 'r');
+  // proposal
+  d.wire([[XH, BY], [XH, GY + 21]], '', 0); d.box(XH, GY, 'tanh', 'c');
+  d.wire([[XH, GY - 21], [XH, YW + 13]], 'c', 2); d.val(XH + 9, 162, st.hc, 'c', 'start', 2);
+  d.op(XH, YW, '×', 'z');
+  d.wire([[XH, YW - 13], [XH, LY + 13]], '', 3); d.val(XH + 9, 92, write, sgn(write), 'start', 3);
+  d.op(XH, LY, '+');
+  d.lane(XH + 13, L1 - 8, LY, st.h, 3); d.arrow(L1, LY, 'r', sgn(st.h)); d.val(596, LY - 12, st.h, sgn(st.h), 'middle', 3);
+  d.label(XH, LB, 'proposal', sy('h\u0303', 't'), 'c');
+  return d;
+}
+
+/* ---------- unrolled timeline ---------- */
+const GUT = 96, RH = { word: 32, cell: 40, pill: 40, signed: 40, bar: 56 };
+
+function rowTimeline(lab) {
+  const { steps, idx, cfg } = lab, N = steps.length;
+  const rows = [{ kind: 'word', word: 'word' }, { kind: 'cell', word: 'cell' }, ...cfg.rows(lab.variant)];
+  const cw = Math.max(64, Math.min(72, Math.floor((lab.tl.clientWidth - GUT) / N)));
+  let y = 0;
+  rows.forEach(r => { r.y = y; r.h = RH[r.kind]; y += r.h; });
+  const W = N * cw, H = y + 4, cx = i => i * cw + cw / 2, o = [];
+  o.push(`<rect class="tl-cur" x="${idx * cw + 2}" y="1" width="${cw - 4}" height="${H - 2}" rx="10"/>`);
+  for (const r of rows) {
+    if (r.kind === 'word') {
+      steps.forEach((s, i) => o.push(`<text class="tl-word${i === idx ? ' cur' : i > idx ? ' later' : ''}" x="${cx(i)}" y="${r.y + 22}">${esc(s.word)}</text>`));
+    } else if (r.kind === 'cell') {
+      const by = r.y + 8, laneKey = cfg.lane, hy = laneKey === 'C' ? by + 18 : by + 12;
+      steps.forEach((s, i) => o.push(`<rect class="tl-cell${i > idx ? ' later' : ''}${i === idx ? ' cur' : ''}" x="${cx(i) - 15}" y="${by}" width="30" height="24" rx="6"/>`));
+      for (let i = 0; i <= idx; i++) {
+        if (laneKey) {
+          const v = steps[i][laneKey], x2 = i < idx ? cx(i + 1) - 15 : cx(i) + 15;
+          o.push(`<line class="tl-lane ${sgn(v)}" x1="${cx(i) - 15}" y1="${by + 6}" x2="${x2}" y2="${by + 6}"/>`);
+        }
+        if (i < idx && laneKey !== 'h') {
+          const x2 = cx(i + 1) - 16;
+          o.push(`<line class="tl-h" x1="${cx(i) + 15}" y1="${hy}" x2="${x2 - 6}" y2="${hy}"/><polygon class="tl-ah" points="${x2},${hy} ${x2 - 8},${hy - 5} ${x2 - 8},${hy + 5}"/>`);
+        }
+      }
+    } else if (r.kind === 'pill' || r.kind === 'signed') {
+      steps.forEach((s, i) => {
+        const x = cx(i) - 26, py = r.y + 7;
+        if (i > idx) { o.push(`<rect class="pill-ghost" x="${x}" y="${py}" width="52" height="26" rx="13"/>`); return; }
+        const v = r.get(s), a = Math.min(1, Math.abs(v));
+        const col = r.kind === 'signed' ? (v >= 0 ? 'pos' : 'neg') : r.cls;
+        const txt = a > 0.55 ? 'var(--on-strong)' : `var(--ink)`;
+        o.push(`<rect class="pill-bg" x="${x}" y="${py}" width="52" height="26" rx="13" fill="var(--${col}-tint)" stroke="var(--${col})"/>` +
+          `<rect x="${x}" y="${py}" width="52" height="26" rx="13" fill="var(--${col})" opacity="${a.toFixed(3)}"/>` +
+          `<text class="pill-t" x="${cx(i)}" y="${py + 19}" fill="${txt}">${fmt(v)}</text>`);
+      });
+    } else if (r.kind === 'bar') {
+      const z0 = r.y + 28, scale = Math.max(1, ...steps.map(s => Math.abs(r.get(s))));
+      o.push(`<line class="tl-zero" x1="4" y1="${z0}" x2="${W - 4}" y2="${z0}"/>`);
+      steps.forEach((s, i) => {
+        if (i > idx) return;
+        const v = r.get(s), hgt = Math.abs(v) / scale * 22, k = sgn(v);
+        if (hgt >= 0.5) o.push(`<rect class="tl-bar ${k}" x="${cx(i) - 11}" y="${v > 0 ? z0 - hgt : z0}" width="22" height="${hgt}" rx="2"/>`);
+        o.push(`<text class="tl-num ${k}" x="${cx(i)}" y="${v >= 0 ? z0 + 19 : z0 - 7}">${fmt(v)}</text>`);
+      });
+    }
+  }
+  steps.forEach((s, i) => o.push(`<rect class="tl-hit" data-i="${i}" x="${i * cw}" y="0" width="${cw}" height="${H}"><title>${esc(s.word)}</title></rect>`));
+  const gutter = rows.map(r => `<div class="g-row" style="height:${r.h}px"><span>${r.word}</span>${r.sym ? `<span class="m">${r.sym}</span>` : ''}</div>`).join('');
+  return { gutter, svg: `<svg class="tl-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${o.join('')}</svg>` };
+}
+
+/* ---------- lab ---------- */
+class Lab {
+  constructor(root, cfg) {
+    this.root = root; this.cfg = cfg; this.review = cfg.reviews[0]; this.variant = cfg.variant; this.idx = 0; this.timer = null; this.fresh = null;
+    root.tabIndex = 0;
+    root.setAttribute('aria-label', cfg.title + '. Use the left and right arrow keys to step through the words.');
+    const sw = cfg.reviews.length > 1 ? `<div class="seg" role="group" aria-label="Review">${cfg.reviews.map(r => `<button data-rv="${r}">Review ${r}</button>`).join('')}</div>` : '';
+    root.innerHTML = `<div class="lab-head"><div class="lab-title">${cfg.title}</div><div class="ctrls">${sw}
+      <button data-a="reset">Reset</button><button data-a="prev">Previous</button><button data-a="next" class="primary">Next word</button><button data-a="play">Play</button></div></div>
+      <div class="tl-scroll"><div class="tl-inner"><div class="tl-gutter"></div><div class="tl-svg-wrap"></div></div></div>
+      ${cfg.zoom ? `<div class="lab-body"><div class="zoom"></div><div class="info" aria-live="polite"></div></div>` : `<div class="info sig-info" aria-live="polite"></div>`}`;
+    this.tl = root.querySelector('.tl-scroll');
+    this.q = s => root.querySelector(s);
+    root.addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (b && b.dataset.rv) { this.stop(); this.review = b.dataset.rv; this.idx = 0; this.compute(); this.render(false); return; }
+      if (b && b.dataset.a) {
+        const a = b.dataset.a;
+        if (a === 'reset') { this.stop(); this.go(0, false); }
+        if (a === 'prev') { this.stop(); this.go(this.idx - 1, false); }
+        if (a === 'next') { this.stop(); this.go(this.idx + 1, true); }
+        if (a === 'play') this.timer ? this.stop() : this.play();
+        return;
+      }
+      const hit = e.target.closest('.tl-hit');
+      if (hit) { this.stop(); this.go(+hit.dataset.i, false); }
+    });
+    root.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') { e.preventDefault(); this.stop(); this.go(this.idx + 1, true); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); this.stop(); this.go(this.idx - 1, false); }
+    });
+    let raf = 0;
+    new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => this.renderTimeline()); }).observe(this.tl);
+    this.compute(); this.render(false);
+  }
+  compute() { this.steps = this.cfg.run(this.review, this.variant); this.idx = Math.min(this.idx, this.steps.length - 1); }
+  setVariant(v, fresh) { this.variant = v; this.fresh = fresh; this.compute(); this.render(false); this.fresh = null; }
+  go(i, animate) {
+    if (i < 0 || i >= this.steps.length) return;
+    this.idx = i; this.render(animate);
+  }
+  play() {
+    if (this.idx >= this.steps.length - 1) this.go(0, false);
+    this.q('[data-a=play]').textContent = 'Pause';
+    this.timer = setInterval(() => { if (this.idx >= this.steps.length - 1) this.stop(); else this.go(this.idx + 1, true); }, 1400);
+  }
+  stop() { clearInterval(this.timer); this.timer = null; this.q('[data-a=play]').textContent = 'Play'; }
+  renderTimeline() {
+    const t = (this.cfg.timeline || rowTimeline)(this);
+    const g = this.q('.tl-gutter');
+    if (g.dataset.sig !== t.gutter) { g.innerHTML = t.gutter; g.dataset.sig = t.gutter; renderMath(g); }
+    this.q('.tl-svg-wrap').innerHTML = t.svg;
+    const cur = this.q('.tl-cur'), sc = this.tl;
+    if (cur && sc.scrollWidth > sc.clientWidth) {
+      const x = +cur.getAttribute('x') + GUT;
+      if (x < sc.scrollLeft + GUT || x + 80 > sc.scrollLeft + sc.clientWidth) sc.scrollLeft = Math.max(0, x - sc.clientWidth / 2);
+    }
+  }
+  render(animate) {
+    this.renderTimeline();
+    const st = this.steps[this.idx];
+    if (this.cfg.zoom) {
+      const d = this.cfg.zoom(st, this.variant, this.fresh), z = this.q('.zoom');
+      z.innerHTML = d.svg(animate && !reduceMotion ? ' anim' : '');
+      if (animate) animateDots(z.querySelector('svg'), d.wires);
+    }
+    this.cfg.info(this, this.q('.info'));
+    this.q('[data-rv]') && this.root.querySelectorAll('[data-rv]').forEach(b => b.setAttribute('aria-pressed', b.dataset.rv === this.review));
+    this.q('[data-a=prev]').disabled = this.idx === 0;
+    this.q('[data-a=next]').disabled = this.idx === this.steps.length - 1;
+  }
+}
+
+// Standard info panel: current word, worked numbers, verdict at the last word.
+function stdInfo(worked, verdicts) {
+  return (lab, el) => {
+    const { steps, idx } = lab, st = steps[idx], end = idx === steps.length - 1;
+    const lines = worked(st, lab);
+    let html = `<div class="now">Word ${idx + 1} of ${steps.length}<b>“${esc(st.word)}”</b></div><div class="worked">`;
+    html += lines.map(l => `<div class="wl">${l.label ? `<span class="lbl">${l.label}</span>` : ''}${l.parts.map(q => `<span class="p m">${q}</span>`).join('')}</div>`).join('');
+    html += '</div>';
+    if (end) html += verdicts(steps).map(v => {
+      const word = verdict(v.y), ok = word === 'Positive';
+      return `<div class="verdict ${ok ? 'ok' : 'bad'}">${v.label}: ${word} ${ok ? '✓ correct' : '✗ wrong'}</div>`;
+    }).join('');
+    el.innerHTML = html; renderMath(el);
+  };
+}
+const yLine = st => ({ parts: [T`\hat{y} = h_t = ${n(st.h)}`] });
+const lstmWorked = (st, lab) => {
+  const v = lab.variant, end = lab.idx === lab.steps.length - 1;
+  const cSym = T`C_t = ${v.forget ? T`\Fg\cdot ` : ''}C_{t-1} + ${v.input ? T`\Ig\cdot` : ''}\Cn`;
+  const cNum = `= ${v.forget ? `${p(st.f)} \\times ` : ''}${p(st.CPrev)} + ${v.input ? `${p(st.i)} \\times ` : ''}${p(st.Cc)}`;
+  const lines = [{ parts: [cSym, cNum, `= ${n(st.C)}`] }];
+  lines.push(v.output
+    ? { parts: [T`h_t = \Og\cdot\tanh(C_t)`, T`= ${p(st.o)} \times \tanh(${n(st.C)})`, `= ${n(st.h)}`] }
+    : { parts: [T`h_t = \tanh(C_t)`, T`= \tanh(${n(st.C)})`, `= ${n(st.h)}`] });
+  if (end) lines.push(yLine(st));
+  return lines;
+};
+const VARIANTS = [
+  { forget: true, input: false, output: false },
+  { forget: true, input: true, output: false },
+  { forget: true, input: true, output: true }
+];
+const LSTM_ROWS = v => [
+  { kind: 'pill', cls: 'f', get: s => s.f, word: 'forget', sym: T`\Fg` },
+  ...(v.input ? [{ kind: 'pill', cls: 'i', get: s => s.i, word: 'input', sym: T`\Ig` }] : []),
+  ...(v.output ? [{ kind: 'pill', cls: 'o', get: s => s.o, word: 'output', sym: T`\Og` }] : []),
+  { kind: 'bar', get: s => s.C, word: 'lane', sym: 'C_t' },
+  { kind: 'bar', get: s => s.h, word: 'output', sym: 'h_t' }
+];
+
+const LABS = {
+  rnn: {
+    title: 'Lab 1 <span>· RNN reads Review A</span>', reviews: ['A'], lane: null,
+    run: rv => rnn(REVIEWS[rv]),
+    rows: () => [{ kind: 'bar', get: s => s.h, word: 'memory', sym: 'h_t' }],
+    zoom: st => zoomRNN(st),
+    info: stdInfo((st, lab) => {
+      const lines = [{ parts: [T`h_t = \tanh(w\cdot x_t + w_h\cdot h_{t-1} + b)`, T`= \tanh(${n(st.wx)} + ${p(WEIGHTS.rnn.wh * st.hPrev)} + ${n(WEIGHTS.rnn.b, 0)})`, `= ${n(st.h)}`] }];
+      if (lab.idx === lab.steps.length - 1) lines.push(yLine(st));
+      return lines;
+    }, steps => [{ label: 'Verdict', y: last(steps).h }])
+  },
+  lane: {
+    title: 'Lab 2 <span>· memory lane vs RNN, Review A</span>', reviews: ['A'], lane: 'C',
+    run: rv => { const R = rnn(REVIEWS[rv]); return laneOnly(REVIEWS[rv]).map((s, i) => ({ ...s, rnnH: R[i].h })); },
+    rows: () => [
+      { kind: 'bar', get: s => s.rnnH, word: 'RNN', sym: 'h_t' },
+      { kind: 'signed', get: s => s.Cc, word: 'proposal', sym: T`\Cn` },
+      { kind: 'bar', get: s => s.C, word: 'lane', sym: 'C_t' }
+    ],
+    zoom: st => zoomLSTM(st, {}),
+    info: stdInfo((st, lab) => {
+      const lines = [
+        { parts: [T`C_t = C_{t-1} + \Cn`, `= ${p(st.CPrev)} + ${p(st.Cc)}`, `= ${n(st.C)}`] },
+        { parts: [T`h_t = \tanh(C_t)`, T`= \tanh(${n(st.C)})`, `= ${n(st.h)}`] },
+        { label: 'RNN, same word', parts: [T`h_t = ${n(st.rnnH)}`] }
+      ];
+      return lines;
+    }, steps => [{ label: 'RNN verdict', y: last(steps).rnnH }, { label: 'Lane verdict', y: last(steps).h }])
+  },
+  laneB: {
+    title: 'Lab 3 <span>· memory lane, Review B</span>', reviews: ['B'], lane: 'C',
+    run: rv => laneOnly(REVIEWS[rv]),
+    rows: () => [
+      { kind: 'signed', get: s => s.Cc, word: 'proposal', sym: T`\Cn` },
+      { kind: 'bar', get: s => s.C, word: 'lane', sym: 'C_t' }
+    ],
+    zoom: st => zoomLSTM(st, {}),
+    info: stdInfo((st, lab) => {
+      const lines = [
+        { parts: [T`C_t = C_{t-1} + \Cn`, `= ${p(st.CPrev)} + ${p(st.Cc)}`, `= ${n(st.C)}`] },
+        { parts: [T`h_t = \tanh(C_t)`, T`= \tanh(${n(st.C)})`, `= ${n(st.h)}`] }
+      ];
+      if (lab.idx === lab.steps.length - 1) lines.push(yLine(st));
+      return lines;
+    }, steps => [{ label: 'Verdict', y: last(steps).h }])
+  },
+  build: {
+    title: 'Lab 4 <span>· building the LSTM, Review B</span>', reviews: ['B'], lane: 'C', variant: VARIANTS[0],
+    run: (rv, v) => lstm(REVIEWS[rv], v),
+    rows: v => LSTM_ROWS(v),
+    zoom: (st, v, fresh) => zoomLSTM(st, v, fresh),
+    info: stdInfo(lstmWorked, steps => [{ label: 'Verdict', y: last(steps).h }])
+  },
+  lstm: {
+    title: 'Lab 5 <span>· the complete LSTM</span>', reviews: ['B', 'A'], lane: 'C', variant: VARIANTS[2],
+    run: (rv, v) => lstm(REVIEWS[rv], v),
+    rows: v => LSTM_ROWS(v),
+    zoom: (st, v) => zoomLSTM(st, v),
+    info: stdInfo(lstmWorked, steps => [{ label: 'Verdict', y: last(steps).h }])
+  },
+  gru: {
+    title: 'Lab 7 <span>· the GRU</span>', reviews: ['B', 'A'], lane: 'h',
+    run: rv => gru(REVIEWS[rv]),
+    rows: () => [
+      { kind: 'pill', cls: 'z', get: s => s.z, word: 'update', sym: T`\Zg` },
+      { kind: 'pill', cls: 'r', get: s => s.r, word: 'reset', sym: T`\Rg` },
+      { kind: 'bar', get: s => s.h, word: 'memory', sym: 'h_t' }
+    ],
+    zoom: st => zoomGRU(st),
+    info: stdInfo((st, lab) => {
+      const lines = [
+        { parts: [T`\Rg\cdot h_{t-1}`, T`= ${p(st.r)} \times ${p(st.hPrev)}`, `= ${n(st.rh)}`] },
+        { parts: [T`h_t = (1-\Zg)\cdot h_{t-1} + \Zg\cdot\Hn`, T`= ${p(1 - st.z)} \times ${p(st.hPrev)} + ${p(st.z)} \times ${p(st.hc)}`, `= ${n(st.h)}`] }
+      ];
+      if (lab.idx === lab.steps.length - 1) lines.push(yLine(st));
+      return lines;
+    }, steps => [{ label: 'Verdict', y: last(steps).h }])
+  }
+};
+
+/* ---------- section 7: learning signal travelling backward ---------- */
+LABS.signal = (() => {
+  const A = REVIEWS.A, R = rnn(A), L = lstm(A), from = A.findIndex(t => t.tok === 'brilliant');
+  const sr = backSignal(R, from, rnnFactor), sl = backSignal(L, from, laneFactor);
+  const T0 = A.length - 1;
+  return {
+    title: 'Lab 6 <span>· learning signal from “.” back to “brilliant”, Review A</span>', reviews: ['A'],
+    run: () => sr.map((s, k) => ({ word: s.word, t: s.t, rnn: s, lane: sl[k] })),
+    timeline(lab) {
+      const k = lab.idx, cols = A.length - from, cw = Math.max(64, Math.min(72, Math.floor((lab.tl.clientWidth - GUT) / cols)));
+      const RB = 74, H = 32 + RB * 2 + 4, W = cols * cw, cx = t => (t - from) * cw + cw / 2, o = [];
+      const curT = T0 - k;
+      o.push(`<rect class="tl-cur" x="${(curT - from) * cw + 2}" y="1" width="${cw - 4}" height="${H - 2}" rx="10"/>`);
+      for (let t = from; t <= T0; t++) o.push(`<text class="tl-word${t === curT ? ' cur' : t < curT ? ' later' : ''}" x="${cx(t)}" y="22">${esc(A[t].word)}</text>`);
+      [[sr, 'neg'], [sl, 'pos']].forEach(([list, cls], row) => {
+        const base = 32 + RB * (row + 1) - 6;
+        o.push(`<line class="tl-zero" x1="4" y1="${base}" x2="${W - 4}" y2="${base}"/>`);
+        list.forEach((s, j) => {
+          if (j > k) return;
+          const hgt = s.signal * 46;
+          if (hgt >= 0.5) o.push(`<rect class="tl-bar ${cls}${j === k ? ' grow' : ''}" x="${cx(s.t) - 12}" y="${base - hgt}" width="24" height="${hgt}" rx="2"/>`);
+          o.push(`<text class="tl-num ${cls}" x="${cx(s.t)}" y="${base - hgt - 6}">${pct(s.signal, true)}</text>`);
+        });
+      });
+      for (let t = from; t <= T0; t++) o.push(`<rect class="tl-hit" data-i="${T0 - t}" x="${(t - from) * cw}" y="0" width="${cw}" height="${H}"><title>${esc(A[t].word)}</title></rect>`);
+      const gutter = `<div class="g-row" style="height:32px"><span>word</span></div><div class="g-row" style="height:${RB}px"><span>RNN</span></div><div class="g-row" style="height:${RB}px"><span>LSTM lane</span></div>`;
+      return { gutter, svg: `<svg class="tl-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${o.join('')}</svg>` };
+    },
+    info(lab, el) {
+      const k = lab.idx, a = sr[k], b = sl[k];
+      let html = `<div class="big2"><div class="neg"><span>RNN signal at “${esc(a.word)}”</span><b>${pct(a.signal)}</b></div><div class="pos"><span>Lane signal at “${esc(b.word)}”</span><b>${pct(b.signal)}</b></div></div><div class="worked">`;
+      if (k === 0) html += `<div class="wl"><span class="lbl">The signal starts at the verdict, at 100%.</span></div>`;
+      else {
+        const pa = sr[k - 1], pb = sl[k - 1], P = v => pct(v).replace('%', '\\%');
+        html += `<div class="wl"><span class="lbl">RNN, one step back</span><span class="p m">${P(pa.signal)} \\times w_h\\cdot\\tanh'</span><span class="p m">= ${P(pa.signal)} \\times ${n(pa.factor)}</span><span class="p m">= ${P(a.signal)}</span></div>`;
+        html += `<div class="wl"><span class="lbl">Lane, one step back</span><span class="p m">${P(pb.signal)} \\times \\Fg</span><span class="p m">= ${P(pb.signal)} \\times ${n(pb.factor)}</span><span class="p m">= ${P(b.signal)}</span></div>`;
+      }
+      el.innerHTML = html + '</div>'; renderMath(el);
+    }
+  };
+})();
+
+/* ---------- static visuals ---------- */
+function drawRecap() {
+  const d = new Draw(760, 252), Y = 135, X0 = 300, X1 = 520, SP = 410, SC = 355;
+  d.label(118, Y - 6, 'word', sy('x', 't'), '', 'end');
+  d.wire([[130, Y], [X0, Y]]); d.arrow(X0, Y, 'r');
+  d.label(200, Y - 33, 'input weight', '<tspan>w</tspan>');
+  d.wire([[X1, Y], [660, Y]]); d.arrow(660, Y, 'r');
+  d.label(672, Y - 6, 'memory', sy('h', 't'), '', 'start');
+  d.wire([[600, Y], [600, 58], [SC, 58], [SC, 100]]); d.arrow(SC, 100, 'd');
+  d.label(478, 20, 'memory weight', sy('w', 'h'));
+  d.label(SC - 18, 68, 'old memory', sy('h', 't-1'), '', 'end');
+  d.wire([[SC, 236], [SC, 170]]); d.arrow(SC, 170, 'u');
+  d.label(SC + 14, 210, 'bias', '<tspan>b</tspan>', '', 'start');
+  d.add(`<g class="bx n"><rect x="${X0}" y="100" width="${X1 - X0}" height="70" rx="10"/><line x1="${SP}" y1="108" x2="${SP}" y2="162"/>
+    <text class="gl" x="${SC}" y="132" style="font-size:24px">Σ</text><text class="gl" x="${(SP + X1) / 2}" y="132" style="font-size:22px">tanh</text>
+    <text class="lb" x="${SC}" y="156" text-anchor="middle">weighted sum</text><text class="lb" x="${(SP + X1) / 2}" y="156" text-anchor="middle">activation</text></g>`);
+  document.getElementById('recap-neuron').innerHTML = d.svg();
+  const parts = [['h_t', 'memory after word t'], '=', ['\\tanh', 'activation'], '(', ['w', 'input weight'], '\\cdot', ['x_t', 'word t'], '+',
+    ['w_h', 'memory weight'], '\\cdot', ['h_{t-1}', 'memory after word t − 1'], '+', ['b', 'bias'], ')'];
+  const an = document.getElementById('anno');
+  an.innerHTML = parts.map(q => Array.isArray(q) ? `<div class="t"><span class="m">${q[0]}</span><small>${q[1]}</small></div>` : `<div class="op"><span class="m">${q}</span></div>`).join('');
+}
+
+function drawVocab() {
+  const show = { i: 'I', sunday: 'Sunday' }, keys = Object.keys(VOCAB), half = Math.ceil(keys.length / 2);
+  const cell = v => v === 0 ? '<td class="z0">0</td>' : `<td>${Number.isInteger(v) ? v : v.toFixed(2)}</td>`;
+  const table = ks => `<table><thead><tr><th>word</th><th>positive</th><th>negative</th><th>turn</th><th>end</th></tr></thead><tbody>${ks.map(k => `<tr><td>${esc(show[k] || k)}</td>${VOCAB[k].map(cell).join('')}</tr>`).join('')}</tbody></table>`;
+  document.getElementById('vocab').innerHTML = table(keys.slice(0, half)) + table(keys.slice(half));
+  document.getElementById('rule-pos').innerHTML = rich('$\\hat{y} > 0.3$ → Positive');
+  document.getElementById('rule-uns').innerHTML = rich('otherwise → Unsure');
+  document.getElementById('rule-neg').innerHTML = rich('$\\hat{y} < -0.3$ → Negative');
+}
+
+function cards(id, list) {
+  document.getElementById(id).innerHTML = list.map(c => `<div class="card-sym ${c.ac || ''}${c.small ? ' small' : ''}"><div class="ns">New symbol</div><div class="sym">${c.html || `<span class="m">${c.sym}</span>`}</div><div class="mean">${rich(c.mean)}</div><div class="range">${c.range}</div></div>`).join('');
+}
+function formulas(id, list, fresh = []) {
+  document.getElementById(id).innerHTML = list.map((f, k) => `<div class="frow${fresh.includes(k) ? ' new' : ''}"><span class="fl">${f[0]}</span><span class="m">${f[1]}</span></div>`).join('');
+}
+const F = {
+  f: ['forget gate', T`\Fg = \sigma(w_f\cdot x_t + w_{hf}\cdot h_{t-1} + b_f)`],
+  i: ['input gate', T`\Ig = \sigma(w_i\cdot x_t + w_{hi}\cdot h_{t-1} + b_i)`],
+  o: ['output gate', T`\Og = \sigma(w_o\cdot x_t + w_{ho}\cdot h_{t-1} + b_o)`],
+  c: ['proposal', T`\Cn = \tanh(w_C\cdot x_t + w_{hC}\cdot h_{t-1} + b_C)`],
+  lane: ['memory lane', T`C_t = \Fg\cdot C_{t-1} + \Ig\cdot\Cn`],
+  h: ['output', T`h_t = \Og\cdot\tanh(C_t)`]
+};
+const weightCard = (g, ac, what) => ({ sym: T`w_${g},\ w_{h${g}},\ b_${g}`, mean: `the ${what}'s own $w$, $w_h$ and $b$`, range: 'learned in training', ac, small: true });
+
+function gateWidget() {
+  const root = document.getElementById('gate'), svg = root.querySelector('svg'), wrap = root.querySelector('.sig-wrap');
+  const MEM = 0.90;
+  let s = 0, drag = false, geo = null;
+  function draw() {
+    const W = Math.max(300, Math.min(520, wrap.clientWidth)), H = 290, pl = 52, pr = 22, pt = 26, pb = 58;
+    const X = v => pl + (v + 6) / 12 * (W - pl - pr), Y = g => pt + (1 - g) * (H - pt - pb);
+    geo = { X, W, pl, pr };
+    let path = '';
+    for (let k = 0; k <= 96; k++) { const v = -6 + k / 8; path += (k ? 'L' : 'M') + X(v).toFixed(1) + ' ' + Y(sigmoid(v)).toFixed(1); }
+    const g = sigmoid(s), hx = X(s), hy = Y(g);
+    svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.innerHTML = `
+      ${[0, 0.5, 1].map(v => `<line class="grid" x1="${pl}" y1="${Y(v)}" x2="${W - pr}" y2="${Y(v)}"/><text class="tick" x="${pl - 8}" y="${Y(v) + 5}" text-anchor="end">${v}</text>`).join('')}
+      <line class="axis" x1="${pl}" y1="${Y(0)}" x2="${W - pr}" y2="${Y(0)}"/><line class="axis" x1="${X(0)}" y1="${pt - 6}" x2="${X(0)}" y2="${Y(0)}"/>
+      ${[-6, 0, 6].map(v => `<text class="tick" x="${X(v)}" y="${Y(0) + 22}" text-anchor="middle">${v}</text>`).join('')}
+      <text class="ax" x="${(pl + W - pr) / 2}" y="${H - 8}" text-anchor="middle">weighted sum Σ</text>
+      <path class="curve" d="${path}"/>
+      <line class="guide" x1="${hx}" y1="${hy}" x2="${pl}" y2="${hy}"/><line class="guide" x1="${hx}" y1="${hy}" x2="${hx}" y2="${Y(0)}"/>
+      <text class="hv" x="${hx + (s > 2 ? -16 : 16)}" y="${hy + (g > 0.5 ? 26 : -12)}" text-anchor="${s > 2 ? 'end' : 'start'}">gate ${g.toFixed(2)}</text>
+      <g class="handle" tabindex="0" role="slider" aria-label="Weighted sum" aria-valuemin="-6" aria-valuemax="6" aria-valuenow="${s.toFixed(1)}" aria-valuetext="gate ${g.toFixed(2)}"><circle cx="${hx}" cy="${hy}" r="12"/></g>`;
+    const out = MEM * g;
+    document.getElementById('bars3').innerHTML = `
+      <span class="bl">memory</span><div class="track"><div class="fill" style="width:${MEM * 100}%;background:var(--pos)"></div></div><span class="bv">${MEM.toFixed(2)}</span>
+      <span class="op3">×</span>
+      <span class="bl">gate</span><div class="track"><div class="fill" style="width:${g * 100}%;background:var(--ink-2)"></div></div><span class="bv">${g.toFixed(2)}</span>
+      <span class="op3">=</span>
+      <span class="bl">what passes</span><div class="track"><div class="fill" style="width:${out * 100}%;background:var(--pos)"></div></div><span class="bv">${out.toFixed(2)}</span>`;
+    tex(document.getElementById('gate-eq'), `${MEM.toFixed(2)} \\times ${g.toFixed(2)} = ${out.toFixed(2)}`);
+  }
+  const setFromEvent = e => { const r = svg.getBoundingClientRect(); s = Math.max(-6, Math.min(6, ((e.clientX - r.left) - geo.pl) / (geo.W - geo.pl - geo.pr) * 12 - 6)); draw(); };
+  svg.addEventListener('pointerdown', e => { drag = true; svg.setPointerCapture(e.pointerId); setFromEvent(e); });
+  svg.addEventListener('pointermove', e => { if (drag) setFromEvent(e); });
+  svg.addEventListener('pointerup', () => { drag = false; svg.querySelector('.handle').focus({ preventScroll: true }); });
+  svg.addEventListener('keydown', e => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault(); s = Math.max(-6, Math.min(6, s + (e.key === 'ArrowRight' ? 0.5 : -0.5))); draw();
+    svg.querySelector('.handle').focus({ preventScroll: true });
+  });
+  new ResizeObserver(draw).observe(wrap);
+  draw();
+}
+
+function drawMapping() {
+  document.getElementById('map').innerHTML = `
+    <div class="mh">LSTM</div><div></div><div class="mh">GRU</div>
+    <div class="side"><span class="chipx">memory lane <span class="m">C_t</span></span><span class="chipx">output <span class="m">h_t</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx">one memory</span></div>
+    <div class="side"><span class="chipx f">forget gate <span class="m">\\Fg</span></span><span class="chipx i">input gate <span class="m">\\Ig</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx z">update gate <small>keeps a share, writes the rest</small></span></div>
+    <div class="side"><span class="chipx o">output gate <span class="m">\\Og</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx gone">not needed</span></div>
+    <div class="side"><span class="chipx c">proposal <span class="m">\\Cn</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx c">proposal</span><span class="chipx r">+ reset gate</span></div>`;
+}
+
+function drawAtBut() {
+  const k = REVIEWS.B.findIndex(t => t.tok === 'but');
+  const a = gru(REVIEWS.B)[k], b = gru(REVIEWS.B, { reset: false })[k];
+  const bar = v => { const w = Math.min(1, Math.abs(v)) * 50; return `<div class="hbar"><i style="${v < 0 ? `right:50%` : `left:50%`};width:${w}%;background:var(--${v < 0 ? 'neg' : 'pos'})"></i></div><div class="hbar-l"><span>−1</span><span>0</span><span>1</span></div>`; };
+  const pane = (title, s) => `<div class="pane"><h4>${title}</h4>
+    <div class="wl"><span class="p m">\\Rg = ${n(s.r)}</span></div>
+    <div class="wl"><span class="p m">\\Rg\\cdot h_{t-1}</span><span class="p m">= ${p(s.r)} \\times ${p(s.hPrev)}</span><span class="p m">= ${n(s.rh)}</span></div>
+    <div class="wl"><span class="p m">h_t = ${n(s.h)}</span></div>${bar(s.h)}</div>`;
+  document.getElementById('at-but').innerHTML = pane('With the reset gate', a) + pane('Reset gate forced to 1', b);
+}
+
+function drawBi() {
+  const S = [['He', 'said', 'Teddy', 'bears', 'are', 'on', 'sale'], ['He', 'said', 'Teddy', 'Roosevelt', 'was', 'a', 'president']];
+  const key = 2, cw = 94, G = 150, W = G + cw * 7, H = 128;
+  document.getElementById('bi').innerHTML = S.map(ws => {
+    const cx = i => G + i * cw + cw / 2, o = [];
+    o.push(`<rect class="keycol" x="${G + key * cw + 4}" y="2" width="${cw - 8}" height="${H - 4}" rx="10"/>`);
+    ws.forEach((w, i) => o.push(`<text class="bw${i === key ? ' key' : ''}" x="${cx(i)}" y="26">${w}</text>`));
+    o.push(`<text class="bl" x="0" y="${66}">forward reader</text><text class="bl" x="0" y="${106}">backward reader</text>`);
+    [[60, i => i <= key, 1], [100, i => i >= key, -1]].forEach(([y, on, dir]) => {
+      for (let i = 0; i < 6; i++) {
+        const lit = on(i) && on(i + 1), x1 = cx(i) + 11, x2 = cx(i + 1) - 11;
+        o.push(`<line class="${lit ? 'linkon' : 'link'}" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`);
+        const tip = dir > 0 ? x2 : x1;
+        o.push(`<polygon class="${lit ? 'dot-on' : 'dot-off'}" points="${tip},${y} ${tip - 8 * dir},${y - 5} ${tip - 8 * dir},${y + 5}"/>`);
+      }
+      ws.forEach((w, i) => o.push(`<circle class="${on(i) ? 'dot-on' : 'dot-off'}" cx="${cx(i)}" cy="${y}" r="9"/>`));
+    });
+    return `<div class="bi-scroll"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${ws.join(' ')}">${o.join('')}</svg></div>`;
+  }).join('');
+}
+
+/* ---------- section 5: building steps ---------- */
+function setupBuild(lab) {
+  const B = REVIEWS.B, fB = lstm(B, VARIANTS[0]), fiB = lstm(B, VARIANTS[1]), full = lstm(B);
+  const STEPS = [
+    { name: 'Forget gate', problem: 'The lane cannot erase. The mood from “slow” never leaves.',
+      fix: 'A forget gate scales the old lane before the proposal is added.',
+      watch: `$\\Fg$ drops to ${fmt(at(fB, 'but').f)} at “but” and wipes the lane.`,
+      cards: [{ sym: T`\Fg`, mean: 'forget gate: share of the old lane to keep', range: '0 to 1', ac: 'ac-f' }, weightCard('f', 'ac-f', 'forget gate')],
+      f: [F.f, ['memory lane', T`C_t = \Fg\cdot C_{t-1} + \Cn`], ['output', T`h_t = \tanh(C_t)`]], fresh: [0, 1] },
+    { name: 'Input gate', problem: 'Every word writes its full proposal, even “the”.',
+      fix: 'An input gate scales the proposal before it is written.',
+      watch: `$\\Ig$ stays near 0 for small words, ${fmt(at(fiB, 'long').i)} for “long”, ${fmt(at(fiB, 'slow').i)} for “slow”.`,
+      cards: [{ sym: T`\Ig`, mean: 'input gate: share of the proposal to write', range: '0 to 1', ac: 'ac-i' }, weightCard('i', 'ac-i', 'input gate')],
+      f: [F.f, F.i, F.lane, ['output', T`h_t = \tanh(C_t)`]], fresh: [1, 2] },
+    { name: 'Output gate', problem: `$h_t$ already shouts “negative” at “slow”: $h_t = ${n(at(fiB, 'slow').h)}$.`,
+      fix: 'An output gate decides how much of the lane to reveal.',
+      watch: `$\\Og$ stays near ${fmt(full[0].o)} until “.”, then opens to ${fmt(last(full).o)}.`,
+      cards: [{ sym: T`\Og`, mean: 'output gate: share of the lane to reveal', range: '0 to 1', ac: 'ac-o' }, weightCard('o', 'ac-o', 'output gate')],
+      f: [F.f, F.i, F.o, F.lane, F.h], fresh: [2, 4] }
+  ];
+  const seg = document.getElementById('step-seg');
+  seg.innerHTML = STEPS.map((s, k) => `<button data-step="${k}">${k + 1}. ${s.name}</button>`).join('');
+  function show(k, fromClick) {
+    const s = STEPS[k];
+    seg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.step === k));
+    setRich(document.getElementById('step-text'), `<p class="pf"><span class="tag problem">Problem</span><span>${s.problem}</span></p>
+      <p class="pf"><span class="tag fix">Fix</span><span>${s.fix}</span></p>`);
+    setRich(document.getElementById('step-watch'), `<p class="pf" style="margin-top:12px"><span class="tag watch">Watch</span><span>${s.watch}</span></p>`);
+    cards('step-cards', s.cards); formulas('step-f', s.f, s.fresh); renderMath(document.getElementById('s5'));
+    if (fromClick) lab.setVariant(VARIANTS[k], new Set([['forget', 'input', 'output'][k]]));
+  }
+  seg.addEventListener('click', e => { const b = e.target.closest('[data-step]'); if (b) show(+b.dataset.step, true); });
+  show(0, false);
+}
+
+/* ---------- MCQs ---------- */
+function mcqs() {
+  const A = REVIEWS.A, B = REVIEWS.B, rA = rnn(A), lA = lstm(A), lB = lstm(B);
+  const bi = A.findIndex(t => t.tok === 'brilliant'), gap = A.length - 1 - bi;
+  const sr = last(backSignal(rA, bi, rnnFactor)).signal, sl = last(backSignal(lA, bi, laneFactor)).signal;
+  const but = at(lB, 'but');
+  return {
+    1: { q: 'Why is the RNN unsure about Review A at the last word?',
+      o: ['“brilliant” was never stored in $h_t$.', `Every later word rewrote $h_t$, so “brilliant” faded.`, 'The bias $b$ pushed $h_t$ to zero.', 'The word “evening” is negative.'], a: 1,
+      e: `$h_t$ was ${fmt(at(rA, 'brilliant').h)} at “brilliant”, then each word rewrote it. At “.”, $\\hat{y} = ${n(last(rA).h)}$.` },
+    2: { q: 'A gate outputs 0.02 and the memory is 0.90. What passes?',
+      o: ['0.92', '0.88', (0.90 * 0.02).toFixed(3), '0.90'], a: 2,
+      e: `What passes $= 0.90 \\times 0.02 = ${(0.90 * 0.02).toFixed(3)}$. A gate near 0 blocks almost everything.` },
+    3: { q: 'What does $\\Fg$ do at “but” in Review B?',
+      o: [`It drops to ${fmt(but.f)} and erases the old mood.`, 'It rises to 1 and keeps “slow”.', 'It writes “but” into the lane.', 'It reveals the lane to $h_t$.'], a: 0,
+      e: `$C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn = ${p(but.f)} \\times ${p(but.CPrev)} + ${p(but.i)} \\times ${p(but.Cc)} = ${n(but.C)}$. The mood is wiped.` },
+    4: { q: 'Which gate stays almost closed until “.”?',
+      o: ['forget gate $\\Fg$', 'input gate $\\Ig$', 'output gate $\\Og$', 'none of them'], a: 2,
+      e: `$\\Og = ${n(lB[0].o)}$ for every word, then ${fmt(last(lB).o)} at “.”, so $h_t = \\Og\\cdot\\tanh(C_t)$ speaks only at the end.` },
+    5: { q: 'Why does the learning signal reach “brilliant” in the LSTM?',
+      o: [`On the lane it is multiplied only by $\\Fg \\approx ${n(lA[1].f)}$ at each step.`, 'The LSTM has no weights to train.', 'The output gate is open at every word.', `It is multiplied by $w_h\\cdot\\tanh'$ at each step.`], a: 0,
+      e: `After ${gap} steps the lane keeps ${pct(sl)}. The RNN, multiplied by about 0.5 each step, keeps ${pct(sr)}.` },
+    6: { q: 'In a GRU with $\\Zg = 0.9$, how much of $h_{t-1}$ is kept?',
+      o: ['0.9', (1 - 0.9).toFixed(1), '1.0', '0'], a: 1,
+      e: `$h_t = (1-\\Zg)\\cdot h_{t-1} + \\Zg\\cdot\\Hn$, so $1 - 0.9 = ${(1 - 0.9).toFixed(1)}$ of $h_{t-1}$ is kept.` },
+    e1: { q: 'Which line is the LSTM memory update?',
+      o: ['$C_t = C_{t-1} + \\Cn$', '$C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn$', '$C_t = \\Og\\cdot\\tanh(C_{t-1})$', '$C_t = \\tanh(w\\cdot x_t + w_h\\cdot h_{t-1} + b)$'], a: 1,
+      e: '$\\Fg$ decides how much old lane to keep. $\\Ig$ decides how much of the proposal to write.' },
+    e2: { q: 'Why does the LSTM keep “brilliant” until the end of Review A?',
+      o: ['$\\Og$ is 1 at every word.', '“brilliant” is the last word.', `$\\Fg \\approx ${n(lA[1].f)}$ keeps it, and small words write little because $\\Ig \\approx 0$.`, 'The lane is cleared at every word.'], a: 2,
+      e: `Each step keeps about 99% of $C_{t-1}$ and adds almost nothing. At “.”, $C_t = ${n(last(lA).C)}$.` },
+    e3: { q: 'What does a GRU have?',
+      o: ['A lane $C_t$ and three gates.', 'One memory and no gates.', 'One memory $h_t$ and two gates, $\\Zg$ and $\\Rg$.', 'Two memories and four gates.'], a: 2,
+      e: 'The GRU merges $C_t$ and $h_t$ into one $h_t$. $\\Zg$ keeps and writes, $\\Rg$ resets.' },
+    p1: { q: 'Why can a bidirectional RNN not generate text word by word?',
+      o: ['It has no hidden state.', 'The backward reader needs words that are not written yet.', 'It cannot use tanh.', 'It reads in one direction only.'], a: 1,
+      e: 'To write word t, the words after it do not exist yet, so the backward reader has nothing to read.' }
+  };
+}
+function setupMCQ(el, m, label) {
+  el.innerHTML = `<div class="qh">${label}</div><div class="q">${rich(m.q)}</div><div class="opts">${m.o.map((o, k) => `<button class="opt" data-k="${k}"><span class="k">${'ABCD'[k]}</span><span>${rich(o)}</span></button>`).join('')}</div><div class="explain" hidden></div>`;
+  renderMath(el);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('.opt');
+    if (!b || el.dataset.done) return;
+    el.dataset.done = 1;
+    const k = +b.dataset.k, ok = k === m.a;
+    el.querySelectorAll('.opt').forEach((x, j) => {
+      x.disabled = true;
+      if (j === m.a) x.classList.add('correct'); else if (j === k) x.classList.add('wrong'); else x.classList.add('dim');
+    });
+    const ex = el.querySelector('.explain');
+    ex.hidden = false; ex.innerHTML = `<b class="${ok ? 'ok' : 'no'}">${ok ? '✓ Correct.' : '✗ Not quite.'}</b> ${rich(m.e)}`;
+    renderMath(ex);
+  });
+}
+
+/* ---------- init ---------- */
+function init() {
+  drawRecap(); drawVocab();
+  const A = REVIEWS.A, bi = A.findIndex(t => t.tok === 'brilliant');
+  document.getElementById('s1-problem').textContent = `“brilliant” is word ${bi + 1}. ${A.length - 1 - bi} more words follow before the verdict.`;
+  document.getElementById('s7-problem').textContent = `To learn from “brilliant”, the signal must travel back ${A.length - 1 - bi} words.`;
+  cards('cards-lane', [
+    { sym: 'C_t', mean: 'memory lane after reading word t', range: 'any number', ac: 'ac-pos' },
+    { sym: T`\Cn`, mean: 'the word’s proposal, made by a Σ | tanh neuron', range: '−1 to 1', ac: 'ac-c' },
+    { sym: T`w_C,\ w_{hC},\ b_C`, mean: 'the proposal neuron’s own $w$, $w_h$ and $b$', range: 'learned in training', ac: 'ac-c', small: true }
+  ]);
+  formulas('f-lane', [F.c, ['memory lane', T`C_t = C_{t-1} + \Cn`], ['output', T`h_t = \tanh(C_t)`]]);
+  cards('cards-gate', [
+    { sym: T`\sigma`, mean: 'sigmoid: squeezes any number into 0 to 1', range: '0 to 1' },
+    { html: '<span style="font:600 22px var(--sans)">Σ | σ</span>', mean: 'a gate: the same neuron, with σ. Its output multiplies a signal.', range: '0 to 1' }
+  ]);
+  formulas('f-gate', [['any gate', T`\text{gate} = \sigma(w\cdot x_t + w_h\cdot h_{t-1} + b)`]]);
+  formulas('f-lstm', [F.f, F.i, F.o, F.c, F.lane, F.h]);
+  cards('cards-signal', [{ sym: T`\tanh'`, mean: 'slope of tanh at that word', range: '0 to 1' }]);
+  drawMapping();
+  cards('cards-gru', [
+    { sym: T`\Zg`, mean: 'update gate: share of the proposal to write', range: '0 to 1', ac: 'ac-z' },
+    { sym: T`\Rg`, mean: 'reset gate: share of the old memory the proposal may see', range: '0 to 1', ac: 'ac-r' },
+    { sym: T`\Hn`, mean: 'the GRU’s proposal for the new memory', range: '−1 to 1', ac: 'ac-c' },
+    { sym: T`w_z,\ w_{hz},\ b_z\ \ldots`, mean: 'each gate’s own $w$, $w_h$ and $b$, named by its letter', range: 'learned in training', small: true }
+  ]);
+  formulas('f-gru', [
+    ['update gate', T`\Zg = \sigma(w_z\cdot x_t + w_{hz}\cdot h_{t-1} + b_z)`],
+    ['reset gate', T`\Rg = \sigma(w_r\cdot x_t + w_{hr}\cdot h_{t-1} + b_r)`],
+    ['proposal', T`\Hn = \tanh(w_{\tilde h}\cdot x_t + w_{h\tilde h}\cdot(\Rg\cdot h_{t-1}) + b_{\tilde h})`],
+    ['memory', T`h_t = (1-\Zg)\cdot h_{t-1} + \Zg\cdot\Hn`]
+  ]);
+  drawAtBut(); drawBi();
+  gateWidget();
+  const labs = {};
+  document.querySelectorAll('[data-lab]').forEach(el => { labs[el.dataset.lab] = new Lab(el, LABS[el.dataset.lab]); });
+  setupBuild(labs.build);
+  const M = mcqs();
+  document.querySelectorAll('[data-mcq]').forEach(el => {
+    const k = el.dataset.mcq, label = k[0] === 'e' ? `Exit ticket ${k.slice(1)}` : k[0] === 'p' ? 'Post-read question' : `Question ${k}`;
+    setupMCQ(el, M[k], label);
+  });
+  renderMath();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

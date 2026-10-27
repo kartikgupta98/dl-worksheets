@@ -19,6 +19,7 @@ dependencies, no network calls at runtime.
 | CNN: From Pixels to Patterns | [`worksheet09_cnn.html`](worksheet09_cnn.html) | pixels and RGB, Sobel, convolution, ReLU, padding, stride, pooling, LeNet; section quizzes and animations |
 | Inside LeNet, AlexNet & VGG-16 | [`worksheet10_architectures.html`](worksheet10_architectures.html) | architecture diagrams, handwritten digit inference, real activation maps, guided shape and parameter exercises; self-contained and offline |
 | Inception & ResNet | [`worksheet11_inception_resnet.html`](worksheet11_inception_resnet.html) | guided architectural discovery, multiscale branches, 1×1 reductions, recorded training experiments, residual learning, MCQs, complete GoogLeNet and ResNet-18 diagrams |
+| LSTM & GRU | [`lstm-gru-worksheet.html`](lstm-gru-worksheet.html) | why the RNN forgets, memory lane, forget/input/output gates built step by step, learning signal over long gaps, GRU, bidirectional RNN post-read; live unrolled timelines and cell diagrams, MCQs; loads KaTeX and Google Fonts online |
 
 ## Kaggle competition: Flagged or Fraud?
 
