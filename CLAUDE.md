@@ -42,7 +42,7 @@ from the most recent worksheet rather than inventing one:
 | `worksheet09_cnn.html` | pixels, Sobel, convolution, ReLU, padding, stride, pooling, LeNet | yes |
 | `worksheet10_architectures.html` | LeNet, AlexNet, VGG-16: diagrams, real activation maps, shapes, parameter counts (~22 MB, data inlined; rebuild with `worksheet_tools/`) | yes |
 | `worksheet11_inception_resnet.html` | Inception and ResNet: connected visual experiments, measured training replays, guided calculations, MCQs, complete architectures | yes |
-| `lstm-gru-worksheet.html` | RNN forgetting, memory lane, LSTM gates built step by step, learning signal, GRU, bidirectional post-read. Exception to the offline rule: loads KaTeX 0.16.9 and Google Fonts from the network by request, with a plain-HTML maths fallback | not yet |
+| `lstm-gru-worksheet.html` | RNN forgetting, memory lane, LSTM gates built step by step, learning signal, GRU, bidirectional post-read. Exception to the offline rule: loads KaTeX 0.16.9 and Google Fonts from the network by request, with a plain-HTML maths fallback | yes |
 
 ## Adding a worksheet
 
