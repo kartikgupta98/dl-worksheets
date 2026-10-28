@@ -399,6 +399,11 @@ button:focus-visible,.lab:focus-visible,.handle:focus-visible{outline:3px solid 
 .trace tr.neutral th,.trace tr.neutral td{color:var(--muted);font-weight:400}
 .trace tr.neutral b{font-weight:500}
 .trace .st{font-family:var(--sans)}
+.gates3 td.sc{white-space:normal;font:400 17px var(--sans);min-width:350px}
+.gates3 td.sc .m{display:block}
+.gates3 td.sc .lv{color:var(--ink-2);font-size:15.9px;margin-top:4px}
+.train td,.train th{white-space:nowrap}
+.name-box{max-width:900px;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:var(--radius);padding:10px 16px;margin:12px 0}
 footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);font-size:17px}
 
 @media (max-width:1179px){
@@ -457,8 +462,8 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   <h3>Today’s path</h3>
   <ol class="path">
     <li><b>See the RNN forget.</b> Its memory fades a little at every word.</li>
-    <li><b>Give it a notebook.</b> A memory that only adds, so nothing fades.</li>
-    <li><b>Add three switches to the notebook:</b> an eraser, a pen and a voice. That is the LSTM.</li>
+    <li><b>Give it a long-term memory.</b> A memory that only adds, so nothing fades.</li>
+    <li><b>Add three gates to it:</b> a forget gate, an input gate and an output gate. That is the LSTM.</li>
     <li><b>A lighter version with two switches:</b> the GRU.</li>
   </ol>
   <p class="key"><b>Key idea</b><span>The RNN mixes the new word and the old memory into a new memory.</span></p>
@@ -485,12 +490,13 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 
 <!-- 2 -->
 <section class="sec" id="s2">
-  <div class="sec-head"><span class="sec-num">2</span><h2>A memory lane: the notebook</h2><span class="sec-chip">Review A</span></div>
+  <div class="sec-head"><span class="sec-num">2</span><h2>A long-term memory lane</h2><span class="sec-chip">Review A</span></div>
   <div class="prose">
-    <p class="bridge">The RNN rewrites its only memory at every word. A careful reader keeps a notebook instead.</p>
+    <p class="bridge">The RNN rewrites its only memory at every word. A careful reader keeps a separate long-term memory that is never rewritten.</p>
     <p class="pf"><span class="tag problem">Problem</span><span>The RNN has no safe place to keep “brilliant”.</span></p>
-    <p class="pf"><span class="tag fix">Fix</span><span>Add a notebook <span class="m">C_t</span>. Each word only <b>adds</b> its proposal <span class="m">\Cn</span> to it: + for a good word, − for a bad word, 0 for a neutral word. Nothing is rewritten.</span></p>
+    <p class="pf"><span class="tag fix">Fix</span><span>Add a long-term memory <span class="m">C_t</span>. Each word only <b>adds</b> its candidate <span class="m">\Cn</span> to it: + for a good word, − for a bad word, 0 for a neutral word. Nothing is rewritten.</span></p>
   </div>
+  <p class="name-box"><b>Where the name LSTM comes from.</b> <span class="m">h_t</span> is the RNN’s <b>short-term memory</b>: it is rewritten at every word and it is what the cell outputs. <span class="m">C_t</span> lets memory last <b>long</b>, across many words. Together: Long Short-Term Memory.</p>
   <div id="s2-hand"></div>
   <div class="lab" data-lab="lane"></div>
   <p class="key"><b>Key idea</b><span>Adding 0 changes nothing, so “brilliant” survives the long gap.</span></p>
@@ -499,30 +505,30 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 
 <!-- 3 -->
 <section class="sec" id="s3">
-  <div class="sec-head"><span class="sec-num">3</span><h2>The notebook cannot forget</h2><span class="sec-chip">Review B</span></div>
+  <div class="sec-head"><span class="sec-num">3</span><h2>The long-term memory cannot forget</h2><span class="sec-chip">Review B</span></div>
   <div class="prose">
-    <p class="bridge">The notebook kept “brilliant”. Now read Review B, where the opinion flips at “but”.</p>
-    <p class="pf"><span class="tag problem">Problem</span><span>“long” and “slow” make the notebook negative. At “but” nothing can erase it.</span></p>
+    <p class="bridge">The long-term memory kept “brilliant”. Now read Review B, where the opinion flips at “but”.</p>
+    <p class="pf"><span class="tag problem">Problem</span><span>“long” and “slow” make the long-term memory negative. At “but” nothing can remove it.</span></p>
   </div>
   <div id="s3-hand"></div>
   <div id="s3-think"></div>
   <div class="lab" data-lab="laneB"></div>
-  <p class="key"><b>Key idea</b><span>The notebook needs 3 switches: an eraser (what to erase), a pen (how firmly to write) and a voice (when to speak).</span></p>
+  <p class="key"><b>Key idea</b><span>The long-term memory needs 3 gates: how much to keep (forget gate), how much new to write (input gate) and how much to show (output gate).</span></p>
 </section>
 
 <!-- 4 -->
 <section class="sec" id="s4">
   <div class="sec-head"><span class="sec-num">4</span><h2>The gate: a switch that multiplies</h2></div>
   <div class="prose">
-    <p class="bridge">The eraser, the pen and the voice are all built the same way. Each one is called a <b>gate</b>. Learn one gate and you know all three.</p>
+    <p class="bridge">The forget, input and output gates are all built the same way. Each one is called a <b>gate</b>. Learn one gate and you know all three.</p>
   </div>
   <h3>Step 1 · A gate is just a number you multiply by</h3>
-  <div class="prose"><p>A gate is a number from 0 to 1. Something passes through it by being multiplied by it. Here the notebook holds <span id="gm-v"></span>, the value after “long” and “slow”.</p></div>
+  <div class="prose"><p>A gate is a number from 0 to 1. Something passes through it by being multiplied by it. Here the long-term memory holds <span id="gm-v"></span>, the value after “long” and “slow”.</p></div>
   <div class="gmult" id="gate-mult"></div>
   <p class="key"><b>Key idea</b><span>Gate 1 keeps everything. Gate 0 removes everything. Gate 0.5 keeps half.</span></p>
   <h3>Step 2 · The word decides the gate</h3>
-  <div class="prose"><p>The eraser must be <b>1</b> for normal words (keep the notebook) and <b>0</b> for “but” (erase it). So the gate has to look at the word, and it does it in two moves.</p>
-    <p class="pf"><span class="tag move">Move 1</span><span><b>Score.</b> Add up the word’s 4 numbers, each times a weight, into one score Σ. This is the same Σ box as the RNN neuron.</span></p>
+  <div class="prose"><p>The forget gate must be <b>1</b> for normal words (keep 100% of the long-term memory) and <b>0</b> for “but” (keep 0%, forget it all). So the gate has to look at the word, and it does it in two moves.</p>
+    <p class="pf"><span class="tag move">Move 1</span><span><b>Score.</b> Add up the word’s 4 numbers, each times a weight, plus a bias, into one score Σ. This is the same Σ box as the RNN neuron, and its weights are learned in training.</span></p>
     <p class="pf"><span class="tag move">Move 2</span><span><b>Squeeze.</b> The sigmoid <span class="m">\sigma</span> turns any score into a number from 0 to 1.</span></p></div>
   <div class="anchors" id="anchors"></div>
   <div class="gate" id="gate">
@@ -533,8 +539,15 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
       <p class="hint">Drag the point, or focus it and press the arrow keys. A big negative score closes the gate, a big positive score opens it.</p>
     </div>
   </div>
-  <h3>Step 3 · The eraser’s score, by hand</h3>
+  <h3>Step 3 · The forget gate’s score, by hand</h3>
   <div id="gate-ex"></div>
+  <h3>Step 4 · Who decides that the gate is 0 at “but”? Training.</h3>
+  <div class="prose">
+    <p>The sigmoid <span class="m">\sigma</span> itself is fixed. It has nothing to learn. What is learned is the score inside it: the weights <span class="m">w</span> and the bias <span class="m">b</span>. Each gate has its own.</p>
+    <p>The weights are the same for every word. The word’s 4 numbers change, so the score changes, so the same gate is open for some words and closed for others.</p>
+    <p>Training starts from random weights, so at first the forget gate keeps and forgets at random. The network reads thousands of reviews whose answers are known. Each time a verdict is wrong, backpropagation nudges every <span class="m">w</span> and <span class="m">b</span> a little toward the right answer. Reviews like B, where the opinion flips at “but”, push <span class="m">w_f^{\text{turn}}</span> down and <span class="m">b_f</span> up. Nobody writes the rule “forget at but”. It is learned from the data.</p>
+  </div>
+  <div class="xs-scroll"><table class="gates3 train" id="train"></table></div>
   <h3>The three gates at a glance</h3>
   <div class="prose"><p>Each gate has its own score, learned in training. Read each row as: “this gate is 1 on these words and 0 on those”.</p></div>
   <div class="xs-scroll"><table class="gates3" id="gates3"></table></div>
@@ -547,14 +560,14 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s5">
   <div class="sec-head"><span class="sec-num">5</span><h2>Building the LSTM</h2><span class="sec-chip">Review B</span></div>
   <div class="prose">
-    <p class="bridge">Add the three gates to the notebook, one at a time, and read Review B again.</p>
+    <p class="bridge">Add the three gates to the long-term memory, one at a time, and read Review B again.</p>
   </div>
   <div class="step-sel"><span class="lb2">Step</span><div class="seg big" id="step-seg" role="group" aria-label="Building step"></div></div>
   <div id="step-text" class="prose" style="margin-top:14px"></div>
   <div id="step-hand"></div>
   <div id="step-f"></div>
   <div class="lab" data-lab="build"></div>
-  <p class="key"><b>Key idea</b><span>Forget gate = eraser. Input gate = pen. Output gate = voice.</span></p>
+  <p class="key"><b>Key idea</b><span>Forget gate: % of the old long-term memory to keep. Input gate: % of the candidate to write. Output gate: % of the memory to show as <span class="m">h_t</span>.</span></p>
 </section>
 
 <!-- 6 -->
@@ -565,11 +578,11 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   </div>
   <div class="story" id="story"></div>
   <h3>Every word, every number</h3>
-  <div class="prose"><p>The whole review in one table. Grey rows are neutral words: the eraser keeps (1), the pen is lifted (0), so nothing changes.</p></div>
+  <div class="prose"><p>The whole review in one table. Grey rows are neutral words: the forget gate keeps 100%, the input gate writes 0%, so nothing changes.</p></div>
   <div class="xs-scroll"><table class="trace" id="trace"></table></div>
   <div id="f-lstm"></div>
   <div class="lab" data-lab="lstm"></div>
-  <p class="key"><b>Key idea</b><span>The notebook carries the memory. The eraser, pen and voice decide what to erase, write and say.</span></p>
+  <p class="key"><b>Key idea</b><span><span class="m">C_t</span> carries the long-term memory. The three gates decide how much to keep, write and show.</span></p>
   <div class="mcq" data-mcq="3"></div>
   <div class="mcq" data-mcq="4"></div>
 </section>
@@ -583,7 +596,7 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   </div>
   <div class="chain" id="s7-chain"></div>
   <div class="lab" data-lab="signal"></div>
-  <p class="key"><b>Key idea</b><span>In the notebook the signal is multiplied by the eraser, <span class="m">\Fg \approx 1</span>, so it stays strong.</span></p>
+  <p class="key"><b>Key idea</b><span>Along the long-term memory the signal is multiplied by the forget gate, <span class="m">\Fg \approx 1</span>, so it stays strong.</span></p>
   <div class="mcq" data-mcq="5"></div>
 </section>
 
@@ -591,13 +604,13 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
 <section class="sec" id="s8">
   <div class="sec-head"><span class="sec-num">8</span><h2>The GRU</h2><span class="sec-chip">Review B</span></div>
   <div class="prose">
-    <p class="bridge">The GRU uses the same idea with fewer parts. The notebook and what you say become one memory <span class="m">h_t</span>.</p>
+    <p class="bridge">The GRU uses the same idea with fewer parts. The long-term and short-term memories become one memory <span class="m">h_t</span>.</p>
   </div>
   <h3>Update gate: one slider for keep and write</h3>
-  <div class="prose"><p>The LSTM has an eraser and a pen. The GRU joins them into one gate <span class="m">\Zg</span>: keep <span class="m">1-\Zg</span> of the old memory, write <span class="m">\Zg</span> of the proposal <span class="m">\Hn</span>. The two shares always add up to 1.</p></div>
+  <div class="prose"><p>The LSTM has a forget gate and an input gate. The GRU joins them into one gate <span class="m">\Zg</span>: keep <span class="m">1-\Zg</span> of the old memory, write <span class="m">\Zg</span> of the candidate <span class="m">\Hn</span>. The two shares always add up to 1.</p></div>
   <div class="split" id="split"></div>
   <div id="sym-update"></div>
-  <h3>Reset gate: a fresh proposal at “but”</h3>
+  <h3>Reset gate: a fresh candidate at “but”</h3>
   <div class="prose"><p id="reset-why"></p></div>
   <div class="cmp2" id="at-but"></div>
   <h3>The two GRU gates at a glance</h3>
@@ -617,12 +630,12 @@ footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);f
   <table class="cmp">
     <thead><tr><th></th><th>LSTM</th><th>GRU</th></tr></thead>
     <tbody>
-      <tr><th>Memory</th><td>a notebook <span class="m">C_t</span>, and <span class="m">h_t</span> for what it says</td><td>one memory <span class="m">h_t</span>: the notebook is what it says</td></tr>
-      <tr><th>Gates</th><td>eraser <span class="m">\Fg</span>, pen <span class="m">\Ig</span>, voice <span class="m">\Og</span></td><td>update <span class="m">\Zg</span>, reset <span class="m">\Rg</span></td></tr>
-      <tr><th>Erase and write</th><td>eraser and pen are separate</td><td>one slider: keep <span class="m">1-\Zg</span>, write <span class="m">\Zg</span></td></tr>
+      <tr><th>Memory</th><td>long-term <span class="m">C_t</span> and short-term <span class="m">h_t</span></td><td>one memory <span class="m">h_t</span> does both jobs</td></tr>
+      <tr><th>Gates</th><td>forget <span class="m">\Fg</span>, input <span class="m">\Ig</span>, output <span class="m">\Og</span></td><td>update <span class="m">\Zg</span>, reset <span class="m">\Rg</span></td></tr>
+      <tr><th>Erase and write</th><td>forget and input gates are separate</td><td>one slider: keep <span class="m">1-\Zg</span>, write <span class="m">\Zg</span></td></tr>
       <tr><th>Σ boxes (neurons)</th><td>4: <span class="m">\Fg</span>, <span class="m">\Ig</span>, <span class="m">\Og</span>, <span class="m">\Cn</span></td><td>3: <span class="m">\Zg</span>, <span class="m">\Rg</span>, <span class="m">\Hn</span></td></tr>
       <tr><th>Speed</th><td>slower: 4 Σ boxes per word</td><td>faster: 3 Σ boxes per word</td></tr>
-      <tr><th>Long memory</th><td>yes: the eraser keeps <span class="m">\Fg\cdot C_{t-1}</span></td><td>yes: the slider keeps <span class="m">(1-\Zg)\cdot h_{t-1}</span></td></tr>
+      <tr><th>Long memory</th><td>yes: the forget gate keeps <span class="m">\Fg\cdot C_{t-1}</span></td><td>yes: the slider keeps <span class="m">(1-\Zg)\cdot h_{t-1}</span></td></tr>
     </tbody>
   </table>
 </section>
@@ -940,17 +953,17 @@ function zoomRNN(st) {
   return d;
 }
 
-// LSTM family. v = which gates are present; with none it is the plain notebook.
+// LSTM family. v = which gates are present; with none it is the plain long-term lane.
 function zoomLSTM(st, v, fresh) {
   const d = new Draw(740, 318);
   const LY = 52, GY = 194, BY = 252, LB = 280, L0 = 112, L1 = 636;
   const XF = 200, XI = 310, XC = 430, XP = 370, YP = 118, XO = 540, YT = 84, YX = 140;
-  d.label(100, LY - 4, 'old notebook', sy('C', 't-1'), '', 'end');
-  d.label(646, LY - 4, 'notebook', sy('C', 't'), '', 'start');
-  d.label(646, YX - 4, 'what it says', sy('h', 't'), '', 'start');
+  d.label(100, LY - 4, 'old long-term', sy('C', 't-1'), '', 'end');
+  d.label(646, LY - 4, 'long-term', sy('C', 't'), '', 'start');
+  d.label(646, YX - 4, 'short-term', sy('h', 't'), '', 'start');
   d.wire([[12, BY], [v.output ? XO : XC, BY]], '', 0);
   inputsLabel(d, st, BY);
-  // forget gate: the eraser scales the old notebook
+  // forget gate scales the old long-term memory
   if (v.forget) {
     const kept = st.f * st.CPrev;
     d.lane(L0, XF - 13, LY, st.CPrev, 0); d.val(152, LY - 12, st.CPrev, sgn(st.CPrev), 'middle', 0);
@@ -959,14 +972,14 @@ function zoomLSTM(st, v, fresh) {
       d.wire([[XF, GY - 21], [XF, LY + 13]], 'f', 1); d.val(XF + 9, 130, st.f, 'f', 'start', 1);
       d.lane(XF + 13, XP - 13, LY, kept, 2); d.op(XF, LY, '×', 'f');
       d.val(287, LY - 12, kept, sgn(kept), 'middle', 2);
-      d.label(XF, LB, 'forget (eraser)', sy('f', 't'), 'f');
+      d.label(XF, LB, 'forget gate', sy('f', 't'), 'f');
     });
   } else {
     d.lane(L0, XP - 13, LY, st.CPrev, 0); d.val(240, LY - 12, st.CPrev, sgn(st.CPrev), 'middle', 0);
   }
-  // proposal, scaled by the pen when it exists
+  // candidate, scaled by the input gate when it exists
   d.wire([[XC, BY], [XC, GY + 21]], '', 0); d.box(XC, GY, 'tanh', 'c'); sigmaLabel(d, XC, BY - 12, st.sC);
-  d.label(XC, LB, 'proposal', sy('C̃', 't'), 'c');
+  d.label(XC, LB, 'candidate', sy('C̃', 't'), 'c');
   if (v.input) {
     const w = st.i * st.Cc;
     d.wire([[XC, GY - 21], [XC, YP], [XP + 13, YP]], 'c', 1); d.val(XC + 9, 158, st.Cc, 'c', 'start', 1);
@@ -974,7 +987,7 @@ function zoomLSTM(st, v, fresh) {
       d.wire([[XI, BY], [XI, GY + 21]], '', 0); d.box(XI, GY, 'σ', 'i'); sigmaLabel(d, XI, BY - 12, st.sI);
       d.wire([[XI, GY - 21], [XI, YP], [XP - 13, YP]], 'i', 1); d.val(XI - 9, 158, st.i, 'i', 'end', 1);
       d.op(XP, YP, '×', 'i');
-      d.label(XI, LB, 'input (pen)', sy('i', 't'), 'i');
+      d.label(XI, LB, 'input gate', sy('i', 't'), 'i');
     });
     d.wire([[XP, YP - 13], [XP, LY + 13]], '', 2); d.val(XP + 9, 94, w, sgn(w), 'start', 2);
   } else {
@@ -982,7 +995,7 @@ function zoomLSTM(st, v, fresh) {
   }
   d.lane(XP + 13, L1 - 8, LY, st.C, 2); d.arrow(L1, LY, 'r', sgn(st.C)); d.op(XP, LY, '+');
   d.val(462, LY - 12, st.C, sgn(st.C), 'middle', 2);
-  // what it says: tanh of the notebook, scaled by the voice when it exists
+  // short-term memory: tanh of the long-term memory, scaled by the output gate when it exists
   d.wire([[XO, LY + 4], [XO, YT - 13]], '', 3); d.pillOp(XO, YT, 'tanh');
   if (v.output) {
     d.wire([[XO, YT + 13], [XO, YX - 13]], '', 3); d.val(XO - 9, 124, st.tC, sgn(st.tC), 'end', 3);
@@ -990,7 +1003,7 @@ function zoomLSTM(st, v, fresh) {
       d.wire([[XO, BY], [XO, GY + 21]], '', 0); d.box(XO, GY, 'σ', 'o'); sigmaLabel(d, XO, BY - 12, st.sO);
       d.wire([[XO, GY - 21], [XO, YX + 13]], 'o', 1); d.val(XO + 9, 166, st.o, 'o', 'start', 1);
       d.op(XO, YX, '×', 'o');
-      d.label(XO, LB, 'output (voice)', sy('o', 't'), 'o');
+      d.label(XO, LB, 'output gate', sy('o', 't'), 'o');
     });
     d.wire([[XO + 13, YX], [L1 - 8, YX]], '', 3);
   } else {
@@ -1010,7 +1023,7 @@ function zoomGRU(st) {
   d.wire([[12, BY], [XH, BY]], '', 0);
   inputsLabel(d, st, BY);
   d.lane(L0, XZ - 13, LY, st.hPrev, 0); d.val(152, LY - 12, st.hPrev, sgn(st.hPrev), 'middle', 0);
-  // update gate: keep 1 − z of the old memory, write z of the proposal
+  // update gate: keep 1 − z of the old memory, write z of the candidate
   d.wire([[XZ, BY], [XZ, GY + 21]], '', 0); d.box(XZ, GY, 'σ', 'z'); sigmaLabel(d, XZ, BY - 12, st.sZ);
   d.wire([[XZ, GY - 21], [XZ, YN + 17]], 'z', 1); d.val(XZ + 9, 152, st.z, 'z', 'start', 1);
   d.wire([[XZ, YB], [490, YB], [490, YW], [XH - 13, YW]], 'z', 1);
@@ -1019,20 +1032,20 @@ function zoomGRU(st) {
   d.op(XZ, LY, '×', 'z');
   d.lane(XZ + 13, XH - 13, LY, kept, 3); d.val(360, LY - 12, kept, sgn(kept), 'middle', 3);
   d.label(XZ, LB, 'update (keep / write)', sy('z', 't'), 'z');
-  // reset gate scales the old memory before the proposal sees it
+  // reset gate scales the old memory before the candidate sees it
   d.wire([[XR, BY], [XR, GY + 21]], '', 0); d.box(XR, GY, 'σ', 'r'); sigmaLabel(d, XR, BY - 12, st.sR);
   d.wire([[XR + 38, GY], [XM - 13, GY]], 'r', 1); d.val(378, GY - 12, st.r, 'r', 'middle', 1);
   d.wire([[XM, BY], [XM, GY + 13]], '', 0); d.op(XM, GY, '×', 'r');
   d.wire([[XM + 13, GY], [XH - 48, GY]], '', 2); d.val(467, GY - 12, st.rh, sgn(st.rh), 'middle', 2);
   d.label(XR + 10, LB, 'reset', sy('r', 't'), 'r');
-  // proposal
+  // candidate
   d.wire([[XH, BY], [XH, GY + 21]], '', 0); d.box(XH, GY, 'tanh', 'c'); sigmaLabel(d, XH, BY - 12, st.sH);
   d.wire([[XH, GY - 21], [XH, YW + 13]], 'c', 2); d.val(XH + 9, 162, st.hc, 'c', 'start', 2);
   d.op(XH, YW, '×', 'z');
   d.wire([[XH, YW - 13], [XH, LY + 13]], '', 3); d.val(XH + 9, 92, write, sgn(write), 'start', 3);
   d.op(XH, LY, '+');
   d.lane(XH + 13, L1 - 8, LY, st.h, 3); d.arrow(L1, LY, 'r', sgn(st.h)); d.val(596, LY - 12, st.h, sgn(st.h), 'middle', 3);
-  d.label(XH, LB, 'proposal', sy('h̃', 't'), 'c');
+  d.label(XH, LB, 'candidate', sy('h̃', 't'), 'c');
   return d;
 }
 
@@ -1168,6 +1181,7 @@ function kind(x) {
 }
 const Wd = st => `<b>“${esc(st.word)}”</b>`;
 const moved = (a, b) => Math.abs(a - b) >= 0.005;
+const pc = v => Math.round(v * 100) + '%';
 
 function narrRNN(st, lab) {
   if (!st.wx && !moved(st.hPrev, 0)) return `${Wd(st)}: ${kind(st.x)}. Nothing comes in, so h stays at 0.`;
@@ -1180,33 +1194,32 @@ function narrRNN(st, lab) {
 }
 function narrLane(st) {
   let s = `${Wd(st)}: ${kind(st.x)}. `;
-  if (st.x[2]) s += `The notebook has no eraser, so it stays at ${fmt(st.C)}.`;
-  else if (!moved(st.Cc, 0)) s += `The proposal is 0, so the notebook stays at ${fmt(st.C)}.`;
-  else s += `The proposal is ${fmt(st.Cc)}, so the notebook goes from ${fmt(st.CPrev)} to ${fmt(st.C)}.`;
+  if (st.x[2]) s += `There is no forget gate, so the long-term memory stays at ${fmt(st.C)}.`;
+  else if (!moved(st.Cc, 0)) s += `The candidate is 0, so the long-term memory stays at ${fmt(st.C)}.`;
+  else s += `The candidate is ${fmt(st.Cc)}, so the long-term memory goes from ${fmt(st.CPrev)} to ${fmt(st.C)}.`;
   if ('rnnH' in st) s += ` The RNN’s h is ${fmt(st.rnnH)}.`;
   return s;
 }
 function narrLSTM(st, lab) {
   const v = lab.variant, out = [`${Wd(st)}: ${kind(st.x)}.`];
-  if (st.f < 0.5) out.push(`The eraser wipes the notebook (f = ${fmt(st.f)}).`);
-  else if (isNeutral(st.x)) out.push(`The eraser keeps (f = ${fmt(st.f)})${v.input ? `, the pen is lifted (i = ${fmt(st.i)})` : ''}.`);
-  if (!v.input) { if (moved(st.Cc, 0)) out.push(`The full proposal ${fmt(st.Cc)} is written.`); }
-  else if (st.i >= 0.9) out.push(`The pen writes firmly (i = ${fmt(st.i)}).`);
-  else if (st.i >= 0.3) out.push(`The pen writes half (i = ${fmt(st.i)}).`);
-  out.push(moved(st.C, st.CPrev) ? `Notebook goes to ${fmt(st.C)}.` : `The notebook stays at ${fmt(st.C)}.`);
-  if (v.input && !v.output && st.tok === 'slow') out.push(`Compare “long”: i = ${fmt(at(lab.steps, 'long').i)}.`);
+  if (st.f < 0.5) out.push(`Forget gate ${fmt(st.f)}: keep ${pc(st.f)} of the old long-term memory.`);
+  else if (isNeutral(st.x)) out.push(`Forget gate ${fmt(st.f)}: keep ${pc(st.f)}.${v.input ? ` Input gate ${fmt(st.i)}: write ${pc(st.i)}.` : ''}`);
+  if (!v.input) { if (moved(st.Cc, 0)) out.push(`With no input gate, all of the candidate ${fmt(st.Cc)} is written.`); }
+  else if (st.i >= 0.3) out.push(`Input gate ${fmt(st.i)}: write ${pc(st.i)} of the candidate ${fmt(st.Cc)}.`);
+  out.push(moved(st.C, st.CPrev) ? `Long-term memory goes to ${fmt(st.C)}.` : `Long-term memory stays at ${fmt(st.C)}.`);
+  if (v.input && !v.output && st.tok === 'slow') out.push(`Compare “long”: input gate ${fmt(at(lab.steps, 'long').i)}, so only ${pc(at(lab.steps, 'long').i)} is written.`);
   if (v.output) {
-    if (st.o > 0.5) out.push(`The voice speaks (o = ${fmt(st.o)}): h = ${fmt(st.h)}.`);
-    else if (Math.abs(st.tC) > 0.3) out.push(`The voice is quiet (o = ${fmt(st.o)}): h = ${fmt(st.h)}, not ${fmt(st.tC)}.`);
-  } else if (Math.abs(st.h) > 0.3) out.push(`It already says h = ${fmt(st.h)}.`);
+    if (st.o > 0.5) out.push(`Output gate ${fmt(st.o)}: show ${pc(st.o)}, so h = ${fmt(st.h)}.`);
+    else if (Math.abs(st.tC) > 0.3) out.push(`Output gate ${fmt(st.o)}: show ${pc(st.o)}, so h = ${fmt(st.h)}, not ${fmt(st.tC)}.`);
+  } else if (Math.abs(st.h) > 0.3) out.push(`The short-term memory already says h = ${fmt(st.h)}.`);
   return out.join(' ');
 }
 function narrGRU(st) {
   let s = `${Wd(st)}: ${kind(st.x)}. `;
   if (st.z < 0.1) s += `The update gate is ${fmt(st.z)}: keep the old memory.`;
-  else if (st.z > 0.9) s += `The update gate is ${fmt(st.z)}: replace the memory with the proposal ${fmt(st.hc)}.`;
-  else s += `The update gate is ${fmt(st.z)}: keep ${fmt(1 - st.z)} of the old memory, write ${fmt(st.z)} of the proposal ${fmt(st.hc)}.`;
-  if (st.r < 0.5) s += ` The reset gate hides the old memory (r = ${fmt(st.r)}), so the proposal starts fresh.`;
+  else if (st.z > 0.9) s += `The update gate is ${fmt(st.z)}: replace the memory with the candidate ${fmt(st.hc)}.`;
+  else s += `The update gate is ${fmt(st.z)}: keep ${fmt(1 - st.z)} of the old memory, write ${fmt(st.z)} of the candidate ${fmt(st.hc)}.`;
+  if (st.r < 0.5) s += ` The reset gate hides the old memory (r = ${fmt(st.r)}), so the candidate starts fresh.`;
   return s + ` Memory: ${fmt(st.h)}.`;
 }
 
@@ -1246,11 +1259,11 @@ const VARIANTS = [
   { forget: true, input: true, output: true }
 ];
 const LSTM_ROWS = v => [
-  { kind: 'pill', cls: 'f', get: s => s.f, word: 'eraser', sym: T`\Fg` },
-  ...(v.input ? [{ kind: 'pill', cls: 'i', get: s => s.i, word: 'pen', sym: T`\Ig` }] : []),
-  ...(v.output ? [{ kind: 'pill', cls: 'o', get: s => s.o, word: 'voice', sym: T`\Og` }] : []),
-  { kind: 'bar', get: s => s.C, word: 'notebook', sym: 'C_t' },
-  { kind: 'bar', get: s => s.h, word: 'says', sym: 'h_t' }
+  { kind: 'pill', cls: 'f', get: s => s.f, word: 'forget', sym: T`\Fg` },
+  ...(v.input ? [{ kind: 'pill', cls: 'i', get: s => s.i, word: 'input', sym: T`\Ig` }] : []),
+  ...(v.output ? [{ kind: 'pill', cls: 'o', get: s => s.o, word: 'output', sym: T`\Og` }] : []),
+  { kind: 'bar', get: s => s.C, word: 'long-term', sym: 'C_t' },
+  { kind: 'bar', get: s => s.h, word: 'short-term', sym: 'h_t' }
 ];
 const startAt = tok => steps => steps.findIndex(s => s.tok === tok);
 const byReview = map => (steps, rv) => startAt(map[rv])(steps);
@@ -1268,25 +1281,25 @@ const LABS = {
     }, steps => [{ label: 'Verdict', y: last(steps).h }], true)
   },
   lane: {
-    title: 'Lab 2 <span>· the notebook vs the RNN, Review A</span>', reviews: ['A'], start: startAt('brilliant'),
+    title: 'Lab 2 <span>· long-term memory vs the RNN, Review A</span>', reviews: ['A'], start: startAt('brilliant'),
     run: rv => { const R = rnn(REVIEWS[rv]); return laneOnly(REVIEWS[rv]).map((s, i) => ({ ...s, rnnH: R[i].h })); },
     rows: () => [
       { kind: 'bar', get: s => s.rnnH, word: 'RNN', sym: 'h_t' },
-      { kind: 'signed', get: s => s.Cc, word: 'proposal', sym: T`\Cn` },
-      { kind: 'bar', get: s => s.C, word: 'notebook', sym: 'C_t' }
+      { kind: 'signed', get: s => s.Cc, word: 'candidate', sym: T`\Cn` },
+      { kind: 'bar', get: s => s.C, word: 'long-term', sym: 'C_t' }
     ],
     zoom: st => zoomLSTM(st, {}), narr: narrLane,
     info: stdInfo(st => [
       { parts: [T`C_t = C_{t-1} + \Cn`, `= ${p(st.CPrev)} + ${p(st.Cc)}`, `= ${n(st.C)}`] },
       { parts: [T`h_t = \tanh(C_t)`, T`= \tanh(${n(st.C)})`, `= ${n(st.h)}`] }
-    ], steps => [{ label: 'RNN', y: last(steps).rnnH }, { label: 'Notebook', y: last(steps).h }])
+    ], steps => [{ label: 'RNN', y: last(steps).rnnH }, { label: 'Long-term', y: last(steps).h }])
   },
   laneB: {
-    title: 'Lab 3 <span>· the notebook, Review B</span>', reviews: ['B'], start: startAt('but'),
+    title: 'Lab 3 <span>· long-term memory, Review B</span>', reviews: ['B'], start: startAt('but'),
     run: rv => laneOnly(REVIEWS[rv]),
     rows: () => [
-      { kind: 'signed', get: s => s.Cc, word: 'proposal', sym: T`\Cn` },
-      { kind: 'bar', get: s => s.C, word: 'notebook', sym: 'C_t' }
+      { kind: 'signed', get: s => s.Cc, word: 'candidate', sym: T`\Cn` },
+      { kind: 'bar', get: s => s.C, word: 'long-term', sym: 'C_t' }
     ],
     zoom: st => zoomLSTM(st, {}), narr: narrLane,
     info: stdInfo((st, lab) => {
@@ -1344,8 +1357,8 @@ LABS.signal = {
   narr(st, lab) {
     const k = lab.idx, a = SIG.sr[k], b = SIG.sl[k];
     if (k === 0) return `${Wd(a)}: the error starts here, at full strength.`;
-    if (k === SIG.sr.length - 1) return `${Wd(a)}: the RNN signal is almost gone (${pct(a.signal)}). The notebook still carries ${pct(b.signal)}.`;
-    return `${Wd(a)}: one more step back. The RNN signal is multiplied by ${n(SIG.sr[k - 1].factor)}, the notebook signal by ${n(SIG.sl[k - 1].factor)}.`;
+    if (k === SIG.sr.length - 1) return `${Wd(a)}: the RNN signal is almost gone (${pct(a.signal)}). The long-term memory still carries ${pct(b.signal)}.`;
+    return `${Wd(a)}: one more step back. The RNN signal is multiplied by ${n(SIG.sr[k - 1].factor)}, the long-term signal by ${n(SIG.sl[k - 1].factor)}.`;
   },
   timeline(lab) {
     const { A, from, T0, sr, sl } = SIG, k = lab.idx, cols = A.length - from;
@@ -1365,17 +1378,17 @@ LABS.signal = {
       });
     });
     for (let t = from; t <= T0; t++) o.push(`<rect class="tl-hit" data-i="${T0 - t}" x="${(t - from) * cw}" y="0" width="${cw}" height="${H}"><title>${esc(A[t].word)}</title></rect>`);
-    const gutter = `<div class="g-row" style="height:32px"><span>word</span></div><div class="g-row" style="height:${RB}px"><span>RNN</span></div><div class="g-row" style="height:${RB}px"><span>notebook</span></div>`;
+    const gutter = `<div class="g-row" style="height:32px"><span>word</span></div><div class="g-row" style="height:${RB}px"><span>RNN</span></div><div class="g-row" style="height:${RB}px"><span>long-term</span></div>`;
     return { gutter, svg: `<svg class="tl-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${o.join('')}</svg>` };
   },
   info(lab, el) {
     const { sr, sl } = SIG, k = lab.idx, a = sr[k], b = sl[k];
-    let html = `<div class="big2"><div class="neg"><span>RNN signal at “${esc(a.word)}”</span><b>${pct(a.signal)}</b></div><div class="pos"><span>Notebook signal at “${esc(b.word)}”</span><b>${pct(b.signal)}</b></div></div><div class="worked">`;
+    let html = `<div class="big2"><div class="neg"><span>RNN signal at “${esc(a.word)}”</span><b>${pct(a.signal)}</b></div><div class="pos"><span>Long-term signal at “${esc(b.word)}”</span><b>${pct(b.signal)}</b></div></div><div class="worked">`;
     if (k === 0) html += `<div class="wl"><span class="lbl">The signal starts at the verdict, at 100%.</span></div>`;
     else {
       const pa = sr[k - 1], pb = sl[k - 1], P = v => pct(v).replace('%', '\\%');
       html += `<div class="wl"><span class="lbl">RNN, one step back (× <span class="m">w_h</span> and the tanh slope)</span><span class="p m">${P(pa.signal)} \\times ${n(pa.factor)}</span><span class="p m">= ${P(a.signal)}</span></div>`;
-      html += `<div class="wl"><span class="lbl">Notebook, one step back (× the eraser)</span><span class="p m">${P(pb.signal)} \\times ${n(pb.factor)}</span><span class="p m">= ${P(b.signal)}</span></div>`;
+      html += `<div class="wl"><span class="lbl">Long-term memory, one step back (× the forget gate)</span><span class="p m">${P(pb.signal)} \\times ${n(pb.factor)}</span><span class="p m">= ${P(b.signal)}</span></div>`;
     }
     el.innerHTML = html + '</div>'; renderMath(el);
   }
@@ -1411,7 +1424,7 @@ function s1Hand() {
   const A = REVIEWS.A, R = rnn(A), k = A.findIndex(t => t.tok === 'brilliant'), wh = WEIGHTS.rnn.wh, w = WEIGHTS.rnn.w;
   const row = st => [Q(st.word), st.wx ? T`w\cdot x_t = ${w[0]} \times ${nS(st.x[0])} = ${nS(st.wx)}` : T`w\cdot x_t = 0`,
     T`h_t = \tanh(${nS(st.wx)} + ${wh} \times ${pS(st.hPrev)}) = \tanh(${nS(st.wx + wh * st.hPrev)}) = ${n(st.h)}`];
-  byHand('s1-hand', `This RNN uses $w\\cdot x_t = ${w[0]} \\times \\text{positive} - ${-w[1]} \\times \\text{negative}$, with $w_h = ${wh}$ and $b = 0$.`,
+  byHand('s1-hand', `The input weight has one number per feature: $w\\cdot x_t = w^{\\text{pos}} \\times \\text{positive} + w^{\\text{neg}} \\times \\text{negative}$ (the turn and end weights are 0). Training gave $w^{\\text{pos}} = ${w[0]}$, $w^{\\text{neg}} = ${w[1]}$, $w_h = ${wh}$ and $b = 0$.`,
     [['“The”, “movie”, “was”', T`w\cdot x_t = 0`, T`h_t = \tanh(0 + ${wh} \times 0) = 0`], row(R[k]), row(R[k + 1]), row(R[k + 2])],
     `tanh only squeezes big numbers. For small numbers $\\tanh(x) \\approx x$, so each neutral word simply halves $h_t$.`);
   const chain = R.slice(k, k + 6).map(s => fmt(s.h)).join(' → ');
@@ -1421,28 +1434,28 @@ function s1Hand() {
 
 function s2Hand() {
   const L = laneOnly(REVIEWS.A), k = L.findIndex(s => s.tok === 'brilliant'), wC = WEIGHTS.C.w[0], b = L[k], e = last(L);
-  byHand('s2-hand', `The proposal is $\\Cn = \\tanh(${wC} \\times \\text{positive} - ${wC} \\times \\text{negative})$. For “brilliant” it is $\\tanh(${wC}) = ${n(b.Cc)}$. For a neutral word it is $\\tanh(0) = 0$.`,
+  byHand('s2-hand', `The candidate is $\\Cn = \\tanh(w_C^{\\text{pos}} \\times \\text{positive} + w_C^{\\text{neg}} \\times \\text{negative})$, with learned weights $w_C^{\\text{pos}} = ${wC}$ and $w_C^{\\text{neg}} = ${WEIGHTS.C.w[1]}$. For “brilliant” it is $\\tanh(${wC} \\times 1) = ${n(b.Cc)}$. For a neutral word it is $\\tanh(0) = 0$.`,
     [['“The”, “movie”, “was”', T`C_t = 0 + 0 = 0`],
      [Q(b.word), T`C_t = ${p(b.CPrev)} + ${p(b.Cc)} = ${n(b.C)}`],
      [Q(L[k + 1].word), T`C_t = ${n(L[k + 1].CPrev)} + 0 = ${n(L[k + 1].C)}`],
      ['every later word', T`C_t = ${n(L[k + 1].C)} + 0 = ${n(e.C)}`],
      ['“.” the verdict', T`h_t = \tanh(C_t) = \tanh(${n(e.C)}) = ${n(e.h)}`, `@${verdict(e.h)} ✓`]],
-    '$C$ is the notebook. $h = \\tanh(C)$ is what the cell says out loud, to the next word and to the verdict.');
+    '$C$ is the long-term memory. $h = \\tanh(C)$ is the short-term memory: what the cell outputs to the next word and to the verdict.');
 }
 
 function s3Hand() {
   const L = laneOnly(REVIEWS.B), g = tok => at(L, tok), e = last(L);
   const row = tok => [Q(g(tok).word), T`C_t = ${p(g(tok).CPrev)} + ${p(g(tok).Cc)} = ${n(g(tok).C)}`];
-  byHand('s3-hand', 'Same notebook, Review B. Neutral words add 0, so only the key words are shown.',
-    [row('long'), row('slow'), [Q('but'), T`C_t = ${p(g('but').CPrev)} + 0 = ${n(g('but').C)}`, '@“but” proposes nothing, and nothing can erase'],
+  byHand('s3-hand', 'Same long-term memory, Review B. Neutral words add 0, so only the key words are shown.',
+    [row('long'), row('slow'), [Q('but'), T`C_t = ${p(g('but').CPrev)} + 0 = ${n(g('but').C)}`, '@“but” adds nothing, and nothing can remove the old value'],
      row('brilliant'), ['“.” the verdict', T`h_t = \tanh(${n(e.C)}) = ${n(e.h)}`, `@${verdict(e.h)} ✗`]],
     'One good word cannot cancel two bad ones.');
   const F = lstm(REVIEWS.B, { input: false, output: false }), fb = at(F, 'brilliant');
   think('s3-think', 'What should happen at “but” to get the right answer?',
-    `Wipe the notebook clean, so $C_t = 0$. Then “brilliant” gives $0 + ${n(fb.Cc)} = ${n(fb.C)}$, and the verdict is ${verdict(last(F).h)}.`);
+    `Forget everything, so $C_t = 0$. Then “brilliant” gives $0 + ${n(fb.Cc)} = ${n(fb.C)}$, and the verdict is ${verdict(last(F).h)}.`);
 }
 
-// Gate step 1: one notebook value through gates 1, 0.5 and 0.
+// Gate step 1: one long-term memory value through gates 1, 0.5 and 0.
 function drawGateMult() {
   const v = at(laneOnly(REVIEWS.B), 'slow').C;
   document.getElementById('gm-v').textContent = fmt(v);
@@ -1455,29 +1468,42 @@ function drawGateMult() {
     `<div class="anc"><span class="m">\\sigma(${s}) = ${n(sigmoid(s))}</span><span>${word}</span></div>`).join('');
 }
 
-// Step 3 of the gate section: the eraser's score for two words.
+// Step 3 of the gate section: the forget gate's score, in symbols first, then two words.
 function drawEraserScore() {
-  const fW = WEIGHTS.f, B = lstm(REVIEWS.B);
+  const fW = WEIGHTS.f, B = lstm(REVIEWS.B), wt = fW.w[2];
   const row = (tok, mean) => {
     const st = at(B, tok), t = st.x[2];
-    return `<tr><th>${Q(st.word)}</th><td>${t}</td><td>${fW.b} − ${-fW.w[2]} × ${t} = <b>${fmtS(st.sF)}</b></td><td class="arr">→ σ →</td><td class="gv f">${fmt(st.f)}</td><td>${mean}</td></tr>`;
+    return `<tr><th>${Q(st.word)}</th><td>${t}</td><td>(${fmtS(wt)}) × ${t} + ${fmtS(fW.b)} = <b>${fmtS(st.sF)}</b></td><td class="arr">→ σ →</td><td class="gv f">${fmt(st.f)}</td><td>${mean}</td></tr>`;
   };
-  document.getElementById('gate-ex').innerHTML = `<div class="byhand"><div class="bh-h">The eraser’s score</div>
-    <p class="bh-rule">${rich(`$\\Sigma_f = ${fW.b} - ${-fW.w[2]} \\times \\text{turn}$. Only the turn number matters to the eraser.`)}</p>
-    <table class="gx"><thead><tr><th>word</th><th>turn</th><th>score Σ</th><th></th><th>gate</th><th>meaning</th></tr></thead>
-    <tbody>${row('movie', 'keep the notebook')}${row('but', 'erase the notebook')}</tbody></table></div>`;
+  document.getElementById('gate-ex').innerHTML = `<div class="byhand"><div class="bh-h">The forget gate’s score</div>
+    <p class="bh-rule">${rich(`In symbols: $\\Sigma_f = w_f\\cdot x_t + b_f$. The word $x_t$ has 4 numbers, so $w_f$ has 4 weights, one for each. After training only the weight on turn is not 0, so the score is just $\\Sigma_f = w_f^{\\text{turn}} \\times \\text{turn} + b_f$.`)}</p>
+    <p class="bh-rule">${rich(`Training found $w_f^{\\text{turn}} = ${wt}$ and $b_f = ${fW.b}$. Step 4 shows how.`)}</p>
+    <table class="gx"><thead><tr><th>word</th><th>turn</th><th>score: <span class="m">w_f^{\\text{turn}} \\times \\text{turn} + b_f</span></th><th></th><th>gate <span class="m">\\Fg</span></th><th>meaning</th></tr></thead>
+    <tbody>${row('movie', 'keep 100% of the long-term memory')}${row('but', 'keep 0%: forget it all')}</tbody></table></div>`;
+}
+
+// Step 4: the same forget gate before, partway through and after training.
+function drawTraining() {
+  const trained = WEIGHTS.f;
+  const stages = [['before training (random)', 2, -1], ['partway through', -3, 1], ['after training', trained.w[2], trained.b]];
+  const v = y => `${verdict(y)} ${verdict(y) === 'Positive' ? '✓' : '✗'}`;
+  const rows = stages.map(([name, w, b]) => {
+    WEIGHTS.f = { ...trained, w: [0, 0, w, 0], b };
+    const A = lstm(REVIEWS.A), B = lstm(REVIEWS.B);
+    const row = `<tr><th>${name}</th><td>${fmtS(w)}</td><td>${fmtS(b)}</td><td>${fmt(at(B, 'movie').f)}</td><td>${fmt(at(B, 'but').f)}</td><td>${v(last(A).h)}</td><td>${v(last(B).h)}</td></tr>`;
+    return row;
+  });
+  WEIGHTS.f = trained;
+  document.getElementById('train').innerHTML = `<thead><tr><th>forget gate</th><th><span class="m">w_f^{\\text{turn}}</span></th><th><span class="m">b_f</span></th>
+    <th><span class="m">\\Fg</span> at “movie”</th><th><span class="m">\\Fg</span> at “but”</th><th>Review A</th><th>Review B</th></tr></thead><tbody>${rows.join('')}</tbody>`;
 }
 
 // Which words open, half-open or close each gate, from the computed values.
-const FEAT = ['positive', 'negative', 'turn', 'end'];
-const scoreText = p => {
-  const terms = p.w.map((w, k) => [w, k]).filter(([w]) => w);
-  // A positive bias goes first (9 − 18 × turn), a negative one last (18 × end − 9).
-  const lead = p.b > 0 ? String(p.b) : '';
-  let s = lead + terms.map(([w, k], j) => `${w < 0 ? (j || lead ? ' − ' : '−') : j || lead ? ' + ' : ''}${Math.abs(w)} × ${FEAT[k]}`).join('');
-  if (p.b < 0) s += ` − ${-p.b}`;
-  return s;
-};
+const FEAT = ['positive', 'negative', 'turn', 'end'], FS = ['pos', 'neg', 'turn', 'end'];
+const used = p => p.w.map((w, k) => [w, k]).filter(([w]) => w);
+// The score in symbols, and the trained numbers that go with it.
+const scoreTex = (p, g) => used(p).map(([, k]) => `w_${g}^{\\text{${FS[k]}}}\\cdot\\text{${FEAT[k]}}`).join(' + ') + ` + b_${g}`;
+const learnedTex = (p, g) => used(p).map(([w, k]) => `w_${g}^{\\text{${FS[k]}}} = ${w}`).concat([`b_${g} = ${p.b}`]).join(',\\ ');
 function gatesTable(id, steps, specs) {
   const group = get => {
     const o = { open: [], half: [], closed: [] }, seen = new Set();
@@ -1487,18 +1513,18 @@ function gatesTable(id, steps, specs) {
     });
     return o;
   };
-  document.getElementById(id).innerHTML = `<thead><tr><th>gate</th><th>multiplies</th><th>score Σ</th><th>1 (open) on</th><th>0.5 (half) on</th><th>0 (closed) on</th></tr></thead><tbody>` +
+  document.getElementById(id).innerHTML = `<thead><tr><th>gate</th><th>multiplies</th><th>score Σ, and its trained values</th><th>1 (open) on</th><th>0.5 (half) on</th><th>0 (closed) on</th></tr></thead><tbody>` +
     specs.map(sp => {
       const g = group(sp.get), cell = l => l.length ? l.join(', ') : '<span class="muted">none</span>';
-      return `<tr><th class="k-${sp.cls}">${sp.name} <span class="m">${sp.sym}</span></th><td>${sp.mult}</td><td class="sc">${scoreText(sp.p)}</td><td>${cell(g.open)}</td><td>${cell(g.half)}</td><td>${cell(g.closed)}</td></tr>`;
+      return `<tr><th class="k-${sp.cls}">${sp.name} <span class="m">${sp.sym}</span></th><td>${sp.mult}</td><td class="sc"><span class="m">${scoreTex(sp.p, sp.g)}</span><span class="m lv">${learnedTex(sp.p, sp.g)}</span></td><td>${cell(g.open)}</td><td>${cell(g.half)}</td><td>${cell(g.closed)}</td></tr>`;
     }).join('') + '</tbody>';
 }
 
 // Section 6: every word of Review B through the complete LSTM.
 function drawTrace() {
   const L = lstm(REVIEWS.B);
-  const head = `<thead><tr><th>word</th><th class="k-f">eraser <span class="m">\\Fg</span></th><th class="k-i">pen <span class="m">\\Ig</span></th><th class="k-c">proposal <span class="m">\\Cn</span></th>
-    <th>notebook <span class="m">C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn</span></th><th class="k-o">voice <span class="m">\\Og</span></th><th>says <span class="m">h_t</span></th></tr></thead>`;
+  const head = `<thead><tr><th>word</th><th class="k-f">forget <span class="m">\\Fg</span></th><th class="k-i">input <span class="m">\\Ig</span></th><th class="k-c">candidate <span class="m">\\Cn</span></th>
+    <th>long-term <span class="m">C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn</span></th><th class="k-o">output <span class="m">\\Og</span></th><th>short-term <span class="m">h_t</span></th></tr></thead>`;
   const rows = L.map(s => {
     const neutral = isNeutral(s.x);
     const Ccell = neutral ? `<span class="st">stays</span> <b>${fmt(s.C)}</b>` : `${fmt(s.f)} × ${fmtP(s.CPrev)} + ${fmt(s.i)} × ${fmtP(s.Cc)} = <b>${fmt(s.C)}</b>`;
@@ -1549,13 +1575,13 @@ function drawStrip(id, toks) {
 // Four moments of Review B, each as a small cell thumbnail.
 function drawStory() {
   const B = lstm(REVIEWS.B), y = last(B).h;
-  const frames = [['slow', 'i', 'write negative'], ['but', 'f', 'erase'], ['brilliant', 'i', 'write positive'], ['.', 'o', `speak: ŷ = ${fmt(y)} ${verdict(y)}`]];
+  const frames = [['slow', 'i', 'write the negative'], ['but', 'f', 'forget it all'], ['brilliant', 'i', 'write the positive'], ['.', 'o', `show it: ŷ = ${fmt(y)} ${verdict(y)}`]];
   document.getElementById('story').innerHTML = frames.map(([tok, active, cap]) => {
     const st = at(B, tok), d = new Draw(250, 112);
-    d.add(`<text class="lb" x="8" y="22">notebook</text>`);
+    d.add(`<text class="lb" x="8" y="22">long-term</text>`);
     d.add(`<path class="lane ${sgn(st.C)}" d="M88 16 H186"/>`);
     d.val(194, 22, st.C, sgn(st.C), 'start');
-    [['f', 'eraser', st.f], ['i', 'pen', st.i], ['o', 'voice', st.o]].forEach(([g, word, v], k) => {
+    [['f', 'forget', st.f], ['i', 'input', st.i], ['o', 'output', st.o]].forEach(([g, word, v], k) => {
       const x = 8 + k * 80, on = g === active;
       d.add(`<text class="lb ${g}" x="${x + 37}" y="56" text-anchor="middle">${word}</text>`);
       d.add(`<rect x="${x}" y="66" width="74" height="30" rx="15" fill="var(--${g}${on ? '' : '-tint'})" stroke="var(--${g})" stroke-width="1.5"/>`);
@@ -1615,27 +1641,27 @@ function drawSplit() {
     const st = at(G, tok);
     return `<div class="sp"><div class="sp-h"><b>“${st.word}”</b> <span class="m">\\Zg = ${n(st.z)}</span></div>
       <div class="sp-bar"><i class="keep" style="flex:${(1 - st.z).toFixed(3)}"></i><i class="write" style="flex:${st.z.toFixed(3)}"></i></div>
-      <div class="sp-l"><span>keep <span class="m">1-\\Zg = ${n(1 - st.z)}</span> of the old memory</span><span>write <span class="m">\\Zg = ${n(st.z)}</span> of the proposal</span></div></div>`;
+      <div class="sp-l"><span>keep <span class="m">1-\\Zg = ${n(1 - st.z)}</span> of the old memory</span><span>write <span class="m">\\Zg = ${n(st.z)}</span> of the candidate</span></div></div>`;
   }).join('');
 }
 
 function drawMapping() {
   document.getElementById('map').innerHTML = `
     <div class="mh">LSTM</div><div></div><div class="mh">GRU</div>
-    <div class="side"><span class="chipx">notebook <span class="m">C_t</span></span><span class="chipx">what it says <span class="m">h_t</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx">long-term <span class="m">C_t</span></span><span class="chipx">short-term <span class="m">h_t</span></span></div><div class="arr">→</div>
     <div class="side"><span class="chipx">one memory <span class="m">h_t</span></span></div>
-    <div class="side"><span class="chipx f">eraser <span class="m">\\Fg</span></span><span class="chipx i">pen <span class="m">\\Ig</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx f">forget <span class="m">\\Fg</span></span><span class="chipx i">input <span class="m">\\Ig</span></span></div><div class="arr">→</div>
     <div class="side"><span class="chipx z">update <span class="m">\\Zg</span> <small>keep <span class="m">1-\\Zg</span>, write <span class="m">\\Zg</span></small></span></div>
-    <div class="side"><span class="chipx o">voice <span class="m">\\Og</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx o">output <span class="m">\\Og</span></span></div><div class="arr">→</div>
     <div class="side"><span class="chipx gone">not needed</span></div>
-    <div class="side"><span class="chipx c">proposal <span class="m">\\Cn</span></span></div><div class="arr">→</div>
-    <div class="side"><span class="chipx c">proposal <span class="m">\\Hn</span></span><span class="chipx r">+ reset <span class="m">\\Rg</span></span></div>`;
+    <div class="side"><span class="chipx c">candidate <span class="m">\\Cn</span></span></div><div class="arr">→</div>
+    <div class="side"><span class="chipx c">candidate <span class="m">\\Hn</span></span><span class="chipx r">+ reset <span class="m">\\Rg</span></span></div>`;
 }
 
 function drawAtBut() {
   const k = REVIEWS.B.findIndex(t => t.tok === 'but');
   const a = gru(REVIEWS.B)[k], b = gru(REVIEWS.B, { reset: false })[k];
-  setRich(document.getElementById('reset-why'), `At “but”, $\\Zg = ${n(a.z)}$: replace almost everything. But the proposal $\\Hn$ is built from the old memory, so it copies the old negativity back ($h_t = ${n(b.h)}$). The reset gate $\\Rg$ blocks the old memory when making the proposal ($h_t = ${n(a.h)}$).`);
+  setRich(document.getElementById('reset-why'), `At “but”, $\\Zg = ${n(a.z)}$: replace almost everything. But the candidate $\\Hn$ is built from the old memory, so it copies the old negativity back ($h_t = ${n(b.h)}$). The reset gate $\\Rg$ blocks the old memory when making the candidate ($h_t = ${n(a.h)}$).`);
   const bar = v => { const w = Math.min(1, Math.abs(v)) * 50; return `<div class="hbar"><i style="${v < 0 ? `right:50%` : `left:50%`};width:${w}%;background:var(--${v < 0 ? 'neg' : 'pos'})"></i></div><div class="hbar-l"><span>−1</span><span>0</span><span>1</span></div>`; };
   const pane = (title, s) => `<div class="pane"><h4>${title}</h4>
     <div class="wl"><span class="p m">\\Rg = ${n(s.r)}</span></div>
@@ -1668,34 +1694,34 @@ function drawBi() {
 /* ---------- section 5: building steps ---------- */
 function setupBuild(lab) {
   const B = REVIEWS.B, F = lstm(B, VARIANTS[0]), FI = lstm(B, VARIANTS[1]), L = lstm(B, VARIANTS[2]), lane = laneOnly(B);
-  const sumOf = (g, gate) => [[T`${g}`, gate], '=', ['\\sigma', '0 to 1'], '(', [T`\Sigma_${g[1].toLowerCase()}`, `${gate}’s score for this word`], ')'];
+  const sumOf = (g, gate) => [[T`${g}`, gate], '=', ['\\sigma', '0 to 1'], '(', [T`\Sigma_${g[1].toLowerCase()}`, `${gate} gate’s score for this word`], ')'];
   const cRow = (S, tok, withF, withI) => {
     const s = at(S, tok);
     return [Q(s.word), T`C_t = ${withF ? `${p(s.f)} \\times ` : ''}${p(s.CPrev)} + ${withI ? `${p(s.i)} \\times ` : ''}${p(s.Cc)} = ${n(s.C)}`];
   };
   const STEPS = [
     { name: 'Forget gate', key: 'forget', at: 'but',
-      problem: `Nothing can erase “long” and “slow”. At “but” the notebook still holds ${fmt(at(lane, 'but').C)}.`,
-      fix: 'Multiply the old notebook by an eraser $\\Fg$. It is 1 (keep) on normal words and 0 (erase) on “but”.',
+      problem: `Nothing can remove “long” and “slow”. At “but” the long-term memory still holds ${fmt(at(lane, 'but').C)}.`,
+      fix: 'Multiply the old long-term memory by a forget gate $\\Fg$, the % to keep. It is 1 (keep 100%) on normal words and 0 (keep 0%) on “but”.',
       hand: [cRow(F, 'slow', true), cRow(F, 'but', true), cRow(F, 'brilliant', true),
         ['“.” the verdict', T`h_t = \tanh(${n(last(F).C)}) = ${n(last(F).h)}`, `@${verdict(last(F).h)} ✓`]],
       note: 'The verdict is already right. The next two gates make the reading more careful.',
-      f: [[['C_t', 'notebook now'], '=', ['\\Fg', 'eraser'], '\\cdot', ['C_{t-1}', 'old notebook'], '+', ['\\Cn', 'proposal']], sumOf('\\Fg', 'eraser')] },
+      f: [[['C_t', 'long-term now'], '=', ['\\Fg', '% to keep'], '\\cdot', ['C_{t-1}', 'old long-term'], '+', ['\\Cn', 'candidate']], sumOf('\\Fg', 'forget')] },
     { name: 'Input gate', key: 'input', at: 'slow',
       problem: `“long” writes ${fmt(at(F, 'long').Cc)}, almost as much as “slow” (${fmt(at(F, 'slow').Cc)}). But a long film is only a little bad.`,
-      fix: 'Multiply the proposal by a pen $\\Ig$. It is 1 for strong words, 0.5 for mild words and 0 for neutral words.',
+      fix: 'Multiply the candidate by an input gate $\\Ig$, the % to write. It is 1 for strong words, 0.5 for mild words and 0 for neutral words.',
       hand: [[Q('long'), T`\Ig\cdot\Cn = ${p(at(FI, 'long').i)} \times ${p(at(FI, 'long').Cc)} = ${n(at(FI, 'long').i * at(FI, 'long').Cc)}`, '@written half'],
         [Q('slow'), T`\Ig\cdot\Cn = ${p(at(FI, 'slow').i)} \times ${p(at(FI, 'slow').Cc)} = ${n(at(FI, 'slow').i * at(FI, 'slow').Cc)}`, '@written in full'],
         cRow(FI, 'slow', true, true)],
-      note: 'The proposal says which way (good or bad). The pen says how firmly.',
-      f: [[['C_t', 'notebook now'], '=', ['\\Fg', 'eraser'], '\\cdot', ['C_{t-1}', 'old notebook'], '+', ['\\Ig', 'pen'], '\\cdot', ['\\Cn', 'proposal']], sumOf('\\Ig', 'pen')] },
+      note: 'The candidate says which way (good or bad). The input gate says how much of it to write.',
+      f: [[['C_t', 'long-term now'], '=', ['\\Fg', '% to keep'], '\\cdot', ['C_{t-1}', 'old long-term'], '+', ['\\Ig', '% to write'], '\\cdot', ['\\Cn', 'candidate']], sumOf('\\Ig', 'input')] },
     { name: 'Output gate', key: 'output', at: 'slow',
-      problem: `At “slow” the cell already says “negative” ($h_t = ${n(at(FI, 'slow').h)}$), before it has read the rest.`,
-      fix: 'Multiply what it says by a voice $\\Og$. It is 0 until the last word and 1 at “.”.',
-      hand: [[Q('slow'), T`h_t = \Og\cdot\tanh(C_t) = ${p(at(L, 'slow').o)} \times ${p(at(L, 'slow').tC)} = ${n(at(L, 'slow').h)}`, '@quiet'],
-        [Q('.'), T`h_t = ${p(last(L).o)} \times \tanh(${n(last(L).C)}) = ${p(last(L).o)} \times ${p(last(L).tC)} = ${n(last(L).h)}`, `@speaks: ${verdict(last(L).h)} ✓`]],
+      problem: `At “slow” the short-term memory already says “negative” ($h_t = ${n(at(FI, 'slow').h)}$), before the cell has read the rest.`,
+      fix: 'Multiply by an output gate $\\Og$, the % of the long-term memory to show as $h_t$. It is 0 until the last word and 1 at “.”.',
+      hand: [[Q('slow'), T`h_t = \Og\cdot\tanh(C_t) = ${p(at(L, 'slow').o)} \times ${p(at(L, 'slow').tC)} = ${n(at(L, 'slow').h)}`, '@shows 0%'],
+        [Q('.'), T`h_t = ${p(last(L).o)} \times \tanh(${n(last(L).C)}) = ${p(last(L).o)} \times ${p(last(L).tC)} = ${n(last(L).h)}`, `@shows 100%: ${verdict(last(L).h)} ✓`]],
       note: 'Read the whole review before giving your opinion.',
-      f: [[['h_t', 'what it says'], '=', ['\\Og', 'voice'], '\\cdot', ['\\tanh(C_t)', 'notebook, squeezed']], sumOf('\\Og', 'voice')] }
+      f: [[['h_t', 'short-term'], '=', ['\\Og', '% to show'], '\\cdot', ['\\tanh(C_t)', 'long-term, squeezed']], sumOf('\\Og', 'output')] }
   ];
   const seg = document.getElementById('step-seg');
   seg.innerHTML = STEPS.map((s, k) => `<button data-step="${k}">${k + 1}. ${s.name}</button>`).join('');
@@ -1726,27 +1752,27 @@ function mcqs() {
     2: { q: 'A gate outputs 0.02 and the memory is 0.90. What passes?',
       o: ['0.92', '0.88', (0.90 * 0.02).toFixed(3), '0.90'], a: 2,
       e: `What passes $= 0.90 \\times 0.02 = ${(0.90 * 0.02).toFixed(3)}$. A gate near 0 blocks almost everything.` },
-    3: { q: 'What does the eraser $\\Fg$ do at “but” in Review B?',
-      o: [`It drops to ${fmt(but.f)} and wipes the notebook.`, 'It rises to 1 and keeps “slow”.', 'It writes “but” into the notebook.', 'It makes the cell speak.'], a: 0,
+    3: { q: 'What does the forget gate $\\Fg$ do at “but” in Review B?',
+      o: [`It drops to ${fmt(but.f)}, so 0% of the old long-term memory is kept.`, 'It rises to 1 and keeps “slow”.', 'It writes “but” into the long-term memory.', 'It shows the memory as output.'], a: 0,
       e: `$C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn = ${p(but.f)} \\times ${p(but.CPrev)} + ${p(but.i)} \\times ${p(but.Cc)} = ${n(but.C)}$. The old mood is wiped.` },
     4: { q: 'Which gate stays almost closed until “.”?',
-      o: ['the eraser $\\Fg$', 'the pen $\\Ig$', 'the voice $\\Og$', 'none of them'], a: 2,
-      e: `$\\Og = ${n(lB[0].o)}$ for every word, then ${fmt(last(lB).o)} at “.”, so $h_t = \\Og\\cdot\\tanh(C_t)$ speaks only at the end.` },
+      o: ['the forget gate $\\Fg$', 'the input gate $\\Ig$', 'the output gate $\\Og$', 'none of them'], a: 2,
+      e: `$\\Og = ${n(lB[0].o)}$ for every word, then ${fmt(last(lB).o)} at “.”, so $h_t = \\Og\\cdot\\tanh(C_t)$ shows the memory only at the end.` },
     5: { q: 'Why does the learning signal reach “brilliant” in the LSTM?',
-      o: [`In the notebook it is multiplied only by $\\Fg \\approx ${n(lA[1].f)}$ at each step.`, 'The LSTM has no weights to train.', 'The voice is open at every word.', 'It is multiplied by about 0.5 at each step.'], a: 0,
-      e: `After ${gap} steps the notebook keeps ${pct(sl)}. The RNN, multiplied by about 0.5 each step, keeps ${pct(sr)}.` },
+      o: [`Along the long-term memory it is multiplied only by $\\Fg \\approx ${n(lA[1].f)}$ at each step.`, 'The LSTM has no weights to train.', 'The output gate is open at every word.', 'It is multiplied by about 0.5 at each step.'], a: 0,
+      e: `After ${gap} steps the long-term memory keeps ${pct(sl)}. The RNN, multiplied by about 0.5 each step, keeps ${pct(sr)}.` },
     6: { q: 'In a GRU with $\\Zg = 0.9$, how much of $h_{t-1}$ is kept?',
       o: ['0.9', (1 - 0.9).toFixed(1), '1.0', '0'], a: 1,
       e: `$h_t = (1-\\Zg)\\cdot h_{t-1} + \\Zg\\cdot\\Hn$, so $1 - 0.9 = ${(1 - 0.9).toFixed(1)}$ of $h_{t-1}$ is kept.` },
     e1: { q: 'Which line is the LSTM memory update?',
       o: ['$C_t = C_{t-1} + \\Cn$', '$C_t = \\Fg\\cdot C_{t-1} + \\Ig\\cdot\\Cn$', '$C_t = \\Og\\cdot\\tanh(C_{t-1})$', '$C_t = \\tanh(w\\cdot x_t + w_h\\cdot h_{t-1} + b)$'], a: 1,
-      e: 'The eraser $\\Fg$ decides how much of the old notebook to keep. The pen $\\Ig$ decides how firmly to write the proposal.' },
+      e: 'The forget gate $\\Fg$ is the % of the old long-term memory to keep. The input gate $\\Ig$ is the % of the candidate to write.' },
     e2: { q: 'Why does the LSTM keep “brilliant” until the end of Review A?',
-      o: ['The voice $\\Og$ is 1 at every word.', '“brilliant” is the last word.', `The eraser keeps it ($\\Fg \\approx ${n(lA[1].f)}$), and small words write little because $\\Ig \\approx 0$.`, 'The notebook is cleared at every word.'], a: 2,
-      e: `At every neutral word the eraser keeps ($\\Fg = ${n(lA[5].f)}$) and the pen is lifted ($\\Ig = ${n(lA[5].i)}$). At “.”, $C_t = ${n(last(lA).C)}$.` },
+      o: ['The output gate $\\Og$ is 1 at every word.', '“brilliant” is the last word.', `The forget gate keeps it ($\\Fg \\approx ${n(lA[1].f)}$), and small words write nothing because $\\Ig \\approx 0$.`, 'The long-term memory is cleared at every word.'], a: 2,
+      e: `At every neutral word the forget gate keeps 100% ($\\Fg = ${n(lA[5].f)}$) and the input gate writes 0% ($\\Ig = ${n(lA[5].i)}$). At “.”, $C_t = ${n(last(lA).C)}$.` },
     e3: { q: 'What does a GRU have?',
-      o: ['A notebook $C_t$ and three gates.', 'One memory and no gates.', 'One memory $h_t$ and two gates, $\\Zg$ and $\\Rg$.', 'Two memories and four gates.'], a: 2,
-      e: 'The GRU merges the notebook and what it says into one $h_t$. $\\Zg$ keeps and writes, $\\Rg$ resets.' },
+      o: ['A long-term memory $C_t$ and three gates.', 'One memory and no gates.', 'One memory $h_t$ and two gates, $\\Zg$ and $\\Rg$.', 'Two memories and four gates.'], a: 2,
+      e: 'The GRU merges the long-term and short-term memories into one $h_t$. $\\Zg$ keeps and writes, $\\Rg$ resets.' },
     p1: { q: 'Why can a bidirectional RNN not generate text word by word?',
       o: ['It has no hidden state.', 'The backward reader needs words that are not written yet.', 'It cannot use tanh.', 'It reads in one direction only.'], a: 1,
       e: 'To write word t, the words after it do not exist yet, so the backward reader has nothing to read.' }
@@ -1778,27 +1804,27 @@ function init() {
   drawKeyWords('strip-A');
   s1Hand(); s2Hand(); s3Hand();
   inSymbols('sym-lane', [
-    [['\\Cn', 'proposal'], '=', ['\\tanh', '−1 to 1'], '(', ['\\Sigma_C', 'score of the word'], ')'],
-    [['C_t', 'notebook now'], '=', ['C_{t-1}', 'old notebook'], '+', ['\\Cn', 'proposal']],
-    [['h_t', 'what it says'], '=', ['\\tanh', '−1 to 1'], '(', ['C_t', 'notebook'], ')']
+    [['\\Cn', 'candidate'], '=', ['\\tanh', '−1 to 1'], '(', ['\\Sigma_C', 'score of the word'], ')'],
+    [['C_t', 'long-term now'], '=', ['C_{t-1}', 'old long-term'], '+', ['\\Cn', 'candidate']],
+    [['h_t', 'short-term'], '=', ['\\tanh', '−1 to 1'], '(', ['C_t', 'long-term'], ')']
   ]);
-  drawGateMult(); drawEraserScore();
+  drawGateMult(); drawEraserScore(); drawTraining();
   const LB = lstm(B), GB = gru(B);
   gatesTable('gates3', LB, [
-    { name: 'eraser', sym: '\\Fg', cls: 'f', mult: 'the old notebook', p: WEIGHTS.f, get: s => s.f },
-    { name: 'pen', sym: '\\Ig', cls: 'i', mult: 'the proposal', p: WEIGHTS.i, get: s => s.i },
-    { name: 'voice', sym: '\\Og', cls: 'o', mult: 'what it says', p: WEIGHTS.o, get: s => s.o }
+    { name: 'forget', g: 'f', sym: '\\Fg', cls: 'f', mult: 'the old long-term memory: % to keep', p: WEIGHTS.f, get: s => s.f },
+    { name: 'input', g: 'i', sym: '\\Ig', cls: 'i', mult: 'the candidate: % to write', p: WEIGHTS.i, get: s => s.i },
+    { name: 'output', g: 'o', sym: '\\Og', cls: 'o', mult: 'the long-term memory: % to show as h', p: WEIGHTS.o, get: s => s.o }
   ]);
   inSymbols('sym-gate', [[['\\text{gate}', '0 to 1'], '=', ['\\sigma', 'squeeze to 0 to 1'], '(', ['\\Sigma', 'score of the word'], ')']],
     'Every Σ box has its own $w$, $w_h$ and $b$, learned in training.');
   drawStory(); drawTrace();
   formulaBlock('f-lstm', 'The complete LSTM in symbols', [
-    ['eraser (forget)', T`\Fg = \sigma(w_f\cdot x_t + w_{hf}\cdot h_{t-1} + b_f)`],
-    ['pen (input)', T`\Ig = \sigma(w_i\cdot x_t + w_{hi}\cdot h_{t-1} + b_i)`],
-    ['voice (output)', T`\Og = \sigma(w_o\cdot x_t + w_{ho}\cdot h_{t-1} + b_o)`],
-    ['proposal', T`\Cn = \tanh(w_C\cdot x_t + w_{hC}\cdot h_{t-1} + b_C)`],
-    ['notebook', T`C_t = \Fg\cdot C_{t-1} + \Ig\cdot\Cn`],
-    ['what it says', T`h_t = \Og\cdot\tanh(C_t)`]
+    ['forget gate', T`\Fg = \sigma(w_f\cdot x_t + w_{hf}\cdot h_{t-1} + b_f)`],
+    ['input gate', T`\Ig = \sigma(w_i\cdot x_t + w_{hi}\cdot h_{t-1} + b_i)`],
+    ['output gate', T`\Og = \sigma(w_o\cdot x_t + w_{ho}\cdot h_{t-1} + b_o)`],
+    ['candidate', T`\Cn = \tanh(w_C\cdot x_t + w_{hC}\cdot h_{t-1} + b_C)`],
+    ['long-term', T`C_t = \Fg\cdot C_{t-1} + \Ig\cdot\Cn`],
+    ['short-term', T`h_t = \Og\cdot\tanh(C_t)`]
   ]);
   const sg = SIG, r = last(sg.sr), l = last(sg.sl), steps = sg.sr.length - 1;
   document.getElementById('s7-problem').textContent = `The signal must travel back ${steps} words, from “.” to “brilliant”.`;
@@ -1806,18 +1832,18 @@ function init() {
   const halves = [1, 0.5, 0.25, 0.125, 0.0625].map(v => String(v)).join(' → ');
   document.getElementById('s7-chain').innerHTML = `
     <div class="chain-row"><span class="tag neg-t">RNN</span><span>multiplies by about 0.5 at each step back (<span class="m">w_h = ${WEIGHTS.rnn.wh}</span>): ${halves} → …</span><span class="m">${chain(sg.sr)}\\ \\text{(${steps} steps)} \\approx ${r.signal.toPrecision(1)}</span></div>
-    <div class="chain-row"><span class="tag pos-t">Notebook</span><span>multiplies only by the eraser, <span class="m">\\Fg = ${n(sg.sl[0].factor)}</span>, at each step back</span><span class="m">${chain(sg.sl)}\\ \\text{(${steps} steps)} \\approx ${n(l.signal)}</span></div>`;
+    <div class="chain-row"><span class="tag pos-t">Long-term</span><span>multiplies only by the forget gate, <span class="m">\\Fg = ${n(sg.sl[0].factor)}</span>, at each step back</span><span class="m">${chain(sg.sl)}\\ \\text{(${steps} steps)} \\approx ${n(l.signal)}</span></div>`;
   drawSplit();
-  inSymbols('sym-update', [[['h_t', 'new memory'], '=', '(', ['1-\\Zg', 'keep'], ')', '\\cdot', ['h_{t-1}', 'old memory'], '+', ['\\Zg', 'write'], '\\cdot', ['\\Hn', 'proposal']]]);
+  inSymbols('sym-update', [[['h_t', 'new memory'], '=', '(', ['1-\\Zg', 'keep'], ')', '\\cdot', ['h_{t-1}', 'old memory'], '+', ['\\Zg', 'write'], '\\cdot', ['\\Hn', 'candidate']]]);
   drawAtBut();
   gatesTable('gates-gru', GB, [
-    { name: 'update', sym: '\\Zg', cls: 'z', mult: 'keep 1 − z of the old memory, write z of the proposal', p: WEIGHTS.z, get: s => s.z },
-    { name: 'reset', sym: '\\Rg', cls: 'r', mult: 'the old memory, before the proposal sees it', p: WEIGHTS.r, get: s => s.r }
+    { name: 'update', g: 'z', sym: '\\Zg', cls: 'z', mult: 'keep 1 − z of the old memory, write z of the candidate', p: WEIGHTS.z, get: s => s.z },
+    { name: 'reset', g: 'r', sym: '\\Rg', cls: 'r', mult: 'the old memory, before the candidate sees it', p: WEIGHTS.r, get: s => s.r }
   ]);
   formulaBlock('f-gru', 'The complete GRU in symbols', [
     ['update', T`\Zg = \sigma(w_z\cdot x_t + w_{hz}\cdot h_{t-1} + b_z)`],
     ['reset', T`\Rg = \sigma(w_r\cdot x_t + w_{hr}\cdot h_{t-1} + b_r)`],
-    ['proposal', T`\Hn = \tanh(w_{\tilde h}\cdot x_t + w_{h\tilde h}\cdot(\Rg\cdot h_{t-1}) + b_{\tilde h})`],
+    ['candidate', T`\Hn = \tanh(w_{\tilde h}\cdot x_t + w_{h\tilde h}\cdot(\Rg\cdot h_{t-1}) + b_{\tilde h})`],
     ['memory', T`h_t = (1-\Zg)\cdot h_{t-1} + \Zg\cdot\Hn`]
   ]);
   drawMapping(); drawBi();
