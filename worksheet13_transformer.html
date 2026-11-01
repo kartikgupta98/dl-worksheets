@@ -352,6 +352,29 @@ svg [text-anchor="end"]{text-anchor:end}svg [text-anchor="start"]{text-anchor:st
 footer{padding:40px 0 60px;color:var(--muted);border-top:1px solid var(--line);font-size:16px}
 footer p{max-width:1000px}
 
+/* sentence reminder and motion helpers */
+.lab-sent{flex-basis:100%;font:400 15px var(--sans);color:var(--muted)}
+.flow{stroke-dasharray:var(--len) var(--len);stroke-dashoffset:var(--len)}
+.flow.on{animation:draw .7s ease forwards;animation-delay:var(--dl,0ms)}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pop{transform-box:fill-box;transform-origin:50% 50%}
+.pop.on{animation:pop .45s cubic-bezier(.3,1.5,.5,1) both;animation-delay:var(--dl,0ms)}
+@keyframes pop{from{transform:scale(.4)}to{transform:scale(1)}}
+.mark.s{font-size:21px}
+.nowband{fill:var(--panel-2)}
+.gloss{font-size:14px;fill:var(--muted);text-anchor:middle;font-style:italic}
+.num.a{fill:var(--att)}
+.bcell{transition:fill-opacity .5s ease}
+.abar{fill:var(--wire);transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform .6s ease,fill .4s ease}
+.abar.wt{fill:var(--att)}
+.heat,.fade-t{transition:fill-opacity .5s ease,opacity .5s ease}
+.stg rect{fill:var(--panel);stroke:var(--line-2);stroke-width:1.5;transition:fill .3s,stroke .3s}
+.stg text{font:600 15px var(--sans);fill:var(--muted);text-anchor:middle;transition:fill .3s}
+.stg.act rect{fill:var(--ink);stroke:var(--ink)}
+.stg.act text{fill:var(--bg)}
+.tile{transition:transform .45s ease,fill-opacity .45s ease}
+.tile-t{font:600 13px var(--sans);fill:#fff;text-anchor:middle;transition:transform .45s ease,opacity .3s ease}
+
 @media (max-width:860px){
   .stack{grid-template-columns:minmax(0,1fr)}
   .stk .new::after{right:6px}
@@ -374,7 +397,9 @@ footer p{max-width:1000px}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  [data-on],[data-mode],[data-tf],.grow,.att,.brow .bf{transition:none!important}
+  [data-on],[data-mode],[data-tf],.grow,.att,.brow .bf,.abar,.bcell,.heat,.fade-t,.tile,.tile-t,.stg rect,.stg text{transition:none!important}
+  .flow{stroke-dasharray:none!important}
+  .flow.on,.pop.on{animation:none!important}
 }
 </style>
 </head>
@@ -845,25 +870,44 @@ const arc = (x1, x2, y, h) => `M${x1} ${y} Q ${(x1 + x2) / 2} ${y - h} ${x2} ${y
 /* ---------- lab engine ----------
    Elements carry data-on="a" (shown from beat a), data-on="a:b" (beats a to b),
    data-mode="m" (shown in mode m) and data-tf="beat|x,y;beat|x,y" (moves). */
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SENT = '<div class="lab-sent"><span class="en-t">I am reading a book</span> → <span class="hi-t">मैं एक किताब पढ़ रहा हूँ</span></div>';
 function makeLab(id, cfg) {
   const el = document.getElementById(id);
   const beatsOf = mm => typeof cfg.beats === 'function' ? cfg.beats(mm) : cfg.beats;
   const multi = beatsOf(0).length > 1;
-  let k = 0, m = 0, timer = null;
+  let k = 0, m = 0, timer = null, playing = false, pk = -1, pm = 0, timers = [], anims = [];
   el.tabIndex = 0;
   el.innerHTML = `<div class="lab-head"><div class="lab-title">${cfg.title}</div><div class="ctrls">
     ${cfg.modes ? `<div class="seg" role="group" aria-label="${cfg.title}">${cfg.modes.map((t, i) => `<button data-m="${i}">${t}</button>`).join('')}</div>` : ''}
     ${multi ? '<button data-a="reset">Reset</button><button data-a="prev">Previous</button><button data-a="next" class="primary">Next</button><button data-a="play">Play</button>' : ''}
-  </div></div>
+  </div>${cfg.sent ? SENT : ''}</div>
   <div class="lab-svg"><svg viewBox="0 0 ${cfg.w} ${cfg.h}" style="min-width:${cfg.minW || 620}px" role="img" aria-label="${cfg.title}">${cfg.draw()}</svg></div>
   <p class="narr" aria-live="polite"></p>`;
   const svg = el.querySelector('svg'), narr = el.querySelector('.narr');
+  svg.querySelectorAll('.flow').forEach(p => p.style.setProperty('--len', Math.ceil(p.getTotalLength()) + 2));
   const items = [...svg.querySelectorAll('[data-on],[data-mode]')];
   const moves = [...svg.querySelectorAll('[data-tf]')];
   const btn = a => el.querySelector(`[data-a="${a}"]`);
   function render() {
     const n = beatsOf(m).length;
     if (k > n - 1) k = n - 1;
+    // A beat entered with Next or Play animates its sub-steps; any other jump shows the end state.
+    timers.forEach(clearTimeout); timers = [];
+    anims.forEach(a => a.cancel()); anims = [];
+    const fwd = !RM && pk >= 0 && k === pk + 1 && m === pm;
+    const A = {
+      fwd,
+      at: (ms, fn) => fwd && ms > 0 ? timers.push(setTimeout(fn, ms)) : fn(),
+      anim: (node, frames, opts) => { if (fwd) anims.push(node.animate(frames, opts)); },
+      fly: (node, dx, dy, delay = 0, dur = 700, o = 1) => A.anim(node, [
+        { opacity: 0, transform: 'translate(0px,0px)' },
+        { opacity: o, transform: 'translate(0px,0px)', offset: .15 },
+        { opacity: o, transform: `translate(${dx}px,${dy}px)`, offset: .85 },
+        { opacity: 0, transform: `translate(${dx}px,${dy}px)` }], { duration: dur, delay, easing: 'ease-in-out' }),
+      pop: (node, delay = 0) => A.anim(node, [{ transform: 'scale(.4)' }, { transform: 'scale(1)' }], { duration: 450, delay, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' })
+    };
+    pk = k; pm = m;
     for (const it of items) {
       let vis = true;
       if (it.dataset.on !== undefined) { const [a, b] = it.dataset.on.split(':'); vis = k >= +a && (b === undefined || k <= +b); }
@@ -876,17 +920,22 @@ function makeLab(id, cfg) {
       const [x, y] = cur.split(',');
       it.style.transform = `translate(${x}px, ${y}px)`;
     }
-    if (cfg.update) cfg.update(svg, k, m);
+    if (cfg.update) cfg.update(svg, k, m, A);
     narr.innerHTML = beatsOf(m)[k];
     if (multi) {
       btn('prev').disabled = k === 0;
       btn('next').disabled = k === n - 1;
-      btn('play').textContent = timer ? 'Pause' : 'Play';
+      btn('play').textContent = playing ? 'Pause' : 'Play';
     }
     el.querySelectorAll('[data-m]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.m === m)));
   }
-  const stop = () => { clearInterval(timer); timer = null; };
+  const stop = () => { clearTimeout(timer); timer = null; playing = false; };
+  const wait = () => (cfg.dur && cfg.dur[k]) || cfg.ms || 2800;
   function go(nk) { k = Math.max(0, Math.min(beatsOf(m).length - 1, nk)); render(); }
+  function tick() {
+    if (k < beatsOf(m).length - 1) { go(k + 1); timer = setTimeout(tick, wait()); }
+    else { stop(); render(); }
+  }
   el.addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -896,10 +945,10 @@ function makeLab(id, cfg) {
     else if (a === 'prev') { stop(); go(k - 1); }
     else if (a === 'next') { stop(); go(k + 1); }
     else if (a === 'play') {
-      if (timer) { stop(); render(); return; }
-      if (k === beatsOf(m).length - 1) k = 0;
-      timer = setInterval(() => { if (k < beatsOf(m).length - 1) go(k + 1); if (k >= beatsOf(m).length - 1) { stop(); render(); } }, cfg.ms || 2800);
-      go(k + 1 > beatsOf(m).length - 1 ? k : k + 1);
+      if (playing) { stop(); render(); return; }
+      playing = true;
+      if (k === beatsOf(m).length - 1) { go(0); timer = setTimeout(tick, 700); }
+      else tick();
     }
   });
   el.addEventListener('keydown', e => {
@@ -944,170 +993,294 @@ makeLab('lab-rnn', {
   ]
 });
 
+/* ---------- shared pieces for Problems 1 to 3 ---------- */
+const GLOSS = ['I', 'a', 'book', 'read', '-ing', 'am'];
+// The English word each Hindi word needs: मैं→I, एक→a, किताब→book, पढ़→reading, रहा→reading, हूँ→am.
+const NEED = [0, 3, 4, 2, 2, 1];
+// A word's state, drawn as six shaded cells.
+const six = (x, y, vals, col, cw = 12, ch = 18) => vals.map((v, i) => R(x + i * cw, y, cw - 2, ch, 'bcell', ` fill="var(${col})" fill-opacity="${v.toFixed(2)}"`, 2)).join('');
+const mixOf = (ws, pats) => pats[0].map((_, c) => ws.reduce((s, w, j) => s + w * pats[j][c], 0));
+const setSix = (g, vals) => [...g.children].forEach((c, i) => { c.style.fillOpacity = vals[i].toFixed(2); });
+const ZERO6 = [0, 0, 0, 0, 0, 0];
+
 /* ---------- 1 · lockstep translation ---------- */
 makeLab('lab-lockstep', {
-  title: 'One Hindi word per step', w: 960, h: 350,
+  title: 'One Hindi word per step', w: 960, h: 320, sent: true, ms: 3600,
   draw() {
-    const xs = [150, 300, 450, 600, 750, 900];
+    const xs = HI.map((_, i) => 190 + i * 136);
     let s = defs('ls');
+    s += R(xs[0] - 64, 12, 128, 262, 'nowband', on(1) + tf([1, 2, 3, 4, 5, 6].map((b, i) => `${b}|${i * 136},0`).join(';')), 12);
+    s += T(18, 62, 'HINDI', 'rl') + T(18, 166, 'RNN', 'rl') + T(18, 243, 'ENGLISH', 'rl');
     xs.forEach((x, i) => {
-      s += R(x - 62, 30, 124, 74, 'ghost');
-      if (i < 5) {
-        s += L(x, 242, x, 204, 'wire', mk('ls', 'wire'));
-        s += R(x - 50, 150, 100, 52, 'cell');
-        s += T(x, 182, 'RNN', 'lbl');
-        s += L(x, 150, x, 108, 'wire', mk('ls', 'wire'));
-        s += T(x, 266, EN[i], 'w en');
+      const step = i < 5, ok = step && NEED[i] <= i;
+      // the Hindi word this step must write
+      s += R(x - 58, 22, 116, 70, 'ghost');
+      s += R(x - 58, 22, 116, 70, ok ? 'ok-fill' : 'bad-fill', on(i + 1) + dl(step ? 1000 : 300));
+      s += T(x, 54, HI[i][0], 'hiw') + T(x, 80, GLOSS[i], 'gloss');
+      s += T(x + 58, 30, ok ? '✓' : '✗', 'mark s ' + (ok ? 'good' : 'bad'), on(i + 1) + dl(step ? 1000 : 300));
+      if (step) {
+        s += L(x, 134, x, 96, 'ghost') + L(x, 134, x, 96, 'wire flow', mk('ls', 'wire') + on(i + 1) + dl(700));
+        s += R(x - 48, 134, 96, 52, 'cell') + R(x - 48, 134, 96, 52, 'cell lit', on(i + 1) + dl(200)) + T(x, 166, 'RNN', 'lbl');
+        if (i < 4) s += L(x + 48, 160, xs[i + 1] - 50, 160, 'wire', mk('ls', 'wire'));
+        s += L(x, 220, x, 190, 'wire', mk('ls', 'wire'));
+        s += T(x, 244, EN[i], 'w dim') + T(x, 244, EN[i], 'w en', on(i + 1));
+        // which English word this step needs, and whether it has arrived
+        const j = NEED[i], mid = (xs[i] + xs[j]) / 2, b = on(i + 1, i + 1);
+        s += R(xs[j] - 50, 223, 100, 32, ok ? 'frame-p' : 'frame-n', b + dl(400), 8);
+        if (j === i) s += T(x, 286, 'already read', 'lbl good', b + dl(500));
+        else {
+          s += P(`M${xs[i]} 260 Q ${mid} 300 ${xs[j]} 260`, (ok ? 'pos-l' : 'neg-l') + ' flow', mk('ls', ok ? 'pos' : 'neg') + b + dl(400));
+          s += T(mid, 306, ok ? `read at step ${j + 1}` : `arrives only at step ${j + 1}`, 'lbl ' + (ok ? 'good' : 'bad'), b + dl(800));
+        }
+      } else {
+        s += R(x - 48, 134, 96, 52, 'ghost') + R(x - 48, 134, 96, 52, 'bad-fill', on(6)) + T(x, 166, 'no step', 'lbl bad', on(6));
+        s += T(x, 244, 'sentence over', 'cap', on(6));
       }
     });
-    const slot = (i, cls, a) => R(xs[i] - 62, 30, 124, 74, cls, a) + T(xs[i], 66, HI[i][0], 'hiw', a) + T(xs[i], 92, HI[i][1], 'tr', a);
-    s += slot(0, 'ok-fill', on(1)) + slot(1, 'ok-fill', on(2)) + slot(2, 'bad-fill', on(3)) + slot(5, 'bad-fill', on(4));
-    s += P('M750 282 Q 600 340 458 286', 'neg-l', mk('ls', 'neg') + ' stroke-dasharray="6 5"' + on(3));
-    s += T(604, 332, '“book” arrives only at step 5', 'lbl bad', on(3));
-    s += T(900, 180, 'no step left', 'lbl bad', on(4));
     return s;
   },
   beats: [
-    'The RNN must write one Hindi word at each step, in step with the English words.',
-    'Step 1 reads “I” and writes <span class="hi-t">मैं</span>. Correct.',
-    'Step 2 reads “am” and writes <span class="hi-t">एक</span>. Still fine.',
+    'The RNN must write the Hindi sentence on top, one word at each step, in step with the English words below. Press <b>Next</b>.',
+    'Step 1 has read “I”. It must write <span class="hi-t">मैं</span> (I). The word it needs is already here.',
+    'Step 2 has read “I am”. It must write <span class="hi-t">एक</span> (a). But “a” arrives only at step 4.',
     'Step 3 must write <span class="hi-t">किताब</span> (book). But “book” arrives only at step 5.',
-    'Hindi needs six words. The RNN has only five steps.'
+    'Step 4 must write <span class="hi-t">पढ़</span> (read). “reading” arrived at step 3, so this one works.',
+    'Step 5 must write <span class="hi-t">रहा</span> (-ing). It uses “reading” again, and works.',
+    'Hindi needs a sixth word, <span class="hi-t">हूँ</span> (am), but the English sentence is over. There is no sixth step. Three of the six words fail.'
   ]
 });
 
 /* ---------- 1 · encoder-decoder ---------- */
 makeLab('lab-encdec', {
-  title: 'Read everything, then write', w: 960, h: 290,
+  title: 'Read everything, then write', w: 960, h: 290, sent: true, dur: [2400, 3400, 2600, 2800, 6000, 3000],
   draw() {
-    const ex = EN.map((_, i) => 70 + i * 80), dx = [0, 1, 2, 3, 4, 5, 6].map(j => 568 + j * 60);
+    const ex = EN.map((_, i) => 64 + i * 72), dx = [0, 1, 2, 3, 4, 5, 6].map(j => 548 + j * 64);
     let s = defs('ed');
-    s += T(230, 36, 'Encoder', 'hdr') + T(748, 36, 'Decoder', 'hdr');
+    s += T(208, 30, 'Encoder', 'hdr') + T(740, 30, 'Decoder', 'hdr');
     ex.forEach((x, i) => {
-      s += L(x, 230, x, 198, 'wire', mk('ed', 'wire'));
-      s += R(x - 31, 150, 62, 46, 'cell') + R(x - 31, 150, 62, 46, 'cell lit', on(1) + dl(i * 220));
-      s += T(x, 254, EN[i], 'w en sm');
-      if (i < 4) s += L(x + 31, 173, ex[i + 1] - 33, 173, 'wire', mk('ed', 'wire'));
+      s += L(x, 222, x, 196, 'wire', mk('ed', 'wire'));
+      s += R(x - 28, 146, 56, 48, 'cell') + R(x - 28, 146, 56, 48, 'cell lit', on(1) + dl(i * 500 + 150));
+      for (let j = 0; j <= i; j++) s += R(x - 25 + j * 10, 165, 8, 10, '', ' fill="var(--en)"' + on(1) + dl(i * 500 + 250), 2);
+      s += T(x, 246, EN[i], 'w dim sm') + T(x, 246, EN[i], 'w en sm', on(1) + dl(i * 500));
+      if (i < 4) s += L(x + 28, 170, ex[i + 1] - 30, 170, 'wire', mk('ed', 'wire'));
     });
-    s += L(101 + 4 * 80, 173, 438, 173, 'wire', mk('ed', 'wire'));
-    s += R(440, 137, 72, 72, 'ghost') + R(440, 137, 72, 72, 'ctx', on(2));
-    s += T(476, 234, 'context', 'lbl') + T(476, 254, 'vector', 'lbl');
-    s += L(512, 173, 541, 173, 'wire', mk('ed', 'wire'));
+    s += L(ex[4] + 28, 170, 398, 170, 'wire', mk('ed', 'wire'));
+    s += R(400, 136, 64, 68, 'ghost') + R(400, 136, 64, 68, 'ctx', on(2) + dl(550));
+    for (let j = 0; j < 5; j++) s += R(407 + j * 10, 165, 8, 10, '', ' fill="var(--en)"' + on(2) + dl(600), 2);
+    s += G('', ' id="ed-ctx" style="opacity:0"', [0, 1, 2, 3, 4].map(j => R(ex[4] - 25 + j * 10, 165, 8, 10, '', ' fill="var(--en)"', 2)).join(''));
+    s += T(432, 228, 'context', 'lbl') + T(432, 248, 'vector', 'lbl');
+    s += L(464, 170, 520, 170, 'wire flow', mk('ed', 'wire') + on(3));
     dx.forEach((x, j) => {
-      s += R(x - 25, 150, 50, 46, 'cell') + R(x - 25, 150, 50, 46, 'cell hil', on(j < 6 ? 3 : 4) + dl(j < 6 ? j * 330 : 0));
-      s += L(x, 150, x, 118, 'wire', on(j < 6 ? 3 : 4) + dl(j < 6 ? j * 330 : 0));
-      s += j < 6 ? T(x, 104, HI[j][0], 'hiw sm', on(3) + dl(j * 330)) : T(x, 104, 'END', 'lbl', on(4));
-      if (j < 6) s += L(x + 25, 173, dx[j + 1] - 25, 173, 'wire');
+      const last = j === 6, b = j === 0 ? 3 : last ? 5 : 4, d = j === 0 || last ? 0 : (j - 1) * 1000;
+      s += R(x - 26, 146, 52, 48, 'cell') + R(x - 26, 146, 52, 48, 'cell hil', on(b) + dl(d + 650));
+      if (j < 6) s += L(x + 26, 170, dx[j + 1] - 28, 170, 'wire', mk('ed', 'wire'));
+      s += L(x, 222, x, 196, 'wire', mk('ed', 'wire'));
+      s += j === 0 ? T(x, 246, 'start', 'cap') : T(x, 250, HI[j - 1][0], 'hiw sm', on(b) + dl(d + 550));
+      s += L(x, 146, x, 118, 'wire flow', mk('ed', 'wire') + on(b) + dl(d + 750));
+      s += T(x, 104, last ? 'END' : HI[j][0], (last ? 'lbl' : 'hiw sm') + ' pop', on(b) + dl(d + 1000));
+      if (!last) s += G('', ` id="ed-f${j}" style="opacity:0"`, T(x, 104, HI[j][0], 'hiw sm'));
     });
     return s;
   },
+  update(svg, k, m, A) {
+    if (k === 2) A.fly(svg.querySelector('#ed-ctx'), 407 - (64 + 4 * 72 - 25), 0, 0, 750);
+    if (k === 4) [0, 1, 2, 3, 4].forEach(j => A.fly(svg.querySelector('#ed-f' + j), 64, 146, j * 1000, 650));
+    if (k === 5) A.fly(svg.querySelector('#ed-f5'), 64, 146, 0, 650);
+  },
   beats: [
-    'Split the work between two RNNs: an encoder and a decoder.',
-    'The encoder reads the whole English sentence first.',
-    'Its final hidden state becomes the <b>context vector</b>: one summary of the sentence.',
-    'The decoder starts from that summary and writes Hindi, one word at a time.',
-    'It stops when it writes END. The two lengths no longer need to match.'
+    'Two RNNs. The <b>encoder</b> reads the English sentence. The <b>decoder</b> writes the Hindi sentence.',
+    'The encoder reads all five English words, one per step. Its summary grows with every word. It writes nothing yet.',
+    'Its final hidden state becomes the <b>context vector</b>: one summary of the whole sentence.',
+    'The decoder starts from the context vector and writes the first Hindi word, <span class="hi-t">मैं</span>.',
+    'Each word it writes is fed back in as its next input. It has read the whole sentence, so it can write <span class="hi-t">किताब</span> (book) third, although “book” came last.',
+    'It stops when it writes END. Five English words became six Hindi words, in Hindi order.'
   ]
 });
 
 /* ---------- 2 · one vector ---------- */
+const LONG = ['The', 'book', 'that', 'my', 'friend', 'lent', 'me', 'last', 'summer', 'was'];
+const SQX = { s: EN.map((_, i) => 240 + i * 120), l: LONG.map((_, i) => 96 + i * 82) };
 makeLab('lab-squeeze', {
-  title: 'Everything through one vector', w: 960, h: 300,
+  title: 'Everything through one vector', w: 960, h: 300, dur: [2400, 4000, 6000, 3200],
   draw() {
-    const short = EN.map((w, i) => [w, 240 + i * 120]);
-    const long = ['The', 'book', 'that', 'my', 'friend', 'lent', 'me', 'last', 'summer', '…'].map((w, i) => [w, 100 + i * 84]);
     let s = defs('sq');
-    short.forEach(([w, x], i) => s += T(x, 50, w, 'w en', on(1, 1)) + L(x, 62, 420 + i * 30, 146, 'wire', on(1, 1)));
-    long.forEach(([w, x], i) => s += T(x, 50, w, 'w en sm', on(2)) + L(x, 62, 392 + i * 19, 146, 'wire', on(2)));
-    s += R(380, 150, 200, 84, 'box');
-    for (let i = 0; i < 5; i++) s += R(388 + i * 38, 158, 32, 68, '', ` fill="var(--en)" fill-opacity=".85"` + on(1, 1), 4);
-    for (let i = 0; i < 10; i++) s += R(386 + i * 19, 158, 15, 68, '', ` fill="var(--en)" fill-opacity="${(.05 + .85 * Math.pow(i / 9, 2.2)).toFixed(2)}"` + on(2), 3);
-    s += T(480, 262, 'one vector, fixed size', 'lbl');
-    s += L(582, 192, 698, 192, 'wire', mk('sq', 'wire') + on(3));
-    s += R(700, 158, 170, 68, 'cell hil', on(3)) + T(785, 199, 'Decoder', 'lbl', on(3));
+    EN.forEach((w, i) => s += T(SQX.s[i], 50, w, 'w en', on(1, 1)) + G('', ` id="sq-s${i}" style="opacity:0"`, T(SQX.s[i], 50, w, 'w en')));
+    LONG.forEach((w, i) => s += T(SQX.l[i], 50, w, 'w en sm', on(2)) + G('', ` id="sq-l${i}" style="opacity:0"`, T(SQX.l[i], 50, w, 'w en sm')));
+    s += T(SQX.l[9] + 50, 50, '…', 'w en sm', on(2));
+    s += T(480, 138, 'one vector, fixed size', 'cap');
+    s += R(330, 150, 300, 76, 'box');
+    for (let i = 0; i < 10; i++) s += `<rect class="tile" id="sq-r${i}" x="0" y="0" width="1" height="60" fill="var(--en)"/>` + `<text class="tile-t" id="sq-x${i}" x="0" y="0"></text>`;
+    s += R(333, 153, 118, 70, 'frame-n', on(3), 6) + T(392, 252, 'early words have faded', 'lbl bad', on(3));
+    s += L(632, 188, 712, 188, 'wire flow', mk('sq', 'wire') + on(3));
+    s += R(714, 154, 160, 68, 'cell hil', on(3)) + T(794, 194, 'Decoder', 'lbl', on(3));
     return s;
   },
+  update(svg, k, m, A) {
+    const words = k === 1 ? EN : k >= 2 ? LONG : [];
+    const lay = t => { for (let i = 0; i < 10; i++) {
+      const r = svg.querySelector('#sq-r' + i), x = svg.querySelector('#sq-x' + i);
+      const show = i < t, W = 290 / Math.max(t, 1), age = t - 1 - i;
+      r.style.transform = `translate(${335 + (show ? i : t) * W}px,158px) scaleX(${show ? W - 3 : 0})`;
+      r.style.fillOpacity = show ? Math.max(.08, 1 - .95 * Math.pow(age / 9, 1.5)).toFixed(2) : 0;
+      x.textContent = words[i] || '';
+      x.style.transform = `translate(${335 + i * W + (W - 3) / 2}px,193px)`;
+      x.style.opacity = show && W >= 44 ? 1 : 0;
+    } };
+    if (k === 0) return lay(0);
+    if (k === 3) return lay(10);
+    const step = k === 1 ? 600 : 520;
+    lay(0);
+    words.forEach((w, i) => {
+      const xw = k === 1 ? SQX.s[i] : SQX.l[i];
+      A.fly(svg.querySelector((k === 1 ? '#sq-s' : '#sq-l') + i), 480 - xw, 140, i * step, 520);
+      A.at(i * step + 440, () => lay(i + 1));
+    });
+  },
   beats: [
-    'The decoder will see the English sentence only through this one vector.',
-    'A short sentence: five words fit well.',
-    'A long sentence: the same vector must now hold ten words, and the early words fade.',
-    'The decoder sees only this blurred summary. As sentences grow longer, translations get worse.'
+    'The decoder will see the English sentence only through this one vector. Its size is fixed.',
+    'A short sentence. The words are read into the vector one by one. Five words share the space, and all of them stay clear.',
+    'A long sentence. The same space must now hold ten words. Each new word squeezes the others, and the early words fade.',
+    'The decoder sees only this blurred summary. The first words have almost faded, so long sentences are translated badly.'
   ]
 });
 
-/* ---------- 2 · lockstep alignment ---------- */
+/* ---------- 2 · pairing by position ---------- */
 makeLab('lab-align', {
-  title: 'Pair word i with word i', w: 960, h: 250,
+  title: 'Pair word i with word i', w: 960, h: 270, sent: true, dur: [2400, 4000, 3600],
   draw() {
     const xs = HI.map((_, i) => 110 + i * 148);
     let s = defs('al');
+    xs.forEach((x, i) => s += T(x, 40, HI[i][0], 'hiw') + T(x, 64, GLOSS[i], 'gloss'));
+    EN.forEach((w, i) => s += T(xs[i], 240, w, 'w en'));
+    s += T(xs[5], 240, 'no word', 'w dim');
     xs.forEach((x, i) => {
-      s += T(x, 46, HI[i][0], 'hiw') + T(x, 70, HI[i][1], 'tr');
-      s += T(x, 204, i < 5 ? EN[i] : 'no word', i < 5 ? 'w en' : 'w dim');
-      s += L(x, 84, x, 180, 'wire');
-      s += i === 0 ? T(x + 22, 142, '✓', 'mark good', on(1)) : T(x + 22, 142, '✗', 'mark bad', on(1));
+      const ok = i === 0;
+      s += L(x, 78, x, 216, (ok ? 'pos-l' : 'neg-l') + ' flow', on(1, 1) + dl(i * 550));
+      s += T(x + 24, 156, ok ? '✓' : '✗', 'mark s ' + (ok ? 'good' : 'bad'), on(1, 1) + dl(i * 550 + 450));
+      const j = NEED[i];
+      s += P(`M${x} 78 C ${x} 150, ${xs[j]} 140, ${xs[j]} 216`, 'pos-l flow', ' stroke-width="3"' + on(2) + dl(i * 380));
     });
-    s += P(`M${xs[2]} 84 C ${xs[2]} 140, ${xs[4]} 120, ${xs[4]} 180`, 'pos-l', mk('al', 'pos') + ' stroke-width="3.5" stroke-dasharray="7 5"' + on(1));
     return s;
   },
   beats: [
     'First attempt: pair Hindi word 1 with English word 1, word 2 with word 2, and so on.',
-    'Only the first pair is right. <span class="hi-t">किताब</span> needs “book”, but Hindi puts the verb at the end, so the order does not line up.'
+    'Only the first pair means the same thing. <span class="hi-t">एक</span> (a) is paired with “am”, and <span class="hi-t">हूँ</span> has no partner at all.',
+    'The true matches cross over each other. Position cannot find them. For each Hindi word, the decoder must search the whole English sentence.'
   ]
 });
 
 /* ---------- 2 · attention ---------- */
+// Five distinct patterns, so a good match is easy to see.
+const PAT = [
+  [.95, .12, .12, .5, .12, .12],
+  [.12, .95, .12, .12, .5, .12],
+  [.12, .12, .95, .12, .12, .5],
+  [.5, .12, .12, .95, .12, .12],
+  [.12, .12, .5, .12, .95, .12]
+];
+const SCORE = ATT.map(r => r.map(w => Math.log(w) + 4));   // softmax of a row gives the ATT row
+const MIX = ATT.map(r => mixOf(r, PAT));
+const AXS = EN.map((_, i) => 70 + i * 112);
 makeLab('lab-attend', {
-  title: 'The decoder looks back', w: 960, h: 370, ms: 3200,
+  title: 'The decoder looks back', w: 960, h: 430, sent: true,
+  dur: [2600, 3200, 2400, 3000, 6200, 6200, 6200, 6200, 6600],
   draw() {
-    const xs = EN.map((_, i) => 70 + i * 112);
     let s = defs('at');
-    s += R(180, 16, 260, 66, 'cell hil');
-    s += T(310, 40, 'Decoder, about to write', 'cap') + T(310, 70, '', 'hiw', ' id="at-word"');
-    xs.forEach((x, i) => s += L(310, 196, x, 278, 'att', ` id="at-l${i}" style="opacity:0"`));
-    s += R(220, 154, 180, 42, 'box') + T(310, 181, 'weighted sum', 'lbl');
-    s += L(310, 154, 310, 86, 'wire', mk('at', 'wire'));
-    xs.forEach((x, i) => {
-      s += R(x - 46, 280, 92, 40, 'chip en', ` id="at-c${i}"`) + T(x, 307, EN[i], 'w en');
-      s += T(x, 348, '', 'num', ` id="at-n${i}"`);
+    s += R(150, 12, 320, 80, 'cell hil');
+    s += T(225, 38, 'writing', 'cap') + T(225, 76, '…', 'hiw pop', ' id="at-word"');
+    s += T(390, 38, 'looking for', 'cap') + G('', ' id="at-q"', six(354, 52, ZERO6, '--hi'));
+    s += L(310, 120, 310, 96, 'wire', mk('at', 'wire'));
+    s += R(250, 122, 120, 46, 'box') + G('', ' id="at-mix"', six(274, 136, ZERO6, '--en'));
+    s += T(382, 150, 'weighted mix', 'lbl st');
+    AXS.forEach((x, j) => s += L(x, 212, 310, 170, 'att', ` id="at-l${j}" style="opacity:0"`));
+    AXS.forEach((x, j) => {
+      s += L(x - 24, 300, x + 24, 300, 'chain');
+      s += R(x - 16, 216, 32, 84, 'abar', ` id="at-b${j}"`, 3);
+      s += T(x, 322, '', 'num', ` id="at-n${j}"`);
+      s += R(x - 48, 352, 96, 36, 'chip en') + six(x - 36, 361, PAT[j], '--en');
+      s += T(x, 414, EN[j], 'w en');
+      if (j < 4) s += L(x + 48, 370, AXS[j + 1] - 48, 370, 'wire');
     });
-    const x0 = 650, cw = 60, rh = 40, y0 = 78;
-    EN.forEach((w, j) => s += T(x0 + j * cw + cw / 2, y0 - 12, w, 'w en sm'));
+    s += G('', ' id="at-scan" style="opacity:0"', six(354, 52, ZERO6, '--hi'));
+    AXS.forEach((x, j) => s += G('', ` id="at-f${j}" style="opacity:0"`, six(x - 36, 361, PAT[j], '--en')));
+    const x0 = 648, cw = 60, rh = 40, y0 = 70;
+    s += T(x0 + 150, 24, 'Where each Hindi word looked', 'cap');
+    EN.forEach((w, j) => s += T(x0 + j * cw + cw / 2, y0 - 10, w, 'w en sm'));
     HI.forEach((h, r) => {
-      s += T(x0 - 12, y0 + r * rh + 28, h[0], 'hiw sm', ' text-anchor="end"');
-      EN.forEach((_, j) => {
-        s += R(x0 + j * cw, y0 + r * rh, cw, rh, 'hgrid', '', 0);
-        s += R(x0 + j * cw + 1, y0 + r * rh + 1, cw - 2, rh - 2, 'heat', ` fill-opacity="${(.04 + .96 * ATT[r][j]).toFixed(2)}"` + on(r + 1), 0);
-      });
-      s += R(x0 - 2, y0 + r * rh - 1, 5 * cw + 4, rh + 2, 'rowcur', on(r + 1, r + 1), 4);
+      s += T(x0 - 10, y0 + r * rh + 27, h[0], 'hiw sm fade-t', ` text-anchor="end" id="at-h${r}" style="opacity:.25"`);
+      EN.forEach((_, j) => s += R(x0 + j * cw, y0 + r * rh, cw, rh, 'hgrid', '', 0) + R(x0 + j * cw + 1, y0 + r * rh + 1, cw - 2, rh - 2, 'heat', ` id="at-c${r}-${j}" style="fill-opacity:0"`, 0));
+      s += R(x0 - 2, y0 + r * rh - 1, 5 * cw + 4, rh + 2, 'rowcur fade-t', ` id="at-rc${r}" style="opacity:0"`, 4);
     });
+    [['Score', 640, 70], ['Softmax', 716, 92], ['Weighted sum', 814, 134]].forEach(([t, x, w], i) =>
+      s += G('stg', ` id="at-s${i}"`, R(x, 344, w, 32, '', '', 16) + T(x + w / 2, 365, t, '')));
     return s;
   },
-  update(svg, k) {
-    const w = k ? ATT[k - 1] : null;
-    svg.querySelector('#at-word').textContent = k ? HI[k - 1][0] : '…';
-    EN.forEach((_, i) => {
-      const l = svg.querySelector('#at-l' + i);
-      l.style.strokeWidth = w ? 1.5 + 16 * w[i] : 1;
-      l.style.opacity = w ? (.25 + .75 * Math.min(1, w[i] * 1.4)).toFixed(2) : 0;
-      svg.querySelector('#at-c' + i).classList.toggle('hot', !!w && w[i] >= .5);
-      svg.querySelector('#at-n' + i).textContent = w ? w[i].toFixed(2) : '';
+  update(svg, k, m, A) {
+    const $ = id => svg.querySelector('#' + id);
+    const r = k === 0 ? -1 : k <= 3 ? 0 : k - 3;
+    const from = k <= 3 ? Math.max(0, k - 1) : 0, to = k <= 3 ? k : 3;
+    const stage = n => [0, 1, 2].forEach(i => $('at-s' + i).classList.toggle('act', i === n - 1));
+    const bar = (j, n) => {
+      const b = $('at-b' + j);
+      b.classList.toggle('wt', n === 2);
+      b.style.transform = `scaleY(${n === 0 ? 0 : n === 1 ? SCORE[r][j] * 22 / 84 : ATT[r][j] * 100 / 84})`;
+      $('at-n' + j).textContent = n === 0 ? '' : n === 1 ? SCORE[r][j].toFixed(1) : ATT[r][j].toFixed(2);
+      $('at-n' + j).classList.toggle('a', n === 2);
+    };
+    const lines = show => EN.forEach((_, j) => {
+      const l = $('at-l' + j);
+      l.style.opacity = show ? (.3 + .7 * Math.min(1, ATT[r][j] * 1.4)).toFixed(2) : 0;
+      l.style.strokeWidth = show ? 1.5 + 10 * ATT[r][j] : 1;
+      if (show) l.setAttribute('y1', (296 - ATT[r][j] * 100).toFixed(1));
     });
+    const heat = (rr, show) => {
+      EN.forEach((_, j) => { $(`at-c${rr}-${j}`).style.fillOpacity = show ? (.04 + .96 * ATT[rr][j]).toFixed(2) : 0; });
+      $('at-h' + rr).style.opacity = show ? 1 : .25;
+    };
+    // the state at the start of this beat
+    HI.forEach((_, rr) => { heat(rr, rr < r); $('at-rc' + rr).style.opacity = rr === r ? 1 : 0; });
+    $('at-word').textContent = '…';
+    setSix($('at-q'), r < 0 ? ZERO6 : MIX[r]);
+    setSix($('at-scan'), r < 0 ? ZERO6 : MIX[r]);
+    setSix($('at-mix'), ZERO6);
+    lines(false);
+    EN.forEach((_, j) => bar(j, r < 0 ? 0 : from));
+    stage(from);
+    if (r < 0) return;
+    // then its steps, one after another
+    let t = 0;
+    if (from < 1) {
+      A.at(t, () => stage(1));
+      AXS.forEach((x, j) => {
+        A.fly($('at-scan'), x - 36 - 354, 274, t + j * 420, 560);
+        A.at(t + j * 420 + 470, () => bar(j, 1));
+      });
+      t += 5 * 420 + 500;
+    }
+    if (from < 2 && to >= 2) { A.at(t, () => { stage(2); EN.forEach((_, j) => bar(j, 2)); }); t += 1000; }
+    if (to >= 3) {
+      A.at(t, () => { stage(3); lines(true); });
+      AXS.forEach((x, j) => A.fly($('at-f' + j), 274 - (x - 36), 136 - 361, t + 200, 800, Math.max(.15, ATT[r][j])));
+      A.at(t + 950, () => setSix($('at-mix'), MIX[r]));
+      A.at(t + 1300, () => { $('at-word').textContent = HI[r][0]; A.pop($('at-word')); heat(r, true); });
+    }
   },
   beats: [
-    'To write each Hindi word, the decoder looks back at all the English words. Press <b>Next</b>.',
-    'Writing <span class="hi-t">मैं</span>: it looks mostly at “I”.',
-    'Writing <span class="hi-t">एक</span>: it looks mostly at “a”.',
-    'Writing <span class="hi-t">किताब</span>: 0.79 of its attention goes to “book”.',
-    'Writing <span class="hi-t">पढ़</span>: it looks at “reading”.',
-    'Writing <span class="hi-t">रहा</span>: it looks at “reading” and “am”.',
-    'Writing <span class="hi-t">हूँ</span>: it looks at “am”. The verb comes last in Hindi, and attention finds it.'
+    'The encoder now keeps its state for every English word, not only the last one. Each state is drawn as a pattern of six cells. Press <b>Next</b>.',
+    '<b>1 · Score.</b> The decoder is about to write its first word. It compares what it is looking for with each English state. “I” matches best.',
+    '<b>2 · Softmax.</b> The scores become weights that add up to 1. The best match grows and the rest shrink: “I” gets 0.82.',
+    '<b>3 · Weighted sum.</b> Each state flows into the mix in proportion to its weight. The mix is mostly “I”, so the decoder writes <span class="hi-t">मैं</span>.',
+    'Next word, the same three steps. This time “a” matches best, and the decoder writes <span class="hi-t">एक</span>.',
+    'Writing <span class="hi-t">किताब</span>: “book” matches best and gets 0.79 of the attention.',
+    'Writing <span class="hi-t">पढ़</span>: the decoder looks at “reading”.',
+    'Writing <span class="hi-t">रहा</span>: it looks at “reading”, and partly at “am”.',
+    'Writing <span class="hi-t">हूँ</span>: it looks at “am”. The verb comes last in Hindi, and attention finds it. The grid records where every word looked.'
   ]
 });
 
 /* ---------- 3 · relay race ---------- */
 makeLab('lab-relay', {
-  title: 'Word 1 must reach word 30', w: 960, h: 230,
+  title: 'Word 1 must reach word 30', w: 960, h: 230, dur: [2200, 3800, 2800],
   draw() {
     const xs = Array.from({ length: 30 }, (_, i) => 210 + i * 24);
     let s = defs('rl');
@@ -1115,48 +1288,99 @@ makeLab('lab-relay', {
     s += T(xs[0], 52, 'word 1', 'cap') + T(xs[29], 52, 'word 30', 'cap');
     s += L(xs[0], 80, xs[29], 80, 'chain');
     xs.forEach((x, i) => {
-      s += C(x, 80, 8, 'dot0') + C(x, 80, 8, 'dot1', on(1) + dl(i * 75));
+      s += C(x, 80, 8, 'dot0') + C(x, 80, 8, 'dot1', on(1) + dl(i * 75) + ` fill-opacity="${(1 - .88 * i / 29).toFixed(2)}"`);
       s += C(x, 170, 8, 'dot0') + C(x, 170, 8, 'dot1', on(2));
     });
-    s += T(xs[29], 116, '29 steps in a row', 'lbl end bad', on(1) + dl(2250));
-    s += P(arc(xs[0], xs[29], 160, 90), 'att', ' stroke-width="4"' + mk('rl', 'att') + on(2));
-    s += T(xs[29], 212, '1 step', 'lbl end good', on(2));
+    s += C(xs[0], 80, 12, '', ' id="rl-pulse" fill="var(--att)" style="opacity:0"');
+    s += T(xs[0] - 10, 118, '', 'lbl st bad', ' id="rl-n"');
+    s += P(arc(xs[0], xs[29], 160, 90), 'att flow', ' stroke-width="5"' + mk('rl', 'att') + on(2) + dl(300));
+    s += T(xs[29], 212, '1 step, full strength', 'lbl end good', on(2) + dl(900));
     return s;
+  },
+  update(svg, k, m, A) {
+    const n = svg.querySelector('#rl-n');
+    n.textContent = '';
+    if (k < 1) return;
+    A.anim(svg.querySelector('#rl-pulse'), [
+      { opacity: 1, transform: 'translate(0px,0px)' },
+      { opacity: .12, transform: `translate(${29 * 24}px,0px)` }], { duration: 29 * 75, easing: 'linear' });
+    for (let i = 1; i <= 29; i++) A.at(i * 75, () => { n.textContent = i < 29 ? `step ${i}` : '29 steps in a row, and the signal fades'; });
   },
   beats: [
     'Word 1 has to reach word 30. Press <b>Next</b>.',
-    'Recurrent: each step waits for the one before it. Word 1 reaches word 30 only after 29 steps, while most of the GPU’s cores wait.',
-    'Self-attention: all the words are processed at once, and word 1 reaches word 30 in a single step.'
+    'Recurrent: word 1’s signal is handed along one step at a time, and fades on the way. Each step waits for the one before it, so most of the GPU sits idle.',
+    'Self-attention: all thirty words are processed at once, and word 1 reaches word 30 in a single step, at full strength.'
   ]
 });
 
 /* ---------- 3 · all pairs ---------- */
+const SW = ['The', 'animal', 'was', 'too', 'tired'];
+const SPAT = [
+  [.9, .12, .12, .12, .45, .12],
+  [.12, .95, .12, .12, .12, .45],
+  [.12, .12, .9, .45, .12, .12],
+  [.45, .12, .12, .9, .12, .12],
+  [.12, .45, .12, .12, .12, .95]
+];
+// How much each word (row) takes from each word (column).
+const SATT = [
+  [.40, .35, .10, .05, .10],
+  [.10, .50, .10, .05, .25],
+  [.05, .35, .30, .10, .20],
+  [.03, .07, .10, .35, .45],
+  [.05, .62, .08, .10, .15]
+];
+const SXS = SW.map((_, i) => 62 + i * 112);
 makeLab('lab-pairs', {
-  title: 'Every pair, all at once', w: 960, h: 300,
+  title: 'Every pair, all at once', w: 960, h: 430, dur: [2400, 4400, 3400, 3000],
   draw() {
-    const words = ['The', 'animal', 'was', 'too', 'tired'], xs = words.map((_, i) => 80 + i * 115);
-    let s = '';
-    words.forEach((w, i) => s += T(xs[i], 262, w, 'w en'));
+    let s = defs('pr');
+    s += T(286, 18, 'after self-attention', 'cap', on(1));
+    SW.forEach((w, i) => {
+      const b = i === 4 ? 1 : 2, d = i === 4 ? 2900 : 1300;
+      s += G('', on(b) + dl(d), R(SXS[i] - 46, 28, 92, 36, 'chip en') + six(SXS[i] - 36, 37, mixOf(SATT[i], SPAT), '--en') + T(SXS[i], 88, w, 'w en sm'));
+    });
+    SW.forEach((w, j) => {
+      const wt = SATT[4][j], sw = ` stroke-width="${(1.5 + 14 * wt).toFixed(1)}"`, b = on(1, 1) + dl(j * 320);
+      s += j === 4 ? E(SXS[4], 314, 26, 12, 'att flow', sw + b) : P(arc(SXS[j], SXS[4], 326, (SXS[4] - SXS[j]) * .42), 'att flow', sw + b);
+      s += T(SXS[j], 416, wt.toFixed(2), 'num a', on(1, 1) + dl(j * 320 + 350));
+    });
     for (let i = 0; i < 5; i++) for (let j = i + 1; j < 5; j++)
-      s += P(arc(xs[i], xs[j], 238, (xs[j] - xs[i]) * .55), 'att', ' stroke-width="2.5"' + on(1));
-    const base = 250, sc = 2.9, gx = [10, 20, 30, 40, 50].map((n, g) => [n, 662 + g * 62]);
-    s += T(620, 30, 'Steps between word 1 and word n', 'hdr st', on(2));
-    s += R(620, 46, 14, 14, 'bar-r', on(2), 2) + T(642, 58, 'Recurrent: n − 1', 'lbl st', on(2));
-    s += R(790, 46, 14, 14, 'bar-s', on(2), 2) + T(812, 58, 'Self-attention: 1', 'lbl st', on(2));
-    s += L(620, base, 950, base, 'chain', on(2));
-    gx.forEach(([n, x], g) => {
+      s += P(arc(SXS[i], SXS[j], 326, (SXS[j] - SXS[i]) * .42), 'att flow', ' stroke-width="2.5"' + on(2));
+    SW.forEach((w, i) => s += R(SXS[i] - 46, 330, 92, 36, 'chip en') + six(SXS[i] - 36, 339, SPAT[i], '--en') + T(SXS[i], 392, w, 'w en'));
+    SW.forEach((w, i) => s += G('', ` id="pr-f${i}" style="opacity:0"`, six(SXS[i] - 36, 339, SPAT[i], '--en')));
+    // the grid of all weights
+    const gx = 688, cw = 52, gy = 118, rh = 44;
+    let g = T(818, 40, 'All 25 weights, in one step', 'hdr') + T(818, 66, 'each row: one word looking at all five', 'cap');
+    SW.forEach((w, j) => g += T(gx + j * cw + cw / 2, gy - 10, w, 'cap'));
+    SW.forEach((w, r) => {
+      g += T(gx - 8, gy + r * rh + 28, w, 'cap', ' text-anchor="end"');
+      SW.forEach((_, j) => g += R(gx + j * cw, gy + r * rh, cw, rh, 'hgrid', '', 0) + R(gx + j * cw + 1, gy + r * rh + 1, cw - 2, rh - 2, 'heat', ` fill-opacity="${(.04 + .96 * SATT[r][j]).toFixed(2)}"` + on(2, 2) + dl(450), 0));
+    });
+    s += G('', on(2, 2), g);
+    // path length: recurrent vs self-attention
+    const base = 250, sc = 2.9, gxs = [10, 20, 30, 40, 50].map((n, i) => [n, 662 + i * 62]);
+    s += T(620, 30, 'Steps between word 1 and word n', 'hdr st', on(3));
+    s += R(620, 46, 14, 14, 'bar-r', on(3), 2) + T(642, 58, 'Recurrent: n − 1', 'lbl st', on(3));
+    s += R(790, 46, 14, 14, 'bar-s', on(3), 2) + T(812, 58, 'Self-attention: 1', 'lbl st', on(3));
+    s += L(620, base, 950, base, 'chain', on(3));
+    gxs.forEach(([n, x], i) => {
       const hr = (n - 1) * sc;
-      s += R(x - 24, base - hr, 22, hr, 'bar-r grow', on(2) + dl(g * 120), 2);
-      s += R(x + 2, base - 4, 22, 4, 'bar-s grow', on(2) + dl(g * 120), 1);
-      s += T(x - 13, base - hr - 6, n - 1, 'num', on(2) + dl(g * 120 + 500));
-      s += T(x + 13, base - 10, 1, 'num', on(2) + dl(g * 120 + 500));
-      s += T(x, base + 22, 'n = ' + n, 'cap', on(2));
+      s += R(x - 24, base - hr, 22, hr, 'bar-r grow', on(3) + dl(i * 120), 2);
+      s += R(x + 2, base - 4, 22, 4, 'bar-s grow', on(3) + dl(i * 120), 1);
+      s += T(x - 13, base - hr - 6, n - 1, 'num', on(3) + dl(i * 120 + 500));
+      s += T(x + 13, base - 10, 1, 'num', on(3) + dl(i * 120 + 500));
+      s += T(x, base + 22, 'n = ' + n, 'cap', on(3));
     });
     return s;
   },
+  update(svg, k, m, A) {
+    if (k === 1) SW.forEach((_, j) => A.fly(svg.querySelector('#pr-f' + j), SXS[4] - SXS[j], 37 - 339, 1900, 950, Math.max(.15, SATT[4][j])));
+  },
   beats: [
-    'Uszkoreit’s idea: drop recurrence, and let every word look at every other word.',
-    'Every pair of words is connected directly, and all the pairs are computed at the same time.',
+    'Uszkoreit’s idea: drop recurrence. Each word starts with its own pattern. Press <b>Next</b>.',
+    'Take “tired”. It scores every word in the sentence, itself included, and takes a weighted mix. Most of the weight goes to “animal”: it is the animal that is tired.',
+    'Every word does the same, all at the same time. Every pair is connected directly, and all 25 weights are computed in one step.',
     'As the sentence grows, the recurrent path grows with it. Self-attention stays at one step.'
   ]
 });
@@ -1454,7 +1678,7 @@ makeLab('lab-mask', {
 
 /* ---------- 9 · cross-attention ---------- */
 makeLab('lab-cross', {
-  title: 'Cross-attention', w: 960, h: 430, ms: 3200,
+  title: 'Cross-attention', w: 960, h: 430, ms: 3200, sent: true,
   draw() {
     const xs = EN.map((_, i) => 78 + i * 76);
     let s = defs('cr');
